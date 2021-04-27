@@ -1,0 +1,9 @@
+[general]
+name=Plugin B
+description=Plugin B description
+about=About plugin B
+version=1.0.0
+qgisMinimumVersion=3.0
+author=Cesar Salad
+email=cesar.salad@test.org
+repository=URL to the code repository

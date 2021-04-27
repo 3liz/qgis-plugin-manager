@@ -1,0 +1,9 @@
+[general]
+name=Plugin A
+description=Plugin A description
+about=About plugin A
+version=1.0.0
+qgisMinimumVersion=3.0
+author=Hazel Nutt
+email=hazel.nutt@test.org
+repository=URL to the code repository
