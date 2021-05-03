@@ -4,15 +4,23 @@ from pathlib import Path
 from typing import List, Union
 
 from .remote import Remote
-from .utils import pretty_table
+from .utils import pretty_table, parse_version
 
 
 class LocalDirectory:
 
-    def __init__(self, folder: Path):
+    def __init__(self, folder: Path, qgis_version: str = None):
         self.folder = folder
         self._plugins = None
         self._invalid = []
+
+        self.qgis_version = None
+        if qgis_version:
+            self.qgis_version = qgis_version.split('.')
+            if len(self.qgis_version) != 3:
+                self.qgis_version = None
+            else:
+                self.qgis_version = [int(i) for i in self.qgis_version]
 
     def plugins(self) -> List[str]:
         self._plugins = []
@@ -73,7 +81,7 @@ class LocalDirectory:
         remote = Remote(self.folder)
 
         print(f"List all plugins in {self.folder.absolute()}\n")
-        headers = ['Name', 'Version', 'QGIS min', 'QGIS max', 'Author', 'Action']
+        headers = ['Name', 'Version', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
         headers = [f"  {i}  " for i in headers]
         data = []
         for plugin in self.plugins():
@@ -82,16 +90,29 @@ class LocalDirectory:
             latest = remote.latest(plugin)
             current = plugin_data[1]
 
+            qgis_min = parse_version(plugin_data[2])
+            qgis_max = parse_version(plugin_data[3])
+            extra_info = []
+
             if latest:
                 if latest.startswith('v'):
                     latest = latest[1:]
 
                 if latest > current:
-                    plugin_data.append(f"Upgrade to {latest}")
-                else:
-                    plugin_data.append('')
+                    extra_info.append(f"Upgrade to {latest}")
+
+                if self.qgis_version and qgis_min:
+                    if qgis_min > self.qgis_version:
+                        extra_info.append(f"QGIS Minimum {plugin_data[2]}")
+
+                if self.qgis_version and qgis_max:
+                    if qgis_max < self.qgis_version:
+                        extra_info.append(f"QGIS Maximum {plugin_data[3]}")
+
             else:
-                plugin_data.append('Unkowwn')
+                extra_info.append('Unkown version')
+
+            plugin_data.append(';'.join(extra_info))
             data.append(plugin_data)
         print(pretty_table(data, headers))
 

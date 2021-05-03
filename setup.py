@@ -22,7 +22,6 @@ setup(
     name="qgis-plugin-manager",
     packages=["qgis_plugin_manager"],
     entry_points={"console_scripts": ["qgis-plugin-manager = qgis_plugin_manager.cli:main"]},
-    # package_data={"qgispluginci": ["plugins.xml.template"]},
     version=VERSION,
     description="Manage QGIS plugin when you are on a server.",
     author="Etienne Trimaille",

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
+from qgis_plugin_manager.utils import qgis_server_version
 
 
 def main():
@@ -43,6 +44,9 @@ def main():
                 pkg_resources.get_distribution("qgis-plugin-manager").version
             )
         )
+        qgis = qgis_server_version()
+        if qgis:
+            print(f"QGIS server version {qgis_server_version()}")
         parser.exit()
 
     # if no command is passed, print the help and exit
@@ -56,7 +60,13 @@ def main():
         remote = Remote(Path('.'))
         remote.update()
     elif args.command == "list":
-        plugins = LocalDirectory(Path('.'))
+        qgis = qgis_server_version()
+        if qgis:
+            print(f"QGIS server version {qgis}")
+        else:
+            print(f"QGIS server version unknown")
+
+        plugins = LocalDirectory(Path('.'), qgis_version=qgis)
         plugins.print_table()
 
     elif args.command == "remote":
