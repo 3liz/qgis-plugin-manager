@@ -1,19 +1,51 @@
+# QGIS-Plugin-Manager
+
 Mainly designed for QGIS Server plugins.
 
-**WIP**
+## TODO
+
+**WIP** for now.
 
 Not tested on Windows.
 
-```bash
-list
-remote
-update
-cache PLUGIN_NAME
-install PLUGIN_NAME
-install PLUGIN_NAME==VERSION
-# info PLUGIN_NAME
-```
-
-Todo : exit code, API
+todo list :
+* exit code
+* API 
+* `init` to create the file `sources.list`
+* check compat with Python 3.5 ... :(
+* publish pypi.org
 
 `QGIS_EXEC_PATH` environment variable if QGIS Server is not located at `/usr/lib/cgi-bin/qgis_mapserv.fcgi`
+
+## Installation
+
+```bash
+pip3 install git+https://github.com/Gustry/qgis-plugin-manager.git
+# Soon
+# pip3 install qgis-plugin-manager
+# python3 -m pip install qgis-plugin-manager
+```
+
+```bash
+cd /path/where/you/have/plugins
+# qgis-plugin-manager init
+```
+
+## Utilisation
+
+Have a `sources.list` in the directory with at least a line, like the default https://plugins.qgis.org :
+```
+https://plugins.qgis.org/plugins/plugins.xml?qgis=3.10
+```
+
+You can have one or many servers, one on each line.
+
+```bash
+qgis-plugin-manager list
+qgis-plugin-manager remote
+qgis-plugin-manager update
+qgis-plugin-manager cache PLUGIN_NAME
+qgis-plugin-manager install PLUGIN_NAME
+qgis-plugin-manager install PLUGIN_NAME==VERSION
+# qgis-plugin-manager info PLUGIN_NAME
+```
