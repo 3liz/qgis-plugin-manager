@@ -10,14 +10,17 @@ Not tested on Windows.
 
 todo list :
 * exit code
-* API 
-* `init` to create the file `sources.list`
-* check compat with Python 3.5 ... :(
+* API
 * publish pypi.org
 
 `QGIS_EXEC_PATH` environment variable if QGIS Server is not located at `/usr/lib/cgi-bin/qgis_mapserv.fcgi`
 
 ## Installation
+
+Python 3.6 minimum
+```bash
+python3 --version
+```
 
 ```bash
 pip3 install git+https://github.com/Gustry/qgis-plugin-manager.git
@@ -28,7 +31,8 @@ pip3 install git+https://github.com/Gustry/qgis-plugin-manager.git
 
 ```bash
 cd /path/where/you/have/plugins
-# qgis-plugin-manager init
+qgis-plugin-manager init
+qgis-plugin-manager list
 ```
 
 ## Utilisation

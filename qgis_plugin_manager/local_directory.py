@@ -22,6 +22,23 @@ class LocalDirectory:
             else:
                 self.qgis_version = [int(i) for i in self.qgis_version]
 
+    def init(self):
+        source_file = self.folder.joinpath('sources.list')
+        if source_file.exists():
+            print("sources.list already existing. Quit")
+            exit(1)
+
+        if self.qgis_version:
+            version = f"{self.qgis_version[0]}.{self.qgis_version[1]}"
+            print(f"Init https://plugins.qgis.org with {version}")
+            server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"
+        else:
+            print(f"QGIS version is unknown, creating with a default 3.16")
+            server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis=3.16\n"
+
+        with open(source_file, 'w', encoding='utf8') as f:
+            f.write(server)
+
     def plugins(self) -> List[str]:
         self._plugins = []
         for folder in self.folder.iterdir():
@@ -32,12 +49,15 @@ class LocalDirectory:
             if folder.name.startswith('.'):
                 continue
 
-            have_python = list(folder.glob('**/*.py'))
-            have_metadata = list(folder.glob('**/metadata.txt'))
+            have_python = list(folder.glob('*.py'))
+            have_metadata = list(folder.glob('metadata.txt'))
             if have_python and have_metadata:
                 self._plugins.append(folder.name)
             else:
                 self._invalid.append(folder.name)
+
+        # Weird issue, there are duplicates
+        self._invalid = list(dict.fromkeys(self._invalid))
 
         return self._plugins
 

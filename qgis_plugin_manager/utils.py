@@ -64,7 +64,7 @@ def qgis_server_version():
     output = subprocess.run(["ls", exec_path], capture_output=True)
 
     if output.returncode != 0:
-        print(f"{exec_path} is not found, not possible to determine QGIS version.")
+        print(f"{exec_path} is not found, not possible to determine QGIS version. Try QGIS_EXEC_PATH")
         return None
 
     output = subprocess.run(

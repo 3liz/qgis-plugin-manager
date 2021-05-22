@@ -1,3 +1,4 @@
+import re
 import shutil
 import urllib
 import urllib.request
@@ -52,7 +53,15 @@ class Remote:
                 print(f"\t{e}")
                 continue
 
-            with open(Path(cache / f"cache_{i}.xml"), 'wb') as output:
+            filename = ""
+            for x in server:
+                if x.isalnum():
+                    filename += x
+                else:
+                    filename += '-'
+
+            filename = re.sub(r"\-+", "-", filename)
+            with open(Path(cache / f"{filename}.xml"), 'wb') as output:
                 output.write(f.read())
 
             print("\tOk")

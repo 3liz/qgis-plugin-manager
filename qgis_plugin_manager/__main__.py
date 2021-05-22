@@ -21,6 +21,8 @@ def main():
         title="commands", description="qgis-plugin-manager command", dest="command"
     )
 
+    subparsers.add_parser("init", help="Create the `sources.list` with plugins.qgis.org as remote")
+
     subparsers.add_parser("list", help="List all plugins in the directory")
 
     subparsers.add_parser("remote", help="List all remote server")
@@ -59,7 +61,7 @@ def main():
     if args.command == "update":
         remote = Remote(Path('.'))
         remote.update()
-    elif args.command == "list":
+    elif args.command in ["list", "init"]:
         qgis = qgis_server_version()
         if qgis:
             print(f"QGIS server version {qgis}")
@@ -67,7 +69,11 @@ def main():
             print(f"QGIS server version unknown")
 
         plugins = LocalDirectory(Path('.'), qgis_version=qgis)
-        plugins.print_table()
+
+        if args.command == "list":
+            plugins.print_table()
+        else:
+            plugins.init()
 
     elif args.command == "remote":
         remote = Remote(Path('.'))
@@ -79,7 +85,7 @@ def main():
         if latest is None:
             print("Plugin not found")
         else:
-            print(f"Plugin {args.plugin_name} : {latest}")
+            print(f"Plugin {args.plugin_name} : {latest} available")
 
     elif args.command == "install":
         remote = Remote(Path('.'))
