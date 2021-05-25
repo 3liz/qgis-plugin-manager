@@ -1,4 +1,4 @@
-name: Run tests and release
+name: 🧪 Tests
 
 on:
   push:
