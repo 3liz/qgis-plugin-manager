@@ -65,7 +65,7 @@ jobs:
     - name: Create release on GitHub
       uses: ncipollo/release-action@v1.8.5
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.BOT_HUB_TOKEN }}
         allowUpdates: true
         artifacts: "dist/*.tar.gz"
 
