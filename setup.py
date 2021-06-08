@@ -41,7 +41,7 @@ setup(
         "Bug Reports": "{}issues/".format(__about__.__uri__),
         "Source": __about__.__uri__,
     },
-    download_url="https://github.com/Gustry/qgis-plugin-manager/archive/{}.tar.gz".format(
+    download_url="https://github.com/3liz/qgis-plugin-manager/archive/{}.tar.gz".format(
         VERSION
     ),
     keywords=["QGIS"],

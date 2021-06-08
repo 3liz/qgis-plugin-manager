@@ -25,7 +25,7 @@ __license__ = "GNU General Public License v3.0"
 __summary__ = "Tool for downloading/managing QGIS plugins from CLI."
 __title__ = "QGIS Plugin Manager"
 __title_clean__ = "".join(e for e in __title__ if e.isalnum())
-__uri__ = "https://github.com/Gustry/qgis-plugin-manager"
+__uri__ = "https://github.com/3liz/qgis-plugin-manager"
 
 # This string might be updated on CI on runtime with a proper semantic version name with X.Y.Z
 __version__ = "__VERSION__"
