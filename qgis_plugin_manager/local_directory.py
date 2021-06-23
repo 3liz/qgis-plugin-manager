@@ -90,8 +90,11 @@ class LocalDirectory:
             return None
 
         data = []
-        for item in ("name", "version", "qgisMinimumVersion", "qgisMaximumVersion", "author"):
-            data.append(self.plugin_metadata(plugin, item))
+        for item in ("name", "version", "experimental", "qgisMinimumVersion", "qgisMaximumVersion", "author"):
+            value = self.plugin_metadata(plugin, item)
+            if item == "experimental":
+                value = 'x' if value in ['True', 'true'] else ''
+            data.append(value)
         return data
 
     def print_table(self):
@@ -101,7 +104,7 @@ class LocalDirectory:
         remote = Remote(self.folder)
 
         print(f"List all plugins in {self.folder.absolute()}\n")
-        headers = ['Name', 'Version', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
+        headers = ['Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
         headers = [f"  {i}  " for i in headers]
         data = []
         for plugin in self.plugins():
@@ -110,8 +113,8 @@ class LocalDirectory:
             latest = remote.latest(plugin)
             current = plugin_data[1]
 
-            qgis_min = parse_version(plugin_data[2])
-            qgis_max = parse_version(plugin_data[3])
+            qgis_min = parse_version(plugin_data[3])
+            qgis_max = parse_version(plugin_data[4])
             extra_info = []
 
             if latest:
@@ -123,11 +126,11 @@ class LocalDirectory:
 
                 if self.qgis_version and qgis_min:
                     if qgis_min > self.qgis_version:
-                        extra_info.append(f"QGIS Minimum {plugin_data[2]}")
+                        extra_info.append(f"QGIS Minimum {plugin_data[3]}")
 
                 if self.qgis_version and qgis_max:
                     if qgis_max < self.qgis_version:
-                        extra_info.append(f"QGIS Maximum {plugin_data[3]}")
+                        extra_info.append(f"QGIS Maximum {plugin_data[4]}")
 
             else:
                 extra_info.append('Unkown version')
