@@ -82,16 +82,22 @@ class Remote:
             root = tree.getroot()
             for plugin in root:
 
+                experimental = False
+                for element in plugin:
+                    if element.tag == 'experimental':
+                        experimental = element.text == "True"
+
                 xml_plugin_name = plugin.attrib['name']
                 if xml_plugin_name in plugins.keys():
                     previous_parsed_version = plugins[xml_plugin_name].split('.')
                     new_parsed_version = plugin.attrib['version'].split('.')
-                    if previous_parsed_version < new_parsed_version:
+                    if previous_parsed_version < new_parsed_version and not experimental:
                         plugins[xml_plugin_name] = plugin.attrib['version']
                     else:
                         continue
                 else:
-                    plugins[xml_plugin_name] = plugin.attrib['version']
+                    if not experimental:
+                        plugins[xml_plugin_name] = plugin.attrib['version']
 
                 plugin_obj = Plugin()
                 data = {}

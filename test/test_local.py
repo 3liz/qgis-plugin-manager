@@ -24,7 +24,7 @@ class PluginManager(unittest.TestCase):
         self.assertEqual('', self.local.plugin_metadata('plugin_a', 'do_not_exist'))
 
         self.assertListEqual(
-            ['Plugin A', '1.0.0', '3.0', '', 'Hazel Nutt'],
+            ['Plugin A', '1.0.0', '', '3.0', '', 'Hazel Nutt'],
             self.local.plugin_all_info('plugin_a'))
 
 
