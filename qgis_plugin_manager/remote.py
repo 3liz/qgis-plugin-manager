@@ -71,6 +71,9 @@ class Remote:
         self.list_plugins = {}
 
         cache = Path(self.folder / ".cache_qgis_plugin_manager")
+        if not cache.exists():
+            cache.mkdir()
+
         for file in cache.iterdir():
             if not file.name.endswith('.xml'):
                 continue
