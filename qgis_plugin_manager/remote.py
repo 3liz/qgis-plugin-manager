@@ -73,10 +73,16 @@ class Remote:
         cache = Path(self.folder / ".cache_qgis_plugin_manager")
         if not cache.exists():
             cache.mkdir()
+            print("The 'update' has not been done before.")
+            print("Running the update to download XML files first.")
+            self.update()
 
+        has_xml = False
         for file in cache.iterdir():
             if not file.name.endswith('.xml'):
                 continue
+
+            has_xml = True
 
             tree = ET.parse(file.absolute())
             root = tree.getroot()
@@ -107,6 +113,10 @@ class Remote:
 
                 plugin_obj = Plugin(**data)
                 self.list_plugins[xml_plugin_name] = plugin_obj
+
+        if not has_xml:
+            print("No remote repositories found !")
+            return None
 
         return plugins.get(plugin_name)
 
