@@ -72,7 +72,6 @@ List all plugins installed :
 
 ```bash
 $ qgis-plugin-manager list
-/usr/lib/cgi-bin/qgis_mapserv.fcgi is not found, not possible to determine QGIS version. Try QGIS_EXEC_PATH
 QGIS server version 3.19.0
 List all plugins in /home/etienne/dev/qgis/server_plugin
 
