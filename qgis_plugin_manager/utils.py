@@ -37,40 +37,15 @@ def parse_version(version: str) -> Union[None, list]:
     return version
 
 
-def parse_ldd(command_output: str):
-    if isinstance(command_output, str):
-        command_output = command_output.split('\n')
-
-    for line in command_output:
-        # line = [i.strip() for i in line.split("=>")]
-
-        if isinstance(line, list):
-            line = line[0]
-
-        exp = re.search(r"\d+.\d+.\d+", line)
-        if exp:
-            return exp.group()
-
-    return None
-
-
 def qgis_server_version():
-    """ Try to guess the QGIS Server version. """
-    # Using ldd :(
-    exec_path = os.getenv('QGIS_EXEC_PATH')
-    if not exec_path:
-        exec_path = "/usr/lib/cgi-bin/qgis_mapserv.fcgi"
+    """ Try to guess the QGIS Server version. 
+    
+        On linux distro, qgis python packages are installed at standard location
+        in /usr/lib/python3/dist-packages
+    """
+    try:
+        from qgis.core import Qgis
+        return Qgis.QGIS_VERSION.split('-')[0]            
+    except ImportError:
+        print(f"Cannot check version with pyQgis, check your qgis installation or your PYTHONPATH")
 
-    output = subprocess.run(["ls", exec_path], capture_output=True)
-
-    if output.returncode != 0:
-        print(f"{exec_path} is not found, not possible to determine QGIS version. Try QGIS_EXEC_PATH")
-        return None
-
-    output = subprocess.run(
-        ["ldd", exec_path],
-        capture_output=True,
-        text=True,
-    )
-    output = [i for i in output.stdout.split('\n') if 'qgis' in i]
-    return parse_ldd(output)
