@@ -1,6 +1,7 @@
-import os
-import re
-import subprocess
+__copyright__ = 'Copyright 2021, 3Liz'
+__license__ = 'GPL version 3'
+__email__ = 'info@3liz.org'
+
 from typing import Union
 
 
@@ -45,7 +46,6 @@ def qgis_server_version():
     """
     try:
         from qgis.core import Qgis
-        return Qgis.QGIS_VERSION.split('-')[0]            
+        return Qgis.QGIS_VERSION.split('-')[0]
     except ImportError:
-        print(f"Cannot check version with pyQgis, check your qgis installation or your PYTHONPATH")
-
+        print("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")

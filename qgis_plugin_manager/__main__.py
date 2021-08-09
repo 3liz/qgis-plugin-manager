@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+__copyright__ = 'Copyright 2021, 3Liz'
+__license__ = 'GPL version 3'
+__email__ = 'info@3liz.org'
+
 import argparse
 
 from pathlib import Path
