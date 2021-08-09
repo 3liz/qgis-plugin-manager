@@ -37,6 +37,7 @@ jobs:
         python -m unittest
 
   flake8:
+    name: "❄ Flake8"
     runs-on: ubuntu-latest
     steps:
 
@@ -57,7 +58,7 @@ jobs:
   release:
     name: "🚀 Release"
     runs-on: ubuntu-20.04
-    needs: [tests]
+    needs: [tests, flake8]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
 
     steps:
