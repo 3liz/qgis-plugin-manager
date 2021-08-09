@@ -36,6 +36,24 @@ jobs:
         export PYTHONPATH="${{ github.workspace }}"
         python -m unittest
 
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Python
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Install Python requirements
+        run: pip install flake8
+
+      - name: Run flake8
+        run: flake8
+
   release:
     name: "🚀 Release"
     runs-on: ubuntu-20.04
