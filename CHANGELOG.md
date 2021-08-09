@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0 - 2021-08-09
+
 * Better error message if the plugin is not found and return 1 for return code
 * Use the QGIS API to determine the QGIS installed version
 

@@ -13,7 +13,7 @@ The **CLI** API is not stable yet.
 
 ## Installation
 
-Python 3.6 minimum
+Python 3.6 minimum, you can make a Python venv if needed.
 ```bash
 python3 --version
 ```
@@ -23,11 +23,7 @@ pip3 install qgis-plugin-manager
 python3 -m pip install qgis-plugin-manager
 ```
 
-## QGIS Version
 
-The script will try to have the QGIS version number. Unfortunately, on server, it can only rely on `ldd`.
-If the binary is not located at `/usr/lib/cgi-bin/qgis_mapserv.fcgi`, you can set this variable when executing
-the script `QGIS_EXEC_PATH`.
 
 ## Utilisation
 
