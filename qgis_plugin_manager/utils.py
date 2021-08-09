@@ -39,8 +39,8 @@ def parse_version(version: str) -> Union[None, list]:
 
 
 def qgis_server_version():
-    """ Try to guess the QGIS Server version. 
-    
+    """ Try to guess the QGIS Server version.
+
         On linux distro, qgis python packages are installed at standard location
         in /usr/lib/python3/dist-packages
     """

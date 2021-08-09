@@ -3,6 +3,7 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import sys
+
 from pathlib import Path
 
 from setuptools import setup

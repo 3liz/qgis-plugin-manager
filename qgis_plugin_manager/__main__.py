@@ -70,7 +70,7 @@ def main():
         if qgis:
             print(f"QGIS server version {qgis}")
         else:
-            print(f"QGIS server version unknown")
+            print("QGIS server version unknown")
 
         plugins = LocalDirectory(Path('.'), qgis_version=qgis)
 

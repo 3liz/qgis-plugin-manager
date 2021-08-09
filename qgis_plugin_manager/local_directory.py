@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import List, Union
 
 from .remote import Remote
-from .utils import pretty_table, parse_version
+from .utils import parse_version, pretty_table
+
+DEFAULT_QGIS_VERSION = "3.16"
 
 
 class LocalDirectory:
@@ -35,10 +37,11 @@ class LocalDirectory:
         if self.qgis_version:
             version = f"{self.qgis_version[0]}.{self.qgis_version[1]}"
             print(f"Init https://plugins.qgis.org with {version}")
-            server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"
         else:
-            print(f"QGIS version is unknown, creating with a default 3.16")
-            server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis=3.16\n"
+            print(f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}")
+            version = DEFAULT_QGIS_VERSION
+
+        server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"
 
         with open(source_file, 'w', encoding='utf8') as f:
             f.write(server)
