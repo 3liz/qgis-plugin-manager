@@ -125,11 +125,12 @@ class Remote:
         return plugins.get(plugin_name)
 
     def install(self, plugin_name, version="latest"):
-        print(f"Installation {plugin_name} {version}")
-
         xml_version = self.latest(plugin_name)
         if xml_version is None:
+            print(f"Plugin {plugin_name} {version} not found.")
             return
+
+        print(f"Installation {plugin_name} {version}")
 
         url = self.list_plugins[plugin_name].download_url
         file_name = self.list_plugins[plugin_name].file_name
@@ -161,3 +162,5 @@ class Remote:
         zip_file.unlink()
 
         print(f"\tOk {zip_file.name}")
+
+        return 0

@@ -94,7 +94,9 @@ def main():
     elif args.command == "install":
         remote = Remote(Path('.'))
         parameter = args.plugin_name.split('==')
-        remote.install(*parameter)
+        result = remote.install(*parameter)
+        if result is None:
+            exit_val = 1
 
     return exit_val
 

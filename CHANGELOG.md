@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Better error message if the plugin is not found and return 1 for return code
+* Use the QGIS API to determine the QGIS installed version
+
 ## 0.2.0 - 2021-06-24
 
 * Fix some issues, CLI still in beta

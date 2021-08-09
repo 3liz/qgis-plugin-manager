@@ -134,6 +134,14 @@ Installation QuickOSM 1.14.0
 	Ok QuickOSM.1.14.0.zip
 ```
 
+## Run tests
+
+```bash
+export PYTHONPATH=/home/etienne/dev/app/qgis-master/share/qgis/python/:/usr/lib/python3/dist-packages/
+cd test
+python3 -m unittest
+```
+
 ## TODO
 
 * proper exit code
