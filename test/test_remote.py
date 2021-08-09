@@ -11,7 +11,7 @@ class PluginManager(unittest.TestCase):
         self.remote = Remote(Path('fixtures/plugins'))
 
     def test_list_remote(self):
-        self.assertListEqual(
+        self.assertCountEqual(
             ["https://my.url/plugins.xml", "https://my.repo/plugins.xml"],
             self.remote.remote_list())
 

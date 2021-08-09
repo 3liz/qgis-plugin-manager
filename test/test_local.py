@@ -12,8 +12,8 @@ class PluginManager(unittest.TestCase):
 
     def test_list_existing_plugins(self):
         """ Test to find existing plugins. """
-        self.assertListEqual(['plugin_a', 'plugin_b'], self.local.plugins())
-        self.assertListEqual(['missing_init', 'missing_metadata'], self.local.invalid)
+        self.assertCountEqual(['plugin_a', 'plugin_b'], self.local.plugins())
+        self.assertCountEqual(['missing_init', 'missing_metadata'], self.local.invalid)
 
     def test_read_metadata(self):
         self.assertIsNone(self.local.plugin_metadata('do_not_exist', 'author'))
@@ -23,7 +23,7 @@ class PluginManager(unittest.TestCase):
         self.assertEqual('Hazel Nutt', self.local.plugin_metadata('plugin_a', 'author'))
         self.assertEqual('', self.local.plugin_metadata('plugin_a', 'do_not_exist'))
 
-        self.assertListEqual(
+        self.assertCountEqual(
             ['Plugin A', '1.0.0', '', '3.0', '', 'Hazel Nutt'],
             self.local.plugin_all_info('plugin_a'))
 
