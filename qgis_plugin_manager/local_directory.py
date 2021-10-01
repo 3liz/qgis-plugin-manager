@@ -7,6 +7,8 @@ import configparser
 from pathlib import Path
 from typing import List, Union
 
+from qgis_plugin_manager.definitions import Level, Plugin
+
 from .remote import Remote
 from .utils import parse_version, pretty_table
 
@@ -33,14 +35,14 @@ class LocalDirectory:
         """ Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = self.folder.joinpath('sources.list')
         if source_file.exists():
-            print("sources.list already existing. Quit")
+            print(f"{Level.Warning}sources.list already existing. Quit{Level.End}")
             return False
 
         if self.qgis_version:
             version = f"{self.qgis_version[0]}.{self.qgis_version[1]}"
             print(f"Init https://plugins.qgis.org with {version}")
         else:
-            print(f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}")
+            print(f"{Level.Warning}QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}{Level.End}")
             version = DEFAULT_QGIS_VERSION
 
         server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"
@@ -99,7 +101,7 @@ class LocalDirectory:
         """
         return self._invalid
 
-    def plugin_all_info(self, plugin: str) -> Union[List[str], None]:
+    def plugin_info(self, plugin: str) -> Union[None, Plugin]:
         """ For a given plugin, retrieve all metadata."""
         if self._plugins is None:
             self.plugins()
@@ -107,12 +109,14 @@ class LocalDirectory:
         if plugin not in self._plugins:
             return None
 
-        data = []
-        for item in ("name", "version", "experimental", "qgisMinimumVersion", "qgisMaximumVersion", "author"):
-            value = self.plugin_metadata(plugin, item)
-            if item == "experimental":
-                value = 'x' if value in ['True', 'true'] else ''
-            data.append(value)
+        data = Plugin(
+            name=self.plugin_metadata(plugin, "name"),
+            version=self.plugin_metadata(plugin, "version"),
+            experimental=self.plugin_metadata(plugin, "experimental"),
+            qgis_minimum_version=self.plugin_metadata(plugin, "qgisMinimumVersion"),
+            qgis_maximum_version=self.plugin_metadata(plugin, "qgisMaximumVersion"),
+            author_name=self.plugin_metadata(plugin, "author"),
+        )
         return data
 
     def print_table(self):
@@ -123,20 +127,44 @@ class LocalDirectory:
         remote = Remote(self.folder)
 
         print(f"List all plugins in {self.folder.absolute()}\n")
-        headers = ['Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
+        headers = ['Folder', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
         headers = [f"  {i}  " for i in headers]
         data = []
         for plugin in self.plugins():
-            plugin_data = self.plugin_all_info(plugin)
+            # Folder
+            plugin_data = [str(plugin)]
 
-            latest = remote.latest(plugin)
-            current = plugin_data[1]
+            info = self.plugin_info(plugin)
 
-            qgis_min = parse_version(plugin_data[3])
-            qgis_max = parse_version(plugin_data[4])
+            # Name
+            plugin_data.append(info.name)
+
+            # Version
+            plugin_data.append(info.version)
+
+            # Experimental
+            plugin_data.append('x' if info.experimental in ('True', 'true', '1') else '')
+
+            # QGIS Min
+            plugin_data.append(info.qgis_minimum_version)
+            qgis_min = parse_version(info.qgis_minimum_version)
+
+            # QGIS Max
+            plugin_data.append(info.qgis_maximum_version)
+            qgis_max = parse_version(info.qgis_maximum_version)
+
+            # Author
+            plugin_data.append(info.author_name)
+
+            latest = remote.latest(info.name)
+            current = info.version
+
             extra_info = []
 
-            if latest:
+            if len(current.split('.')) == 1:
+                extra_info.append("Not a semantic version")
+
+            elif latest:
                 if latest.startswith('v'):
                     latest = latest[1:]
 
@@ -145,16 +173,16 @@ class LocalDirectory:
 
                 if self.qgis_version and qgis_min:
                     if qgis_min > self.qgis_version:
-                        extra_info.append(f"QGIS Minimum {plugin_data[3]}")
+                        extra_info.append(f"QGIS Minimum {info.qgis_minimum_version}")
 
                 if self.qgis_version and qgis_max:
                     if qgis_max < self.qgis_version:
-                        extra_info.append(f"QGIS Maximum {plugin_data[4]}")
+                        extra_info.append(f"QGIS Maximum {info.qgis_maximum_version}")
 
             else:
                 extra_info.append('Unknown version')
 
-            plugin_data.append(';'.join(extra_info))
+            plugin_data.append(Level.Warning + ';'.join(extra_info) + Level.End)
             data.append(plugin_data)
         print(pretty_table(data, headers))
 

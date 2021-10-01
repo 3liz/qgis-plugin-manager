@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Union
 
-from qgis_plugin_manager.definitions import Plugin
+from qgis_plugin_manager.definitions import Level, Plugin
 
 
 class Remote:
@@ -73,7 +73,7 @@ class Remote:
             with open(Path(cache / f"{filename}.xml"), 'wb') as output:
                 output.write(f.read())
 
-            print("\tOk")
+            print(f"\t{Level.Success}Ok{Level.End}")
 
     def latest(self, plugin_name: str) -> Union[str, None]:
         """ For a given plugin, it returns the latest version found in all remotes. """
@@ -122,11 +122,14 @@ class Remote:
                     if element.tag in plugin_obj._fields:
                         data[element.tag] = element.text
 
+                # Not present in XML, but property available in metadata.txt
+                data['qgis_maximum_version'] = ''
+
                 plugin_obj = Plugin(**data)
                 self.list_plugins[xml_plugin_name] = plugin_obj
 
         if not has_xml:
-            print("No remote repositories found !")
+            print(f"{Level.Warning}No remote repositories found !{Level.End}")
             return None
 
         return plugins.get(plugin_name)
@@ -138,7 +141,7 @@ class Remote:
         """
         xml_version = self.latest(plugin_name)
         if xml_version is None:
-            print(f"Plugin {plugin_name} {version} not found.")
+            print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
             return False
 
         print(f"Installation {plugin_name} {version}")
@@ -155,7 +158,7 @@ class Remote:
         try:
             f = urllib.request.urlopen(request)
         except urllib.error.HTTPError:
-            print(f"Plugin {plugin_name} {version} not found.")
+            print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
             return False
 
         zip_file = Path(self.folder / file_name)
@@ -172,6 +175,6 @@ class Remote:
 
         zip_file.unlink()
 
-        print(f"\tOk {zip_file.name}")
+        print(f"\t{Level.Success}Ok {zip_file.name}{Level.End}")
 
         return True

@@ -11,6 +11,7 @@ class Plugin(NamedTuple):
     description: str = None
     version: str = None
     qgis_minimum_version: str = None
+    qgis_maximum_version: str = None
     homepage: str = None
     prerelease: str = None
     file_name: str = None
@@ -25,3 +26,11 @@ class Plugin(NamedTuple):
     tracker: str = None
     repository: str = None
     tags: str = None
+
+
+class Level:
+    """ Color in terminal. """
+    Success = '\033[92m'
+    Warning = '\033[93m'
+    Critical = '\033[91m'
+    End = '\033[0m'

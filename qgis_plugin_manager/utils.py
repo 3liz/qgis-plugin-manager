@@ -4,6 +4,8 @@ __email__ = 'info@3liz.org'
 
 from typing import Union
 
+from qgis_plugin_manager.definitions import Level
+
 
 def pretty_table(iterable, header) -> str:
     """ Copy/paste from http://stackoverflow.com/a/40426743/2395485 """
@@ -48,4 +50,6 @@ def qgis_server_version():
         from qgis.core import Qgis
         return Qgis.QGIS_VERSION.split('-')[0]
     except ImportError:
-        print("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
+        print(
+            f"{Level.Warning}"
+            f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")

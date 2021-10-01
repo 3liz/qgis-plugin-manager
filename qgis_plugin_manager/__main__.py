@@ -8,6 +8,7 @@ import argparse
 
 from pathlib import Path
 
+from qgis_plugin_manager.definitions import Level
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import qgis_server_version
@@ -68,10 +69,7 @@ def main():
     elif args.command in ["list", "init"]:
         qgis = qgis_server_version()
         if qgis:
-            print(f"QGIS server version {qgis}")
-        else:
-            print("QGIS server version unknown")
-
+            print(f"QGIS server version : {qgis}")
         plugins = LocalDirectory(Path('.'), qgis_version=qgis)
 
         if args.command == "list":
@@ -87,7 +85,7 @@ def main():
         remote = Remote(Path('.'))
         latest = remote.latest(args.plugin_name)
         if latest is None:
-            print("Plugin not found")
+            print(f"{Level.Warning}Plugin not found{Level.End}")
         else:
             print(f"Plugin {args.plugin_name} : {latest} available")
 

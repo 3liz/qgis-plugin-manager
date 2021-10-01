@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Adds some colors in the terminal
+* Fix an issue about version name
+* Refactoring the code
+
 ## 0.3.0 - 2021-08-09
 
 * Better error message if the plugin is not found and return 1 for return code

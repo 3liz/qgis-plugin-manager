@@ -27,9 +27,13 @@ class PluginManager(unittest.TestCase):
         self.assertEqual('Hazel Nutt', self.local.plugin_metadata('plugin_a', 'author'))
         self.assertEqual('', self.local.plugin_metadata('plugin_a', 'do_not_exist'))
 
-        self.assertCountEqual(
-            ['Plugin A', '1.0.0', '', '3.0', '', 'Hazel Nutt'],
-            self.local.plugin_all_info('plugin_a'))
+        plugin = self.local.plugin_info('plugin_a')
+        self.assertEqual('Plugin A', plugin.name)
+        self.assertEqual('1.0.0', plugin.version)
+        self.assertEqual('', plugin.experimental)
+        self.assertEqual('3.0', plugin.qgis_minimum_version)
+        self.assertEqual('', plugin.qgis_maximum_version)
+        self.assertEqual('Hazel Nutt', plugin.author_name)
 
 
 if __name__ == '__main__':
