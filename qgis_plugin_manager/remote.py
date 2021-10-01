@@ -9,6 +9,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 from pathlib import Path
+from typing import Union
 
 from qgis_plugin_manager.definitions import Plugin
 
@@ -16,11 +17,13 @@ from qgis_plugin_manager.definitions import Plugin
 class Remote:
 
     def __init__(self, folder: Path):
+        """ Constructor. """
         self.folder = folder
         self.list = None
         self.list_plugins = None
 
     def remote_list(self) -> list:
+        """Return the list of remotes configured."""
         self.list = []
         source_list = Path(self.folder / 'sources.list')
         if not source_list.exists():
@@ -33,6 +36,7 @@ class Remote:
         return self.list
 
     def print_list(self):
+        """ Print in the console the list of remotes. """
         if self.list is None:
             self.remote_list()
 
@@ -40,6 +44,7 @@ class Remote:
         print('\n'.join(self.list))
 
     def update(self):
+        """ For each remote, it updates the XML file. """
         if self.list is None:
             self.remote_list()
 
@@ -70,7 +75,9 @@ class Remote:
 
             print("\tOk")
 
-    def latest(self, plugin_name):
+    def latest(self, plugin_name: str) -> Union[str, None]:
+        """ For a given plugin, it returns the latest version found in all remotes. """
+        # plugins is a dict : plugin_name : version
         plugins = {}
         self.list_plugins = {}
 
@@ -124,11 +131,15 @@ class Remote:
 
         return plugins.get(plugin_name)
 
-    def install(self, plugin_name, version="latest"):
+    def install(self, plugin_name, version="latest") -> bool:
+        """ Install the plugin with a specific version.
+
+        Default version is latest.
+        """
         xml_version = self.latest(plugin_name)
         if xml_version is None:
             print(f"Plugin {plugin_name} {version} not found.")
-            return
+            return False
 
         print(f"Installation {plugin_name} {version}")
 
@@ -145,7 +156,7 @@ class Remote:
             f = urllib.request.urlopen(request)
         except urllib.error.HTTPError:
             print(f"Plugin {plugin_name} {version} not found.")
-            return
+            return False
 
         zip_file = Path(self.folder / file_name)
         with open(zip_file, 'wb') as output:
@@ -163,4 +174,4 @@ class Remote:
 
         print(f"\tOk {zip_file.name}")
 
-        return 0
+        return True

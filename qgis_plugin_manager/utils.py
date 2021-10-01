@@ -5,7 +5,7 @@ __email__ = 'info@3liz.org'
 from typing import Union
 
 
-def pretty_table(iterable, header):
+def pretty_table(iterable, header) -> str:
     """ Copy/paste from http://stackoverflow.com/a/40426743/2395485 """
     max_len = [len(x) for x in header]
     for row in iterable:

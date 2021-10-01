@@ -16,6 +16,7 @@ DEFAULT_QGIS_VERSION = "3.16"
 class LocalDirectory:
 
     def __init__(self, folder: Path, qgis_version: str = None):
+        """ Constructor"""
         self.folder = folder
         self._plugins = None
         self._invalid = []
@@ -28,11 +29,12 @@ class LocalDirectory:
             else:
                 self.qgis_version = [int(i) for i in self.qgis_version]
 
-    def init(self):
+    def init(self) -> bool:
+        """ Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = self.folder.joinpath('sources.list')
         if source_file.exists():
             print("sources.list already existing. Quit")
-            exit(1)
+            return False
 
         if self.qgis_version:
             version = f"{self.qgis_version[0]}.{self.qgis_version[1]}"
@@ -46,7 +48,10 @@ class LocalDirectory:
         with open(source_file, 'w', encoding='utf8') as f:
             f.write(server)
 
+        return True
+
     def plugins(self) -> List[str]:
+        """ Get the list of plugins installed in the current directory. """
         self._plugins = []
         for folder in self.folder.iterdir():
 
@@ -69,6 +74,7 @@ class LocalDirectory:
         return self._plugins
 
     def plugin_metadata(self, plugin: str, key: str) -> Union[str, None]:
+        """ For a given plugin installed, get a metadata item. """
         if self._plugins is None:
             self.plugins()
 
@@ -87,9 +93,14 @@ class LocalDirectory:
 
     @property
     def invalid(self) -> list:
+        """ List of invalid plugins.
+
+        Maybe not a valid folder ? No metadata.txt ?
+        """
         return self._invalid
 
     def plugin_all_info(self, plugin: str) -> Union[List[str], None]:
+        """ For a given plugin, retrieve all metadata."""
         if self._plugins is None:
             self.plugins()
 
@@ -105,6 +116,7 @@ class LocalDirectory:
         return data
 
     def print_table(self):
+        """ Print all plugins installed as a table. """
         if self._plugins is None:
             self.plugins()
 
@@ -140,7 +152,7 @@ class LocalDirectory:
                         extra_info.append(f"QGIS Maximum {plugin_data[4]}")
 
             else:
-                extra_info.append('Unkown version')
+                extra_info.append('Unknown version')
 
             plugin_data.append(';'.join(extra_info))
             data.append(plugin_data)

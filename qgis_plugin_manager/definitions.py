@@ -6,6 +6,7 @@ __email__ = 'info@3liz.org'
 
 
 class Plugin(NamedTuple):
+    """ Definition of a plugin in the XML file. """
     name: str = None
     description: str = None
     version: str = None
