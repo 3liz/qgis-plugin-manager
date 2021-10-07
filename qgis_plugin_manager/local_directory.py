@@ -10,9 +10,7 @@ from typing import List, Union
 from qgis_plugin_manager.definitions import Level, Plugin
 
 from .remote import Remote
-from .utils import parse_version, pretty_table
-
-DEFAULT_QGIS_VERSION = "3.16"
+from .utils import parse_version, pretty_table, DEFAULT_QGIS_VERSION
 
 
 class LocalDirectory:
@@ -39,10 +37,14 @@ class LocalDirectory:
             return False
 
         if self.qgis_version:
-            version = f"{self.qgis_version[0]}.{self.qgis_version[1]}"
-            print(f"Init https://plugins.qgis.org with {version}")
+            version = "[VERSION]"
+            print(f"Init https://plugins.qgis.org")
         else:
-            print(f"{Level.Warning}QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}{Level.End}")
+            print(
+                f"{Level.Warning}"
+                f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}"
+                f"{Level.End}"
+            )
             version = DEFAULT_QGIS_VERSION
 
         server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"

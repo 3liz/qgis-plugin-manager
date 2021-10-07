@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
+from qgis_plugin_manager.utils import qgis_server_version, DEFAULT_QGIS_VERSION
 
 
 class Remote:
@@ -23,16 +24,45 @@ class Remote:
         self.list_plugins = None
 
     def remote_list(self) -> list:
-        """Return the list of remotes configured."""
+        """Return the list of remotes configured.
+
+        The token [VERSION] is replaced by the current version X.YY
+        """
         self.list = []
         source_list = Path(self.folder / 'sources.list')
         if not source_list.exists():
             return []
 
+        qgis_version = qgis_server_version()
+        if not qgis_version:
+            qgis_version = DEFAULT_QGIS_VERSION
+
+        qgis_version = qgis_version.split('.')
+
         with source_list.open() as f:
             for line in f.readlines():
                 if not line.startswith('#'):
-                    self.list.append(line.strip())
+                    raw_line = line.strip()
+                    if raw_line.startswith("https://plugins.qgis.org") and not "[VERSION]" in raw_line:
+                        print(
+                            f"{Level.Warning}"
+                            f"Your https://plugins.qgis.org remote is not using dynamic QGIS version."
+                            f"{Level.End}"
+                        )
+                        print(
+                            f"Instead of\n{raw_line}"
+                            f"\n"
+                            f"you should have"
+                            f"\n"
+                            f"https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]"
+                            f"\n"
+                            f"If you can remove the file sources.list ? 'qgis-plugin-manager init' will "
+                            f"regenerate it using dynamic QGIS version."
+                        )
+
+                    raw_line = raw_line.replace("[VERSION]", f"{qgis_version[0]}.{qgis_version[1]}")
+                    self.list.append(raw_line)
+
         return self.list
 
     def print_list(self):
@@ -41,7 +71,10 @@ class Remote:
             self.remote_list()
 
         print("List of remotes :\n")
-        print('\n'.join(self.list))
+        if len(self.list):
+            print('\n'.join(self.list))
+        else:
+            print(f"{Level.Warning}No remote configured{Level.End}")
 
     def update(self):
         """ For each remote, it updates the XML file. """

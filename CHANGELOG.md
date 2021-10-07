@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Adds some colors in the terminal
+* Better management of QGIS upgrade when the version was hardcoded in the `sources.list` file
 * Fix an issue about version name
 * Refactoring the code
 

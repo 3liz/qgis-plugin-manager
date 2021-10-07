@@ -13,7 +13,7 @@ The **CLI** API is not stable yet.
 
 ## Installation
 
-Python 3.6 minimum, you can make a Python venv if needed.
+Python 3.6 **minimum**, you can make a Python venv if needed.
 ```bash
 python3 --version
 ```
@@ -22,8 +22,6 @@ python3 --version
 pip3 install qgis-plugin-manager
 python3 -m pip install qgis-plugin-manager
 ```
-
-
 
 ## Utilisation
 
@@ -90,9 +88,18 @@ List all plugins in /home/etienne/dev/qgis/server_plugin
 $ qgis-plugin-manager remote
 List of remotes :
 
-https://plugins.qgis.org/plugins/plugins.xml?qgis=3.19
+https://plugins.qgis.org/plugins/plugins.xml?qgis=3.22
 
+$ cat sources.list 
+https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]
 ```
+
+`[VERSION]` is a token in the `sources.list` file to be replaced by the QGIS version, for instance `3.22`.
+If QGIS is upgraded, the XML file will be updated as well.
+
+You don't have to set the TOKEN for all URL : 
+
+`https://docs.3liz.org/plugins.xml` is valid.
 
 ### Update
 
@@ -138,6 +145,7 @@ Installation QuickOSM 1.14.0
 export PYTHONPATH=/home/etienne/dev/app/qgis-master/share/qgis/python/:/usr/lib/python3/dist-packages/
 cd test
 python3 -m unittest
+flake8
 ```
 
 ## TODO

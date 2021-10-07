@@ -6,6 +6,8 @@ from typing import Union
 
 from qgis_plugin_manager.definitions import Level
 
+DEFAULT_QGIS_VERSION = "3.16"
+
 
 def pretty_table(iterable, header) -> str:
     """ Copy/paste from http://stackoverflow.com/a/40426743/2395485 """
@@ -40,7 +42,7 @@ def parse_version(version: str) -> Union[None, list]:
     return version
 
 
-def qgis_server_version():
+def qgis_server_version() -> str:
     """ Try to guess the QGIS Server version.
 
         On linux distro, qgis python packages are installed at standard location
@@ -55,3 +57,4 @@ def qgis_server_version():
             f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
             f"{Level.End}"
         )
+    return ''
