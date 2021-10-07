@@ -52,4 +52,6 @@ def qgis_server_version():
     except ImportError:
         print(
             f"{Level.Warning}"
-            f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
+            f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
+            f"{Level.End}"
+        )

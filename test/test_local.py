@@ -9,7 +9,7 @@ from pathlib import Path
 from qgis_plugin_manager.local_directory import LocalDirectory
 
 
-class PluginManager(unittest.TestCase):
+class TestLocal(unittest.TestCase):
 
     def setUp(self) -> None:
         self.local = LocalDirectory(Path('fixtures/plugins'))
@@ -20,6 +20,7 @@ class PluginManager(unittest.TestCase):
         self.assertCountEqual(['missing_init', 'missing_metadata'], self.local.invalid)
 
     def test_read_metadata(self):
+        """ Test read metadata. """
         self.assertIsNone(self.local.plugin_metadata('do_not_exist', 'author'))
         self.assertIsNone(self.local.plugin_metadata('missing_init', 'author'))
         self.assertIsNone(self.local.plugin_metadata('missing_metadata', 'author'))

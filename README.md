@@ -29,6 +29,8 @@ python3 -m pip install qgis-plugin-manager
 
 ```bash
 cd /path/where/you/have/plugins
+# usually
+cd /usr/lib/qgis/plugins
 ```
 
 ```bash

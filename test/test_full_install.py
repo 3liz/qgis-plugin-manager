@@ -35,7 +35,7 @@ class FullInstallNetwork(unittest.TestCase):
         shutil.copy(Path(self.directory / 'sources.list.back'), Path(self.directory / 'sources.list'))
 
     def test_install_network(self):
-
+        """ Test install QuickOSM with a specific version, remove and try the latest. """
         self.assertFalse(Path(self.directory / 'QuickOSM').exists())
         self.assertNotIn(self.plugin_name, self.local.plugins())
 
