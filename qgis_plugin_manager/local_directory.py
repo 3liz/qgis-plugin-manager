@@ -38,7 +38,7 @@ class LocalDirectory:
 
         if self.qgis_version:
             version = "[VERSION]"
-            print(f"Init https://plugins.qgis.org")
+            print("Init https://plugins.qgis.org")
         else:
             print(
                 f"{Level.Warning}"

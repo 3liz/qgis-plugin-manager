@@ -43,7 +43,7 @@ class Remote:
             for line in f.readlines():
                 if not line.startswith('#'):
                     raw_line = line.strip()
-                    if raw_line.startswith("https://plugins.qgis.org") and not "[VERSION]" in raw_line:
+                    if raw_line.startswith("https://plugins.qgis.org") and "[VERSION]" not in raw_line:
                         print(
                             f"{Level.Warning}"
                             f"Your https://plugins.qgis.org remote is not using dynamic QGIS version."
