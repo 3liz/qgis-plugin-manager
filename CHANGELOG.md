@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add a `search` option using plugin tags
+* Add an example with a plugin having a space in its name
 * Add some information about the user and file permissions when showing plugins
 * Display plugin name similarity when installing if the given name is not found
 * Display a better error message if the folder/file can not be removed

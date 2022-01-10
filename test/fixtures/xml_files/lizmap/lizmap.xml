@@ -1,5 +1,3 @@
-<?xml version = '1.0' encoding = 'UTF-8'?>
-<?xml-stylesheet type="text/xsl" href="/static/style/plugins.xsl" ?>
 <plugins>
     <pyqgis_plugin name="Lizmap" version="3.7.4" plugin_id="72">
         <description><![CDATA[Publish and share your QGIS maps on the Web via Lizmap Web Client, by 3liz.com]]></description>

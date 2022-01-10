@@ -37,8 +37,15 @@ def main():
     cache = subparsers.add_parser("cache", help="Look for a plugin in the cache")
     cache.add_argument("plugin_name", help="The plugin to look for")
 
+    search = subparsers.add_parser('search', help="Search for plugins")
+    search.add_argument("plugin_name", help="Search in tags and plugin names")
+
     install = subparsers.add_parser('install', help="Install a plugin")
-    install.add_argument("plugin_name", help="The plugin to install, suffix '==version' is optional")
+    install.add_argument(
+        "plugin_name",
+        help=(
+            "The plugin to install, suffix '==version' is optional. The plugin might require quotes if there "
+            "is a space in its name."))
 
     args = parser.parse_args()
 
@@ -88,6 +95,12 @@ def main():
             print(f"{Level.Warning}Plugin not found{Level.End}")
         else:
             print(f"Plugin {args.plugin_name} : {latest} available")
+
+    elif args.command == "search":
+        remote = Remote(Path('.'))
+        results = remote.search(args.plugin_name)
+        for result in results:
+            print(result)
 
     elif args.command == "install":
         remote = Remote(Path('.'))

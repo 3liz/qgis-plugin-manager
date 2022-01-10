@@ -116,12 +116,8 @@ class Remote:
 
             print(f"\t{Level.Success}Ok{Level.End}")
 
-    def latest(self, plugin_name: str) -> Union[str, None]:
-        """ For a given plugin, it returns the latest version found in all remotes. """
-        # plugins is a dict : plugin_name : version
-        plugins = {}
-        self.list_plugins = {}
-
+    def xml_in_folder(self) -> List[Path]:
+        """ Returns the list of XML files in the folder. """
         cache = Path(self.folder / ".cache_qgis_plugin_manager")
         if not cache.exists():
             cache.mkdir()
@@ -129,21 +125,30 @@ class Remote:
             print("Running the update to download XML files first.")
             self.update()
 
-        xml_count = 0
+        xml = []
         for xml_file in cache.iterdir():
             if not xml_file.name.endswith('.xml'):
                 continue
 
-            plugins = self.parse_xml(xml_file, plugins)
-            xml_count += 1
+            xml.append(xml_file)
 
-        if xml_count < 1:
+        if len(xml) < 1:
             print(f"{Level.Warning}No remote repositories found !{Level.End}")
-            return None
 
-        return plugins.get(plugin_name)
+        return xml
 
-    def parse_xml(self, xml_file: Path, plugins: Dict) -> Dict:
+    def available_plugins(self) -> Dict:
+        """ Populates the list of available plugins, in all XML files. """
+        plugins = {}
+        for xml_file in self.xml_in_folder():
+            plugins = self._parse_xml(xml_file, plugins)
+        return plugins
+
+    def latest(self, plugin_name: str) -> Union[str, None]:
+        """ For a given plugin, it returns the latest version found in all remotes. """
+        return self.available_plugins().get(plugin_name)
+
+    def _parse_xml(self, xml_file: Path, plugins: Dict) -> Dict:
         """ Parse the given XML file. """
         if self.list_plugins is None:
             # Maybe only in tests
@@ -168,6 +173,9 @@ class Remote:
                     continue
             else:
                 if not experimental:
+                    # Not sure about this one, fixme
+                    plugins[xml_plugin_name] = plugin.attrib['version']
+                else:
                     plugins[xml_plugin_name] = plugin.attrib['version']
 
             plugin_obj = Plugin()
@@ -176,8 +184,24 @@ class Remote:
                 if element.tag in plugin_obj._fields:
                     data[element.tag] = element.text
 
+            # Add the real name of the plugin
+            data['name'] = plugin.attrib['name']
+
             # Not present in XML, but property available in metadata.txt
             data['qgis_maximum_version'] = ''
+
+            # Add more search fields
+            if data.get('tags'):
+                tags = data['tags'].split(',')
+            else:
+                tags = []
+
+            data['search'] = [
+                xml_plugin_name.lower(),
+                xml_plugin_name.lower().replace(" ", ""),
+            ]
+            data['search'].extend(tags)
+            data['search'] = list(dict.fromkeys(data['search']))
 
             plugin_obj = Plugin(**data)
             self.list_plugins[xml_plugin_name] = plugin_obj
@@ -193,6 +217,21 @@ class Remote:
                 similar.append(plugin_name)
 
         return similar
+
+    def search(self, search_string: str) -> List:
+        """ Search in plugin names and tags."""
+        results = []
+
+        if self.list_plugins is None:
+            self.available_plugins()
+
+        for plugin_name, plugin in self.list_plugins.items():
+            for item in plugin.search:
+                ratio = SequenceMatcher(None, search_string.lower(), item.lower()).ratio()
+                if ratio > 0.8 and plugin_name not in results:
+                    results.append(plugin_name)
+
+        return results
 
     def install(self, plugin_name, version="latest") -> bool:
         """ Install the plugin with a specific version.

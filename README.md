@@ -122,14 +122,24 @@ $ qgis-plugin-manager cache atlasprint
 Plugin atlasprint : v3.2.2 available
 ```
 
+### Search
+
+Look for plugins according to tags and title :
+
+```bash
+$ qgis-plugin-manager search dataviz
+Data Plotly
+QSoccer
+```
+
 ### Install
 
-Plugins are case sensitive :
+Plugins are case-sensitive and might have spaces in its name :
 ```bash
-$ qgis-plugin-manager install quickosm
-Plugin quickosm latest not found.
-Do you mean maybe 'QuickOSM' ?
-
+$ qgis-plugin-manager install dataplotly
+Plugin dataplotly latest not found.
+Do you mean maybe 'Data Plotly' ?
+$ qgis-plugin-manager install 'Data Plotly'
 ```
 
 Install the latest version :
