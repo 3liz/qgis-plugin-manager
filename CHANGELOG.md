@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.0 - 2022-01-10
+
 * Adds some colors in the terminal
 * Better management of QGIS upgrade when the version was hardcoded in the `sources.list` file
 * Fix an issue about version name
