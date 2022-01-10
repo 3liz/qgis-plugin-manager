@@ -5,7 +5,7 @@ __email__ = 'info@3liz.org'
 import configparser
 
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict
 
 from qgis_plugin_manager.definitions import Level, Plugin
 
@@ -54,9 +54,9 @@ class LocalDirectory:
 
         return True
 
-    def plugins(self) -> List[str]:
+    def plugin_list(self) -> Dict[str, str]:
         """ Get the list of plugins installed in the current directory. """
-        self._plugins = []
+        self._plugins = {}
         for folder in self.folder.iterdir():
 
             if not folder.is_dir():
@@ -68,7 +68,8 @@ class LocalDirectory:
             have_python = list(folder.glob('*.py'))
             have_metadata = list(folder.glob('metadata.txt'))
             if have_python and have_metadata:
-                self._plugins.append(folder.name)
+                name = self.plugin_metadata(folder.name, 'name')
+                self._plugins[folder.name] = name
             else:
                 self._invalid.append(folder.name)
 
@@ -77,17 +78,20 @@ class LocalDirectory:
 
         return self._plugins
 
-    def plugin_metadata(self, plugin: str, key: str) -> Union[str, None]:
+    def plugin_metadata(self, plugin_folder: str, key: str) -> Union[str, None]:
         """ For a given plugin installed, get a metadata item. """
         if self._plugins is None:
-            self.plugins()
+            self.plugin_list()
 
-        if plugin not in self._plugins:
+        if plugin_folder not in self._plugins.keys():
+            print("not found")
+            print(f'here for {plugin_folder}')
+            print(self._plugins)
             return None
 
         config_parser = configparser.ConfigParser()
 
-        with Path(self.folder / Path(f"{plugin}/metadata.txt")).open() as f:
+        with Path(self.folder / Path(f"{plugin_folder}/metadata.txt")).open() as f:
             config_parser.read_file(f)
 
         try:
@@ -104,27 +108,37 @@ class LocalDirectory:
         return self._invalid
 
     def plugin_info(self, plugin: str) -> Union[None, Plugin]:
-        """ For a given plugin, retrieve all metadata."""
-        if self._plugins is None:
-            self.plugins()
+        """ For a given plugin, retrieve all metadata.
 
-        if plugin not in self._plugins:
+        The param "plugin" can either be :
+        * a folder name such as "pg_metadata"
+        * or the name of the plugin "PgMetadata"
+        """
+        if self._plugins is None:
+            self.plugin_list()
+
+        if plugin in self._plugins.keys():
+            plugin_folder = plugin
+        elif plugin not in self._plugins.values():
             return None
+        else:
+            # It's a plugin name
+            plugin_folder = list(self._plugins.keys())[list(self._plugins.values()).index(plugin)][0]
 
         data = Plugin(
-            name=self.plugin_metadata(plugin, "name"),
-            version=self.plugin_metadata(plugin, "version"),
-            experimental=self.plugin_metadata(plugin, "experimental"),
-            qgis_minimum_version=self.plugin_metadata(plugin, "qgisMinimumVersion"),
-            qgis_maximum_version=self.plugin_metadata(plugin, "qgisMaximumVersion"),
-            author_name=self.plugin_metadata(plugin, "author"),
+            name=self.plugin_metadata(plugin_folder, "name"),
+            version=self.plugin_metadata(plugin_folder, "version"),
+            experimental=self.plugin_metadata(plugin_folder, "experimental"),
+            qgis_minimum_version=self.plugin_metadata(plugin_folder, "qgisMinimumVersion"),
+            qgis_maximum_version=self.plugin_metadata(plugin_folder, "qgisMaximumVersion"),
+            author_name=self.plugin_metadata(plugin_folder, "author"),
         )
         return data
 
     def print_table(self):
         """ Print all plugins installed as a table. """
         if self._plugins is None:
-            self.plugins()
+            self.plugin_list()
 
         remote = Remote(self.folder)
 
@@ -132,9 +146,9 @@ class LocalDirectory:
         headers = ['Folder', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
         headers = [f"  {i}  " for i in headers]
         data = []
-        for plugin in self.plugins():
+        for folder, plugin in self.plugin_list():
             # Folder
-            plugin_data = [str(plugin)]
+            plugin_data = [folder]
 
             info = self.plugin_info(plugin)
 

@@ -16,7 +16,7 @@ class TestLocal(unittest.TestCase):
 
     def test_list_existing_plugins(self):
         """ Test to find existing plugins. """
-        self.assertCountEqual(['plugin_a', 'plugin_b'], self.local.plugins())
+        self.assertCountEqual(['plugin_a', 'plugin_b'], self.local.plugin_list())
         self.assertCountEqual(['missing_init', 'missing_metadata'], self.local.invalid)
 
     def test_read_metadata(self):

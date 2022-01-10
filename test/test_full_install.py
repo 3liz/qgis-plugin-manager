@@ -37,7 +37,7 @@ class FullInstallNetwork(unittest.TestCase):
     def test_install_network(self):
         """ Test install QuickOSM with a specific version, remove and try the latest. """
         self.assertFalse(Path(self.directory / 'QuickOSM').exists())
-        self.assertNotIn(self.plugin_name, self.local.plugins())
+        self.assertNotIn(self.plugin_name, self.local.plugin_list())
 
         with open(Path(self.directory / 'sources.list'), 'w') as file:
             file.write(self.repository)
@@ -47,7 +47,7 @@ class FullInstallNetwork(unittest.TestCase):
         version = '1.1.1'
         self.remote.install(self.plugin_name, version)
         self.assertTrue(Path(self.directory / 'QuickOSM').exists())
-        self.local.plugins()
+        self.local.plugin_list()
         self.assertEqual(version, self.local.plugin_metadata(self.plugin_name, 'version'))
 
         self.remote.install(self.plugin_name)

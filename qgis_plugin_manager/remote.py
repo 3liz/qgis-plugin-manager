@@ -200,7 +200,12 @@ class Remote:
 
         existing = Path(self.folder / plugin_name)
         if existing.exists():
-            shutil.rmtree(existing)
+            try:
+                shutil.rmtree(existing)
+            except OSError as e:
+                print(f"\t{Level.Critical}{e}{Level.End}")
+                zip_file.unlink()
+                return False
 
         import zipfile
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
