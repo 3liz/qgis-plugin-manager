@@ -1,0 +1,28 @@
+<plugins>
+    <pyqgis_plugin name="Data Plotly" version="0.4" plugin_id="1247">
+        <description><![CDATA[D3 Plots for QGIS]]></description>
+        <about><![CDATA[Draw D3 plots in QGIS]]></about>
+        <version>0.4</version>
+        <trusted>True</trusted>
+        <qgis_minimum_version>2.99.0</qgis_minimum_version>
+        <qgis_maximum_version>3.98.0</qgis_maximum_version>
+        <homepage><![CDATA[https://github.com/ghtmtt/DataPlotly]]></homepage>
+        <file_name>DataPlotly.0.4.zip</file_name>
+        <icon>/media/packages/2021/icon_OQ1HW5O.png</icon>
+        <author_name><![CDATA[Matteo Ghetta (Faunalia)]]></author_name>
+        <download_url>https://plugins.qgis.org/plugins/DataPlotly/version/0.4/download/</download_url>
+        <uploaded_by><![CDATA[ghtmtt]]></uploaded_by>
+        <create_date>2017-05-27T09:31:59.014818</create_date>
+        <update_date>2017-07-24T08:41:18.313158</update_date>
+        <experimental>True</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/ghtmtt/DataPlotly/issues]]></tracker>
+        <repository><![CDATA[https://github.com/ghtmtt/DataPlotly]]></repository>
+        <tags><![CDATA[vector,python,d3,plots,graphs,datavis,dataplotly,dataviz]]></tags>
+        <downloads>97056</downloads>
+        <average_vote>4.5184627350279625</average_vote>
+        <rating_votes>81</rating_votes>
+        <external_dependencies></external_dependencies>
+        <server>False</server>
+    </pyqgis_plugin>
+</plugins>

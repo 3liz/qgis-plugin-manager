@@ -10,6 +10,7 @@ class Plugin(NamedTuple):
     name: str = None
     description: str = None
     version: str = None
+    search: list = []
     qgis_minimum_version: str = None
     qgis_maximum_version: str = None
     homepage: str = None

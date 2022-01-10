@@ -110,8 +110,6 @@ class Remote:
 
     def latest(self, plugin_name: str) -> Union[str, None]:
         """ For a given plugin, it returns the latest version found in all remotes. """
-        # plugins is a dict : plugin_name : version
-        plugins = {}
         self.list_plugins = {}
 
         cache = Path(self.folder / ".cache_qgis_plugin_manager")
@@ -128,44 +126,62 @@ class Remote:
 
             has_xml = True
 
-            tree = ET.parse(file.absolute())
-            root = tree.getroot()
-            for plugin in root:
-
-                experimental = False
-                for element in plugin:
-                    if element.tag == 'experimental':
-                        experimental = element.text == "True"
-
-                xml_plugin_name = plugin.attrib['name']
-                if xml_plugin_name in plugins.keys():
-                    previous_parsed_version = plugins[xml_plugin_name].split('.')
-                    new_parsed_version = plugin.attrib['version'].split('.')
-                    if previous_parsed_version < new_parsed_version and not experimental:
-                        plugins[xml_plugin_name] = plugin.attrib['version']
-                    else:
-                        continue
-                else:
-                    if not experimental:
-                        plugins[xml_plugin_name] = plugin.attrib['version']
-
-                plugin_obj = Plugin()
-                data = {}
-                for element in plugin:
-                    if element.tag in plugin_obj._fields:
-                        data[element.tag] = element.text
-
-                # Not present in XML, but property available in metadata.txt
-                data['qgis_maximum_version'] = ''
-
-                plugin_obj = Plugin(**data)
-                self.list_plugins[xml_plugin_name] = plugin_obj
+            self._parse_xml(file)
 
         if not has_xml:
             print(f"{Level.Warning}No remote repositories found !{Level.End}")
             return None
 
-        return plugins.get(plugin_name)
+        return self.list_plugins.get(plugin_name)
+
+    def search(self, search_string: str):
+        """ Search in plugin names and tags."""
+
+
+    def _parse_xml(self, file: Path) -> dict:
+        """ Parse an XML file"""
+        tree = ET.parse(file.absolute())
+        root = tree.getroot()
+        for plugin in root:
+            experimental = False
+            for element in plugin:
+                if element.tag == 'experimental':
+                    experimental = element.text == "True"
+
+            xml_plugin_name = plugin.attrib['name']
+            if xml_plugin_name in self.list_plugins.keys():
+                previous_parsed_version = self.list_plugins[xml_plugin_name].split('.')
+                new_parsed_version = plugin.attrib['version'].split('.')
+                if previous_parsed_version < new_parsed_version and not experimental:
+                    self.list_plugins[xml_plugin_name] = plugin.attrib['version']
+                else:
+                    continue
+            else:
+                # if not experimental:
+                self.list_plugins[xml_plugin_name] = plugin.attrib['version']
+
+            plugin_obj = Plugin()
+            data = {}
+            for element in plugin:
+                if element.tag in plugin_obj._fields:
+                    data[element.tag] = element.text
+
+            # Not present in XML, but property available in metadata.txt
+            data['qgis_maximum_version'] = ''
+
+            # Add more search fields
+            if data.get('tags'):
+                tags = data['tags'].split(',')
+            else:
+                tags = []
+            data['search'] = [
+                xml_plugin_name.lower(),
+                xml_plugin_name.lower().replace(" ", ""),
+                tags,
+            ]
+
+            plugin_obj = Plugin(**data)
+            self.list_plugins[xml_plugin_name] = plugin_obj
 
     def install(self, plugin_name, version="latest") -> bool:
         """ Install the plugin with a specific version.

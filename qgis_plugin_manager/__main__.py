@@ -89,6 +89,12 @@ def main():
         else:
             print(f"Plugin {args.plugin_name} : {latest} available")
 
+    elif args.command == "search":
+        remote = Remote(Path('.'))
+        results = remote.search(args.plugin_name)
+        for result in results:
+            print(result)
+
     elif args.command == "install":
         remote = Remote(Path('.'))
         parameter = args.plugin_name.split('==')

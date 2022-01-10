@@ -9,6 +9,5 @@ __pycache__/
 venv/
 
 # Tests
-.cache_qgis_plugin_manager
 test/fixtures/plugins/QuickOSM
 test/fixtures/plugins/sources.list.back
