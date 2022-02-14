@@ -87,7 +87,7 @@ class LocalDirectory:
 
         config_parser = configparser.ConfigParser()
 
-        with Path(self.folder / Path(f"{plugin}/metadata.txt")).open() as f:
+        with Path(self.folder / Path(f"{plugin}/metadata.txt")).open(encoding='utf8') as f:
             config_parser.read_file(f)
 
         try:

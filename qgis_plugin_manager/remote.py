@@ -39,7 +39,7 @@ class Remote:
 
         qgis_version = qgis_version.split('.')
 
-        with source_list.open() as f:
+        with source_list.open(encoding='utf8') as f:
             for line in f.readlines():
                 if not line.startswith('#'):
                     raw_line = line.strip()
@@ -103,6 +103,7 @@ class Remote:
                     filename += '-'
 
             filename = re.sub(r"\-+", "-", filename)
+            # Binary mode does not support encoding parameter
             with open(Path(cache / f"{filename}.xml"), 'wb') as output:
                 output.write(f.read())
 
@@ -195,6 +196,7 @@ class Remote:
             return False
 
         zip_file = Path(self.folder / file_name)
+        # Binary mode does not support encoding parameter
         with open(zip_file, 'wb') as output:
             output.write(f.read())
 

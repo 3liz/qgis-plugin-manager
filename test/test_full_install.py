@@ -39,7 +39,7 @@ class FullInstallNetwork(unittest.TestCase):
         self.assertFalse(Path(self.directory / 'QuickOSM').exists())
         self.assertNotIn(self.plugin_name, self.local.plugins())
 
-        with open(Path(self.directory / 'sources.list'), 'w') as file:
+        with open(Path(self.directory / 'sources.list'), 'w', encoding='utf8') as file:
             file.write(self.repository)
 
         self.remote.update()

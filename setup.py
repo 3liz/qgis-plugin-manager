@@ -28,7 +28,7 @@ if "." not in VERSION:
     # let's hardcode 0.0.0
     VERSION = "0.0.0"
 
-read_me = Path(__file__).parent.joinpath("README.md").read_text()
+read_me = Path(__file__).parent.joinpath("README.md").read_text(encoding='utf8')
 
 setup(
     name="qgis-plugin-manager",
