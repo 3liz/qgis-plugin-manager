@@ -4,8 +4,6 @@
 
 ## 0.4.1 - 2022-02-14
 
-### Fixed
-
 * Fix a Python error when not the encoding was not set when opening files
 
 ## 0.4.0 - 2022-01-10
