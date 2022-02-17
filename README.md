@@ -71,15 +71,15 @@ $ qgis-plugin-manager list
 QGIS server version 3.19.0
 List all plugins in /home/etienne/dev/qgis/server_plugin
 
-----------------------------------------------------------------------------------------
-|  Name            |  Version  |  QGIS min  |  QGIS max  |  Author         |  Action ⚠       |
-----------------------------------------------------------------------------------------
-|Lizmap            |master     |3.4         |3.99        |3Liz             |Unkown version   |
-|wfsOutputExtension|1.5.3      |3.0         |            |3Liz             |                 |
-|QuickOSM          |1.14.0     |3.4         |3.99        |Etienne Trimaille|Upgrade to 1.16.0|
-|cadastre          |1.6.2      |3.0         |3.99        |3liz             |                 |
-|atlasprint        |3.2.2      |3.10        |            |3Liz             |                 |
-----------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+|  Name            |  Version  |  QGIS min  |  QGIS max  |  Author         | Folder owner     | Action ⚠         |
+------------------------------------------------------------------------------------------------------------------
+|Lizmap            |master     |3.4         |3.99        |3Liz             | root : 0o755     | Unkown version   |
+|wfsOutputExtension|1.5.3      |3.0         |            |3Liz             | etienne : 0o755  |                  |
+|QuickOSM          |1.14.0     |3.4         |3.99        |Etienne Trimaille| etienne : 0o755  | Upgrade to 1.16.0|
+|cadastre          |1.6.2      |3.0         |3.99        |3liz             | www-data : 0o755 |                  |
+|atlasprint        |3.2.2      |3.10        |            |3Liz             | www-data : 0o755 |                  |
+------------------------------------------------------------------------------------------------------------------
 ```
 
 ### Remote

@@ -1,8 +1,11 @@
-__copyright__ = 'Copyright 2021, 3Liz'
+__copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import configparser
+import os
+import pwd
+import stat
 
 from pathlib import Path
 from typing import List, Union
@@ -10,7 +13,7 @@ from typing import List, Union
 from qgis_plugin_manager.definitions import Level, Plugin
 
 from .remote import Remote
-from .utils import parse_version, pretty_table, DEFAULT_QGIS_VERSION
+from .utils import DEFAULT_QGIS_VERSION, parse_version, pretty_table
 
 
 class LocalDirectory:
@@ -129,7 +132,9 @@ class LocalDirectory:
         remote = Remote(self.folder)
 
         print(f"List all plugins in {self.folder.absolute()}\n")
-        headers = ['Folder', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author', 'Action ⚠']
+        headers = [
+            'Folder', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author',
+            'Folder rights', 'Action ⚠', ]
         headers = [f"  {i}  " for i in headers]
         data = []
         for plugin in self.plugins():
@@ -158,6 +163,13 @@ class LocalDirectory:
             # Author
             plugin_data.append(info.author_name)
 
+            # Folder rights
+            folder = self.folder.joinpath(plugin)
+            stat_info = os.stat(folder)
+            perms = stat.S_IMODE(os.stat(folder).st_mode)
+            plugin_data.append(f"{pwd.getpwuid(stat_info.st_uid)[0]} : {oct(perms)}")
+
+            # Action
             latest = remote.latest(info.name)
             current = info.version
 

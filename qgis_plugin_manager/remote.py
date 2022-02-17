@@ -1,7 +1,8 @@
-__copyright__ = 'Copyright 2021, 3Liz'
+__copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+import os
 import re
 import shutil
 import urllib
@@ -12,7 +13,7 @@ from pathlib import Path
 from typing import Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
-from qgis_plugin_manager.utils import qgis_server_version, DEFAULT_QGIS_VERSION
+from qgis_plugin_manager.utils import DEFAULT_QGIS_VERSION, qgis_server_version
 
 
 class Remote:
@@ -212,4 +213,12 @@ class Remote:
 
         print(f"\t{Level.Success}Ok {zip_file.name}{Level.End}")
 
+        # Installation is done, check user rights
+        sudo_user = os.environ.get('SUDO_USER')
+        current_user = os.environ.get('USER')
+        if sudo_user:
+            print(f"Installed with super user '{current_user}' instead of '{sudo_user}'")
+        else:
+            print(f"Installed with user '{current_user}'")
+        print("Please check file permissions and owner according to the user running QGIS Server.")
         return True

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add some information about the user and file permissions when showing plugins
+
 ## 0.4.1 - 2022-02-14
 
 * Fix a Python error when not the encoding was not set when opening files
