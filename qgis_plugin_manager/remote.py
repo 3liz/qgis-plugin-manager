@@ -85,7 +85,12 @@ class Remote:
 
         cache = Path(self.folder / ".cache_qgis_plugin_manager")
         if cache.exists():
-            shutil.rmtree(cache)
+            try:
+                shutil.rmtree(cache)
+            except OSError as e:
+                print(f"\t{Level.Critical}{e}{Level.End}")
+                return
+
         cache.mkdir()
 
         for i, server in enumerate(self.list):
@@ -227,7 +232,12 @@ class Remote:
 
         existing = Path(self.folder / plugin_name)
         if existing.exists():
-            shutil.rmtree(existing)
+            try:
+                shutil.rmtree(existing)
+            except OSError as e:
+                print(f"\t{Level.Critical}{e}{Level.End}")
+                zip_file.unlink()
+                return False
 
         import zipfile
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:

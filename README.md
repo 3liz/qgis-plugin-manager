@@ -124,6 +124,14 @@ Plugin atlasprint : v3.2.2 available
 
 ### Install
 
+Plugins are case sensitive :
+```bash
+$ qgis-plugin-manager install quickosm
+Plugin quickosm latest not found.
+Do you mean maybe 'QuickOSM' ?
+
+```
+
 Install the latest version :
 ```bash
 $ qgis-plugin-manager install QuickOSM

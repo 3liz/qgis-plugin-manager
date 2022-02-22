@@ -4,6 +4,7 @@
 
 * Add some information about the user and file permissions when showing plugins
 * Display plugin name similarity when installing if the given name is not found
+* Display a better error message if the folder/file can not be removed
 
 ## 0.4.1 - 2022-02-14
 
