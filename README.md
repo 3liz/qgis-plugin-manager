@@ -33,7 +33,7 @@ cd /usr/lib/qgis/plugins
 
 ```bash
 $ qgis-plugin-manager --help
-usage: qgis-plugin-manager [-h] [-v] {init,list,remote,update,cache,install} ...
+usage: qgis-plugin-manager [-h] [-v] {init,list,remote,update,upgrade,cache,search,install} ...
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -42,12 +42,14 @@ optional arguments:
 commands:
   qgis-plugin-manager command
 
-  {init,list,remote,update,cache,install}
+  {init,list,remote,update,upgrade,cache,search,install}
     init                Create the `sources.list` with plugins.qgis.org as remote
     list                List all plugins in the directory
     remote              List all remote server
     update              Update all index files
+    upgrade             Upgrade all plugins installed
     cache               Look for a plugin in the cache
+    search              Search for plugins
     install             Install a plugin
 ```
 
@@ -156,6 +158,16 @@ $ qgis-plugin-manager install QuickOSM==1.14.0
 Installation QuickOSM 1.14.0
 	Ok QuickOSM.1.14.0.zip
 ```
+
+### Upgrade
+
+Upgrade all plugins installed :
+
+```bash
+$ qgis-plugin-manager upgrade
+```
+
+*Note*, like APT, `update` is needed before to refresh the cache.
 
 ## Run tests
 

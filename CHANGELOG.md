@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-* Add a `search` option using plugin tags
+* Add a `search` command to search plugins among tags and names
+* Add an `upgrade` command to upgrade all plugins installed
 * Add an example with a plugin having a space in its name
 * Add some information about the user and file permissions when showing plugins
 * Display plugin name similarity when installing if the given name is not found

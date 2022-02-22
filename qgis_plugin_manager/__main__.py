@@ -14,7 +14,8 @@ from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import qgis_server_version
 
 
-def main():
+def main():  # noqa: C901
+    """ Main function for the CLI menu. """
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -33,6 +34,8 @@ def main():
     subparsers.add_parser("remote", help="List all remote server")
 
     subparsers.add_parser('update', help="Update all index files")
+
+    subparsers.add_parser('upgrade', help="Upgrade all plugins installed")
 
     cache = subparsers.add_parser("cache", help="Look for a plugin in the cache")
     cache.add_argument("plugin_name", help="The plugin to look for")
@@ -73,7 +76,7 @@ def main():
     if args.command == "update":
         remote = Remote(Path('.'))
         remote.update()
-    elif args.command in ["list", "init"]:
+    elif args.command in ("list", "init", "upgrade"):
         qgis = qgis_server_version()
         if qgis:
             print(f"QGIS server version : {qgis}")
@@ -81,8 +84,16 @@ def main():
 
         if args.command == "list":
             plugins.print_table()
-        else:
+        elif args.command == "init":
             plugins.init()
+        elif args.command == "upgrade":
+            remote = Remote(Path('.'))
+            folders = plugins.plugin_list()
+            for folder in folders:
+                plugin_object = plugins.plugin_info(folder)
+                result = remote.install(plugin_object.name)
+                if not result:
+                    exit_val = 1
 
     elif args.command == "remote":
         remote = Remote(Path('.'))
