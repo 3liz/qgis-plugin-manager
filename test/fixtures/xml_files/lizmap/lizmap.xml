@@ -1,0 +1,30 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<?xml-stylesheet type="text/xsl" href="/static/style/plugins.xsl" ?>
+<plugins>
+    <pyqgis_plugin name="Lizmap" version="3.7.4" plugin_id="72">
+        <description><![CDATA[Publish and share your QGIS maps on the Web via Lizmap Web Client, by 3liz.com]]></description>
+        <about><![CDATA[With a few clicks, it&#39;s possible to publish and share your QGIS projects on the Web via Lizmap Web Client, by 3liz.com. QGIS Server is used in the background so all the symbology is kept. The edition forms in QGIS are also available. Demo : https://demo.lizmap.com and documentation : https://docs.lizmap.com and hosting solutions https://lizmap.com]]></about>
+        <version>3.7.4</version>
+        <trusted>True</trusted>
+        <qgis_minimum_version>3.4.0</qgis_minimum_version>
+        <qgis_maximum_version>3.99.0</qgis_maximum_version>
+        <homepage><![CDATA[https://docs.lizmap.com]]></homepage>
+        <file_name>lizmap.3.7.4.zip</file_name>
+        <icon>/media/packages/2022/icon_ybkXde8.png</icon>
+        <author_name><![CDATA[3Liz]]></author_name>
+        <download_url>https://plugins.qgis.org/plugins/lizmap/version/3.7.4/download/</download_url>
+        <uploaded_by><![CDATA[Gustry]]></uploaded_by>
+        <create_date>2012-02-16T12:04:45.621776</create_date>
+        <update_date>2022-02-15T08:04:59.660884</update_date>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/3liz/lizmap-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/3liz/lizmap-plugin]]></repository>
+        <tags><![CDATA[web,cloud,mobile,wfs,server,wms,publication,wps,webmapping,webservice,internet,webgis,dashboard,online]]></tags>
+        <downloads>126334</downloads>
+        <average_vote>4.633617488935753</average_vote>
+        <rating_votes>101</rating_votes>
+        <external_dependencies></external_dependencies>
+        <server>True</server>
+    </pyqgis_plugin>
+</plugins>

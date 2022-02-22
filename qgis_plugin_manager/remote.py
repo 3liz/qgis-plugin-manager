@@ -9,8 +9,9 @@ import urllib
 import urllib.request
 import xml.etree.ElementTree as ET
 
+from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Union
+from typing import Union, List, Dict
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import DEFAULT_QGIS_VERSION, qgis_server_version
@@ -123,51 +124,70 @@ class Remote:
             print("Running the update to download XML files first.")
             self.update()
 
-        has_xml = False
-        for file in cache.iterdir():
-            if not file.name.endswith('.xml'):
+        xml_count = 0
+        for xml_file in cache.iterdir():
+            if not xml_file.name.endswith('.xml'):
                 continue
 
-            has_xml = True
+            plugins = self.parse_xml(xml_file, plugins)
+            xml_count += 1
 
-            tree = ET.parse(file.absolute())
-            root = tree.getroot()
-            for plugin in root:
-
-                experimental = False
-                for element in plugin:
-                    if element.tag == 'experimental':
-                        experimental = element.text == "True"
-
-                xml_plugin_name = plugin.attrib['name']
-                if xml_plugin_name in plugins.keys():
-                    previous_parsed_version = plugins[xml_plugin_name].split('.')
-                    new_parsed_version = plugin.attrib['version'].split('.')
-                    if previous_parsed_version < new_parsed_version and not experimental:
-                        plugins[xml_plugin_name] = plugin.attrib['version']
-                    else:
-                        continue
-                else:
-                    if not experimental:
-                        plugins[xml_plugin_name] = plugin.attrib['version']
-
-                plugin_obj = Plugin()
-                data = {}
-                for element in plugin:
-                    if element.tag in plugin_obj._fields:
-                        data[element.tag] = element.text
-
-                # Not present in XML, but property available in metadata.txt
-                data['qgis_maximum_version'] = ''
-
-                plugin_obj = Plugin(**data)
-                self.list_plugins[xml_plugin_name] = plugin_obj
-
-        if not has_xml:
+        if xml_count < 1:
             print(f"{Level.Warning}No remote repositories found !{Level.End}")
             return None
 
         return plugins.get(plugin_name)
+
+    def parse_xml(self, xml_file: Path, plugins: Dict) -> Dict:
+        """ Parse the given XML file. """
+        if self.list_plugins is None:
+            # Maybe only in tests
+            self.list_plugins = {}
+
+        tree = ET.parse(xml_file.absolute())
+        root = tree.getroot()
+        for plugin in root:
+
+            experimental = False
+            for element in plugin:
+                if element.tag == 'experimental':
+                    experimental = element.text == "True"
+
+            xml_plugin_name = plugin.attrib['name']
+            if xml_plugin_name in plugins.keys():
+                previous_parsed_version = plugins[xml_plugin_name].split('.')
+                new_parsed_version = plugin.attrib['version'].split('.')
+                if previous_parsed_version < new_parsed_version and not experimental:
+                    plugins[xml_plugin_name] = plugin.attrib['version']
+                else:
+                    continue
+            else:
+                if not experimental:
+                    plugins[xml_plugin_name] = plugin.attrib['version']
+
+            plugin_obj = Plugin()
+            data = {}
+            for element in plugin:
+                if element.tag in plugin_obj._fields:
+                    data[element.tag] = element.text
+
+            # Not present in XML, but property available in metadata.txt
+            data['qgis_maximum_version'] = ''
+
+            plugin_obj = Plugin(**data)
+            self.list_plugins[xml_plugin_name] = plugin_obj
+        return plugins
+
+    def similar_names(self, plugin_name_wanted: str) -> List[str]:
+        """ Return a list of similar plugin name found in the XML file. """
+        similar = []
+        plugin_name_wanted = plugin_name_wanted.lower()
+        for plugin_name in self.list_plugins.keys():
+            ratio = SequenceMatcher(None, plugin_name_wanted, plugin_name.lower()).ratio()
+            if ratio > 0.8:
+                similar.append(plugin_name)
+
+        return similar
 
     def install(self, plugin_name, version="latest") -> bool:
         """ Install the plugin with a specific version.
@@ -177,6 +197,10 @@ class Remote:
         xml_version = self.latest(plugin_name)
         if xml_version is None:
             print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
+            similarity = self.similar_names(plugin_name)
+            if similarity:
+                for plugin in similarity:
+                    print(f"Do you mean maybe '{plugin}' ?")
             return False
 
         print(f"Installation {plugin_name} {version}")

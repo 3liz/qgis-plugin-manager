@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Add some information about the user and file permissions when showing plugins
+* Display plugin name similarity when installing if the given name is not found
 
 ## 0.4.1 - 2022-02-14
 

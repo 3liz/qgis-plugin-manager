@@ -18,6 +18,12 @@ class TestRemote(unittest.TestCase):
             ["https://my.url/plugins.xml", "https://my.repo/plugins.xml"],
             self.remote.remote_list())
 
+    def test_similar_names(self):
+        """ Test about similar names in the XML file. """
+        self.remote = Remote(Path('fixtures/xml_files/lizmap'))
+        self.remote.parse_xml(Path('fixtures/xml_files/lizmap/lizmap.xml'), {})
+        self.assertListEqual(['Lizmap'], self.remote.similar_names('lizmap'))
+
     @unittest.expectedFailure
     def test_latest_pgmetadata(self):
         """ Test read multiple remotes. """

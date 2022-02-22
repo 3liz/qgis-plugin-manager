@@ -8,7 +8,7 @@ import pwd
 import stat
 
 from pathlib import Path
-from typing import List, Union
+from typing import Union, Dict
 
 from qgis_plugin_manager.definitions import Level, Plugin
 
@@ -21,6 +21,7 @@ class LocalDirectory:
     def __init__(self, folder: Path, qgis_version: str = None):
         """ Constructor"""
         self.folder = folder
+        # Dictionary : folder : plugin name
         self._plugins = None
         self._invalid = []
 
@@ -57,9 +58,9 @@ class LocalDirectory:
 
         return True
 
-    def plugins(self) -> List[str]:
+    def plugin_list(self) -> Dict[str, str]:
         """ Get the list of plugins installed in the current directory. """
-        self._plugins = []
+        self._plugins = {}
         for folder in self.folder.iterdir():
 
             if not folder.is_dir():
@@ -71,7 +72,8 @@ class LocalDirectory:
             have_python = list(folder.glob('*.py'))
             have_metadata = list(folder.glob('metadata.txt'))
             if have_python and have_metadata:
-                self._plugins.append(folder.name)
+                name = self.plugin_metadata(folder.name, 'name')
+                self._plugins[folder.name] = name
             else:
                 self._invalid.append(folder.name)
 
@@ -80,17 +82,17 @@ class LocalDirectory:
 
         return self._plugins
 
-    def plugin_metadata(self, plugin: str, key: str) -> Union[str, None]:
+    def plugin_metadata(self, plugin_folder: str, key: str) -> Union[str, None]:
         """ For a given plugin installed, get a metadata item. """
         if self._plugins is None:
-            self.plugins()
+            self.plugin_list()
 
-        if plugin not in self._plugins:
+        if plugin_folder not in self._plugins.keys():
             return None
 
         config_parser = configparser.ConfigParser()
 
-        with Path(self.folder / Path(f"{plugin}/metadata.txt")).open(encoding='utf8') as f:
+        with Path(self.folder / Path(f"{plugin_folder}/metadata.txt")).open(encoding='utf8') as f:
             config_parser.read_file(f)
 
         try:
@@ -109,25 +111,32 @@ class LocalDirectory:
     def plugin_info(self, plugin: str) -> Union[None, Plugin]:
         """ For a given plugin, retrieve all metadata."""
         if self._plugins is None:
-            self.plugins()
+            self.plugin_list()
 
-        if plugin not in self._plugins:
+        if plugin in self._plugins.keys():
+            # It's plugin folder
+            plugin_folder = plugin
+        elif plugin not in self._plugins.values():
+            # Not found, either as a plugin folder or plugin name
             return None
+        else:
+            # It's a plugin name
+            plugin_folder = list(self._plugins.keys())[list(self._plugins.values()).index(plugin)][0]
 
         data = Plugin(
-            name=self.plugin_metadata(plugin, "name"),
-            version=self.plugin_metadata(plugin, "version"),
-            experimental=self.plugin_metadata(plugin, "experimental"),
-            qgis_minimum_version=self.plugin_metadata(plugin, "qgisMinimumVersion"),
-            qgis_maximum_version=self.plugin_metadata(plugin, "qgisMaximumVersion"),
-            author_name=self.plugin_metadata(plugin, "author"),
+            name=self.plugin_metadata(plugin_folder, "name"),
+            version=self.plugin_metadata(plugin_folder, "version"),
+            experimental=self.plugin_metadata(plugin_folder, "experimental"),
+            qgis_minimum_version=self.plugin_metadata(plugin_folder, "qgisMinimumVersion"),
+            qgis_maximum_version=self.plugin_metadata(plugin_folder, "qgisMaximumVersion"),
+            author_name=self.plugin_metadata(plugin_folder, "author"),
         )
         return data
 
     def print_table(self):
         """ Print all plugins installed as a table. """
         if self._plugins is None:
-            self.plugins()
+            self.plugin_list()
 
         remote = Remote(self.folder)
 
@@ -137,11 +146,11 @@ class LocalDirectory:
             'Folder rights', 'Action ⚠', ]
         headers = [f"  {i}  " for i in headers]
         data = []
-        for plugin in self.plugins():
+        for folder in self.plugin_list():
             # Folder
-            plugin_data = [str(plugin)]
+            plugin_data = [str(folder)]
 
-            info = self.plugin_info(plugin)
+            info = self.plugin_info(folder)
 
             # Name
             plugin_data.append(info.name)
@@ -164,7 +173,7 @@ class LocalDirectory:
             plugin_data.append(info.author_name)
 
             # Folder rights
-            folder = self.folder.joinpath(plugin)
+            folder = self.folder.joinpath(folder)
             stat_info = os.stat(folder)
             perms = stat.S_IMODE(os.stat(folder).st_mode)
             plugin_data.append(f"{pwd.getpwuid(stat_info.st_uid)[0]} : {oct(perms)}")
