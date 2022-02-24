@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0 - 2022-02-24
+
 * Add a `search` command to search plugins among tags and names
 * Add an `upgrade` command to upgrade all plugins installed
 * Add an example with a plugin having a space in its name
