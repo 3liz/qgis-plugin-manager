@@ -207,7 +207,13 @@ class LocalDirectory:
 
             plugin_data.append(Level.Warning + ';'.join(extra_info) + Level.End)
             data.append(plugin_data)
-        print(pretty_table(data, headers))
+
+        if len(data):
+            print(pretty_table(data, headers))
+        else:
+            print(
+                f"{Level.Warning}No plugin found in the current directory {self.folder.absolute()}{Level.End}"
+            )
 
         if len(self._invalid) >= 1:
             print(pretty_table(self._invalid, ['Invalid']))

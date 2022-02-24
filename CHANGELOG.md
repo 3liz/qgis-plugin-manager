@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Better warning when we are not in the correct directory without any plugin
+
 ## 1.0.0 - 2022-02-24
 
 * Add a `search` command to search plugins among tags and names
