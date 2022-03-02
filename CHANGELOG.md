@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Better warning when we are not in the correct directory without any plugin
+* Better warning when the user can not extract the ZIP in the folder
 
 ## 1.0.0 - 2022-02-24
 

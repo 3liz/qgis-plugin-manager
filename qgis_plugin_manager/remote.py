@@ -264,10 +264,21 @@ class Remote:
             print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
             return False
 
+        # Check user rights
+        sudo_user = os.environ.get('SUDO_USER')
+        current_user = os.environ.get('USER')
+
+        # Extracting
         zip_file = Path(self.folder / file_name)
-        # Binary mode does not support encoding parameter
-        with open(zip_file, 'wb') as output:
-            output.write(f.read())
+        try:
+            # Binary mode does not support encoding parameter
+            with open(zip_file, 'wb') as output:
+                output.write(f.read())
+        except PermissionError:
+            file_path = self.folder.absolute()
+            print(f"\t{Level.Critical}Current user {current_user} can not write in {file_path}{Level.End}")
+            print("Check file permissions for the folder.")
+            return False
 
         existing = Path(self.folder / plugin_name)
         if existing.exists():
@@ -286,9 +297,7 @@ class Remote:
 
         print(f"\t{Level.Success}Ok {zip_file.name}{Level.End}")
 
-        # Installation is done, check user rights
-        sudo_user = os.environ.get('SUDO_USER')
-        current_user = os.environ.get('USER')
+        # Installation done !
         if sudo_user:
             print(f"Installed with super user '{current_user}' instead of '{sudo_user}'")
         else:
