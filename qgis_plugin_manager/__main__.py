@@ -94,6 +94,7 @@ def main():  # noqa: C901
                 result = remote.install(plugin_object.name)
                 if not result:
                     exit_val = 1
+            print(f"{Level.Warning}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
 
     elif args.command == "remote":
         remote = Remote(Path('.'))
@@ -119,6 +120,8 @@ def main():  # noqa: C901
         result = remote.install(*parameter)
         if not result:
             exit_val = 1
+        else:
+            print(f"{Level.Warning}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
 
     return exit_val
 
