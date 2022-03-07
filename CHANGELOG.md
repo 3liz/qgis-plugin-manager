@@ -2,11 +2,13 @@
 
 ## Unreleased
 
+* Display `PYTHONPATH` when QGIS library is not found
+* Display tip to restart QGIS Server after a plugin installation
+
 ## 1.0.1 - 2022-03-02
 
 * Better warning when we are not in the correct directory without any plugin
 * Better warning when the user can not extract the ZIP in the folder
-* Display `PYTHONPATH` when QGIS library is not found
 
 ## 1.0.0 - 2022-02-24
 
