@@ -58,5 +58,6 @@ def qgis_server_version() -> str:
             f"{Level.End}"
         )
         import os
+        print(f"Current user : {os.environ.get('USER')}")
         print(f'PYTHONPATH={os.getenv("PYTHONPATH")}')
     return ''
