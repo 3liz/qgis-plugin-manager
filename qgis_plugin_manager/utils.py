@@ -57,4 +57,6 @@ def qgis_server_version() -> str:
             f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
             f"{Level.End}"
         )
+        import os
+        print(f'PYTHONPATH={os.getenv("PYTHONPATH")}')
     return ''
