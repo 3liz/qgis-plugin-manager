@@ -147,6 +147,8 @@ class LocalDirectory:
         headers = [f"  {i}  " for i in headers]
         data = []
 
+        list_of_owners = []
+
         sorted_plugins = list(self.plugin_list().keys())
         sorted_plugins.sort()
         for folder in sorted_plugins:
@@ -179,7 +181,10 @@ class LocalDirectory:
             folder = self.folder.joinpath(folder)
             stat_info = os.stat(folder)
             perms = stat.S_IMODE(os.stat(folder).st_mode)
-            plugin_data.append(f"{pwd.getpwuid(stat_info.st_uid)[0]} : {oct(perms)}")
+            permissions = f"{pwd.getpwuid(stat_info.st_uid)[0]} : {oct(perms)}"
+            plugin_data.append(permissions)
+            if permissions not in list_of_owners:
+                list_of_owners.append(permissions)
 
             # Action
             latest = remote.latest(info.name)
@@ -216,6 +221,15 @@ class LocalDirectory:
         else:
             print(
                 f"{Level.Warning}No plugin found in the current directory {self.folder.absolute()}{Level.End}"
+            )
+
+        if len(list_of_owners) > 1:
+            list_of_owners = [f"'{i}'" for i in list_of_owners]
+            print(
+                f"{Level.Warning}"
+                f"Different rights have been detected : {','.join(list_of_owners)}"
+                f"{Level.End}. "
+                f"Please check user-rights."
             )
 
         if len(self._invalid) >= 1:
