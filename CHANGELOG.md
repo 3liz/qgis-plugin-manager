@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.3 - 2022-03-09
+
 * Order the plugin list by folder name
 * Show file permissions warning if there are more than 2 different values
 
