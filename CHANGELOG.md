@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Order the plugin list by folder name
+
 ## 1.0.2 - 2022-03-09
 
 * Display `PYTHONPATH` when QGIS library is not found

@@ -142,11 +142,14 @@ class LocalDirectory:
 
         print(f"List all plugins in {self.folder.absolute()}\n")
         headers = [
-            'Folder', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author',
+            'Folder ⬇', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author',
             'Folder rights', 'Action ⚠', ]
         headers = [f"  {i}  " for i in headers]
         data = []
-        for folder in self.plugin_list():
+
+        sorted_plugins = list(self.plugin_list().keys())
+        sorted_plugins.sort()
+        for folder in sorted_plugins:
             # Folder
             plugin_data = [str(folder)]
 
