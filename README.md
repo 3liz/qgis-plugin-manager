@@ -30,6 +30,9 @@ cd /path/where/you/have/plugins
 # usually
 cd /usr/lib/qgis/plugins
 ```
+It depends where you want to store QGIS plugins. On a server, you can use the variable `QGIS_PLUGINPATH`
+according to the [documentation](https://docs.qgis.org/3.22/en/docs/server_manual/config.html#environment-variables)
+if you don't want the default folder.
 
 ```bash
 $ qgis-plugin-manager --help
