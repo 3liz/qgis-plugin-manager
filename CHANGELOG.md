@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.0 - 2022-05-10
+
 * Show different flags about plugins : server, deprecated, processing
 
 ## 1.0.3 - 2022-03-09
