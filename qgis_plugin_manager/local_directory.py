@@ -137,7 +137,7 @@ class LocalDirectory:
         )
         return data
 
-    def print_table(self):
+    def print_table(self):  # noqa: C901
         """ Print all plugins installed as a table. """
         if self._plugins is None:
             self.plugin_list()
