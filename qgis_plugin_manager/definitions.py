@@ -27,6 +27,8 @@ class Plugin(NamedTuple):
     tracker: str = None
     repository: str = None
     tags: str = None
+    server: bool = False
+    has_processing: bool = False
 
 
 class Level:

@@ -130,6 +130,10 @@ class LocalDirectory:
             qgis_minimum_version=self.plugin_metadata(plugin_folder, "qgisMinimumVersion"),
             qgis_maximum_version=self.plugin_metadata(plugin_folder, "qgisMaximumVersion"),
             author_name=self.plugin_metadata(plugin_folder, "author"),
+            server=self.plugin_metadata(
+                plugin_folder, "server") in ('True', 'true', '1', 'yes', True),
+            has_processing=self.plugin_metadata(
+                plugin_folder, "hasProcessingProvider") in ('True', 'true', '1', 'yes', True),
         )
         return data
 
@@ -142,7 +146,7 @@ class LocalDirectory:
 
         print(f"List all plugins in {self.folder.absolute()}\n")
         headers = [
-            'Folder ⬇', 'Name', 'Version', 'Experimental', 'QGIS min', 'QGIS max', 'Author',
+            'Folder ⬇', 'Name', 'Version', 'Flags', 'QGIS min', 'QGIS max', 'Author',
             'Folder rights', 'Action ⚠', ]
         headers = [f"  {i}  " for i in headers]
         data = []
@@ -163,8 +167,17 @@ class LocalDirectory:
             # Version
             plugin_data.append(info.version)
 
-            # Experimental
-            plugin_data.append('x' if info.experimental in ('True', 'true', '1') else '')
+            # Flags column
+            flags = []
+            if info.server:
+                flags.append('Server')
+            if info.experimental in ('True', 'true', '1', 'yes', True):
+                flags.append('Experimental')
+            if info.has_processing in ('True', 'true', '1', 'yes', True):
+                flags.append('Processing')
+            if info.deprecated in ('True', 'true', '1', 'yes', True):
+                flags.append('Deprecated')
+            plugin_data.append(','.join(flags))
 
             # QGIS Min
             plugin_data.append(info.qgis_minimum_version)

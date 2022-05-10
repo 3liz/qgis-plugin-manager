@@ -7,3 +7,4 @@ qgisMinimumVersion=3.0
 author=Cesar Salad
 email=cesar.salad@test.org
 repository=URL to the code repository
+server=False

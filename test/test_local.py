@@ -28,6 +28,7 @@ class TestLocal(unittest.TestCase):
         self.assertEqual('Hazel Nutt', self.local.plugin_metadata('plugin_a', 'author'))
         self.assertEqual('', self.local.plugin_metadata('plugin_a', 'do_not_exist'))
 
+        # Plugin A
         plugin = self.local.plugin_info('plugin_a')
         self.assertEqual('Plugin A', plugin.name)
         self.assertEqual('1.0.0', plugin.version)
@@ -35,6 +36,15 @@ class TestLocal(unittest.TestCase):
         self.assertEqual('3.0', plugin.qgis_minimum_version)
         self.assertEqual('', plugin.qgis_maximum_version)
         self.assertEqual('Hazel Nutt', plugin.author_name)
+        self.assertTrue(plugin.server)
+        self.assertTrue(plugin.has_processing)
+        self.assertFalse(plugin.deprecated)
+
+        # Plugin B
+        plugin = self.local.plugin_info('plugin_b')
+        self.assertFalse(plugin.server)
+        self.assertFalse(plugin.has_processing)
+        self.assertFalse(plugin.deprecated)
 
 
 if __name__ == '__main__':

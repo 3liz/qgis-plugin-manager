@@ -7,3 +7,6 @@ qgisMinimumVersion=3.0
 author=Hazel Nutt
 email=hazel.nutt@test.org
 repository=URL to the code repository
+server=True
+deprecated=False
+hasProcessingProvider=yes
