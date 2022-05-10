@@ -8,10 +8,11 @@ import shutil
 import urllib
 import urllib.request
 import xml.etree.ElementTree as ET
+import zipfile
 
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import DEFAULT_QGIS_VERSION, qgis_server_version
@@ -264,11 +265,11 @@ class Remote:
             print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
             return False
 
-        # Check user rights
+        # Get current users
         sudo_user = os.environ.get('SUDO_USER')
         current_user = os.environ.get('USER')
 
-        # Extracting
+        # Saving the zip from the URL
         zip_file = Path(self.folder / file_name)
         try:
             # Binary mode does not support encoding parameter
@@ -280,6 +281,7 @@ class Remote:
             print("Check file permissions for the folder.")
             return False
 
+        # Removing existing plugin folder if needed
         existing = Path(self.folder / plugin_name)
         if existing.exists():
             try:
@@ -289,10 +291,11 @@ class Remote:
                 zip_file.unlink()
                 return False
 
-        import zipfile
+        # Extracting the zip in the folder
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
             zip_ref.extractall(self.folder)
 
+        # Removing the zip file
         zip_file.unlink()
 
         print(f"\t{Level.Success}Ok {zip_file.name}{Level.End}")

@@ -8,7 +8,7 @@ import pwd
 import stat
 
 from pathlib import Path
-from typing import Union, Dict
+from typing import Dict, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
 
