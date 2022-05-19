@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix some Python errors and typo
+
 ## 1.1.0 - 2022-05-10
 
 * Show different flags about plugins : server, deprecated, processing

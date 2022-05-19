@@ -49,7 +49,7 @@ class Remote:
                     if raw_line.startswith("https://plugins.qgis.org") and "[VERSION]" not in raw_line:
                         print(
                             f"{Level.Warning}"
-                            f"Your https://plugins.qgis.org remote is not using dynamic QGIS version."
+                            f"Your https://plugins.qgis.org remote is not using a dynamic QGIS version."
                             f"{Level.End}"
                         )
                         print(
@@ -59,8 +59,8 @@ class Remote:
                             f"\n"
                             f"https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]"
                             f"\n"
-                            f"If you can remove the file sources.list ? 'qgis-plugin-manager init' will "
-                            f"regenerate it using dynamic QGIS version."
+                            f"Can you remove the file sources.list ? 'qgis-plugin-manager init' will "
+                            f"regenerate it using dynamic QGIS version if QGIS is well configured."
                         )
 
                     raw_line = raw_line.replace("[VERSION]", f"{qgis_version[0]}.{qgis_version[1]}")
@@ -221,10 +221,16 @@ class Remote:
 
     def search(self, search_string: str) -> List:
         """ Search in plugin names and tags."""
+        if self.list is None:
+            self.remote_list()
+
         results = []
 
         if self.list_plugins is None:
             self.available_plugins()
+
+        if len(self.list) == 0:
+            return []
 
         for plugin_name, plugin in self.list_plugins.items():
             for item in plugin.search:
