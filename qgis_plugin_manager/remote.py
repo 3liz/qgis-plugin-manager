@@ -197,12 +197,15 @@ class Remote:
             else:
                 tags = []
 
-            data['search'] = [
+            search_text = [
                 xml_plugin_name.lower(),
                 xml_plugin_name.lower().replace(" ", ""),
             ]
-            data['search'].extend(tags)
-            data['search'] = list(dict.fromkeys(data['search']))
+            search_text.extend(tags)
+            search_text.extend(plugin.attrib['name'].lower().split(" "))
+
+            # Remove duplicates
+            data['search'] = list(dict.fromkeys(search_text))
 
             plugin_obj = Plugin(**data)
             self.list_plugins[xml_plugin_name] = plugin_obj
@@ -228,9 +231,6 @@ class Remote:
 
         if self.list_plugins is None:
             self.available_plugins()
-
-        if len(self.list) == 0:
-            return []
 
         for plugin_name, plugin in self.list_plugins.items():
             for item in plugin.search:

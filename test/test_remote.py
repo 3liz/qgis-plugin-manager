@@ -28,21 +28,51 @@ class TestRemote(unittest.TestCase):
         """ Test plugin with different name, using tags. """
         self.remote = Remote(Path('fixtures/xml_files/dataplotly'))
         plugins = self.remote._parse_xml(Path('fixtures/xml_files/dataplotly/dataplotly.xml'), {})
+        self.assertDictEqual({'Data Plotly': '0.4'}, plugins)
+
         self.assertEqual(1, len(self.remote.list_plugins))
+
         plugin = self.remote.list_plugins.get('Data Plotly')
         self.assertIsNotNone(plugin)
         self.assertEqual(plugin.name, 'Data Plotly')
-        self.assertDictEqual({'Data Plotly': '0.4'}, plugins)
         self.assertEqual(plugin.tags, 'vector,python,d3,plots,graphs,datavis,dataplotly,dataviz')
         self.assertListEqual(
             plugin.search,
-            ['data plotly', 'dataplotly', 'vector', 'python', 'd3', 'plots', 'graphs', 'datavis', 'dataviz']
+            [
+                'data plotly', 'dataplotly', 'vector', 'python', 'd3', 'plots', 'graphs', 'datavis',
+                'dataviz', 'data', 'plotly'
+            ]
         )
 
         # Test the search
         self.assertListEqual([], self.remote.search("foo"))
         self.assertListEqual(['Data Plotly'], self.remote.search("dataviz"))
         self.assertListEqual(['Data Plotly'], self.remote.search("dataplotly"))
+
+    def test_search_with_space_in_name(self):
+        """ Test Lizmap should give 2 values : Lizmap and 'Lizmap server'. """
+        self.remote = Remote(Path('fixtures/xml_files/lizmap'))
+        plugins = self.remote._parse_xml(Path('fixtures/xml_files/lizmap/lizmap.xml'), {})
+        self.assertEqual(2, len(self.remote.list_plugins))
+        self.assertDictEqual(
+            {
+                'Lizmap': '3.7.4',
+                'Lizmap server': '1.0.0',
+            },
+            plugins
+        )
+
+        plugin = self.remote.list_plugins.get('Lizmap server')
+        self.assertIsNotNone(plugin)
+        self.assertEqual(plugin.name, 'Lizmap server')
+
+        self.assertListEqual(
+            plugin.search,
+            ['lizmap server', 'lizmapserver', 'web', 'cloud', 'lizmap', 'server']
+        )
+
+        # Test the search
+        self.assertListEqual(['Lizmap', 'Lizmap server'], self.remote.search("lizmap"))
 
     @unittest.expectedFailure
     def test_latest_pgmetadata(self):

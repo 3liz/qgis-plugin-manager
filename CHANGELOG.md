@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fix the search when there is a space in the plugin name
 * Fix some Python errors and typo
 
 ## 1.1.0 - 2022-05-10

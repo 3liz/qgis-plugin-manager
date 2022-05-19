@@ -25,4 +25,30 @@
         <external_dependencies></external_dependencies>
         <server>True</server>
     </pyqgis_plugin>
+    <pyqgis_plugin name="Lizmap server" version="1.0.0" plugin_id="2683">
+        <description><![CDATA[Only used on a QGIS server. Publish and share your QGIS maps on the Web via Lizmap Web Client, by 3liz.com]]></description>
+        <about><![CDATA[With a few clicks, it&#39;s possible to publish and share your QGIS projects on the Web via Lizmap Web Client, by 3liz.com. QGIS Server is used in the background so all the symbology is kept. The edition forms in QGIS are also available. Demo : https://demo.lizmap.com and documentation : https://docs.lizmap.com and hosting solutions https://lizmap.com]]></about>
+        <version>1.0.0</version>
+        <trusted>True</trusted>
+        <qgis_minimum_version>3.10.0</qgis_minimum_version>
+        <qgis_maximum_version>3.99.0</qgis_maximum_version>
+        <homepage><![CDATA[https://docs.lizmap.com]]></homepage>
+        <file_name>lizmap_server.1.0.0.zip</file_name>
+        <icon>/media/packages/2022/icon_NdFz8Bm.png</icon>
+        <author_name><![CDATA[3Liz]]></author_name>
+        <download_url>https://plugins.qgis.org/plugins/lizmap_server/version/1.0.0/download/</download_url>
+        <uploaded_by><![CDATA[Gustry]]></uploaded_by>
+        <create_date>2022-05-11T04:20:29.836930</create_date>
+        <update_date>2022-05-11T04:20:30.259694</update_date>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/3liz/qgis-lizmap-server-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/3liz/qgis-lizmap-server-plugin]]></repository>
+        <tags><![CDATA[web,cloud]]></tags>
+        <downloads>189</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+        <external_dependencies></external_dependencies>
+        <server>True</server>
+    </pyqgis_plugin>
 </plugins>
