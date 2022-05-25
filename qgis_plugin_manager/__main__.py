@@ -63,7 +63,7 @@ def main():  # noqa: C901
         )
         qgis = qgis_server_version()
         if qgis:
-            print(f"QGIS server version {qgis_server_version()}")
+            print(f"QGIS version {qgis_server_version()}")
         parser.exit()
 
     # if no command is passed, print the help and exit
