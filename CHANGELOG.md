@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.2 - 2022-06-13
+
 * Fix Python exception if the "init" or "update" commands were not executed
 
 ## 1.1.1 - 2022-05-19
