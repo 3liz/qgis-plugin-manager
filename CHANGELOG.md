@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix Python exception if the "init" or "update" commands were not executed
+
 ## 1.1.1 - 2022-05-19
 
 * Fix the search when there is a space in the plugin name

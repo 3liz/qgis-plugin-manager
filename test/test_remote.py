@@ -46,8 +46,8 @@ class TestRemote(unittest.TestCase):
 
         # Test the search
         self.assertListEqual([], self.remote.search("foo"))
-        self.assertListEqual(['Data Plotly'], self.remote.search("dataviz"))
-        self.assertListEqual(['Data Plotly'], self.remote.search("dataplotly"))
+        self.assertListEqual(['Data Plotly'], self.remote.search("dataviz", strict=False))
+        self.assertListEqual(['Data Plotly'], self.remote.search("dataplotly", strict=False))
 
     def test_search_with_space_in_name(self):
         """ Test Lizmap should give 2 values : Lizmap and 'Lizmap server'. """
@@ -72,7 +72,7 @@ class TestRemote(unittest.TestCase):
         )
 
         # Test the search
-        self.assertListEqual(['Lizmap', 'Lizmap server'], self.remote.search("lizmap"))
+        self.assertListEqual(['Lizmap', 'Lizmap server'], self.remote.search("lizmap", strict=False))
 
     @unittest.expectedFailure
     def test_latest_pgmetadata(self):

@@ -26,6 +26,32 @@ class Remote:
         self.list = None
         self.list_plugins = None
 
+    def remote_is_ready(self) -> bool:
+        """ Return if the remote is ready to be parsed. """
+        source_list = Path(self.folder / 'sources.list')
+        if not source_list.exists():
+            print(f"{Level.Critical}The sources.list file does not exist{Level.End}")
+            print("Use the 'init' command to create the file")
+            return False
+
+        if self.list is None:
+            self.remote_list()
+
+        cache = Path(self.folder / ".cache_qgis_plugin_manager")
+        for server in self.list:
+            filename = self.server_cache_filename(cache, server)
+
+            if not filename.exists():
+                print(
+                    f"{Level.Critical}"
+                    f"The 'update' command has not been done before. "
+                    f"The repository {server} has not been fetched before."
+                    f"{Level.End}"
+                )
+                return False
+
+        return True
+
     def remote_list(self) -> list:
         """Return the list of remotes configured.
 
@@ -53,14 +79,15 @@ class Remote:
                             f"{Level.End}"
                         )
                         print(
-                            f"Instead of\n{raw_line}"
+                            f"Instead of\n'{raw_line}'"
+                            f"\nin your 'sources.list' file, you should have"
                             f"\n"
-                            f"you should have"
-                            f"\n"
-                            f"https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]"
-                            f"\n"
+                            f"'https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]'"
+                            f"\n\n"
                             f"Can you remove the file sources.list ? 'qgis-plugin-manager init' will "
-                            f"regenerate it using dynamic QGIS version if QGIS is well configured."
+                            f"regenerate it using dynamic QGIS version if QGIS is well configured.\n"
+                            f"This just warning, the process will continue with the hardcoded QGIS version."
+                            f"\n\n"
                         )
 
                     raw_line = raw_line.replace("[VERSION]", f"{qgis_version[0]}.{qgis_version[1]}")
@@ -103,22 +130,19 @@ class Remote:
                 print(f"\t{e}")
                 continue
 
-            filename = ""
-            for x in server:
-                if x.isalnum():
-                    filename += x
-                else:
-                    filename += '-'
+            filename = self.server_cache_filename(cache, server)
 
-            filename = re.sub(r"\-+", "-", filename)
             # Binary mode does not support encoding parameter
-            with open(Path(cache / f"{filename}.xml"), 'wb') as output:
+            with open(filename, 'wb') as output:
                 output.write(f.read())
 
             print(f"\t{Level.Success}Ok{Level.End}")
 
     def xml_in_folder(self) -> List[Path]:
         """ Returns the list of XML files in the folder. """
+        if not self.remote_is_ready():
+            return []
+
         cache = Path(self.folder / ".cache_qgis_plugin_manager")
         if not cache.exists():
             cache.mkdir()
@@ -132,9 +156,6 @@ class Remote:
                 continue
 
             xml.append(xml_file)
-
-        if len(xml) < 1:
-            print(f"{Level.Warning}No remote repositories found !{Level.End}")
 
         return xml
 
@@ -222,8 +243,12 @@ class Remote:
 
         return similar
 
-    def search(self, search_string: str) -> List:
+    def search(self, search_string: str, strict=True) -> List:
         """ Search in plugin names and tags."""
+        # strict is used in tests to not check if the remote is ready
+        if strict and not self.remote_is_ready():
+            return []
+
         if self.list is None:
             self.remote_list()
 
@@ -245,6 +270,9 @@ class Remote:
 
         Default version is latest.
         """
+        if not self.remote_is_ready():
+            return False
+
         xml_version = self.latest(plugin_name)
         if xml_version is None:
             print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
@@ -313,3 +341,16 @@ class Remote:
             print(f"Installed with user '{current_user}'")
         print("Please check file permissions and owner according to the user running QGIS Server.")
         return True
+
+    @staticmethod
+    def server_cache_filename(cache_folder, server) -> Path:
+        """ Return the path for XML file. """
+        filename = ""
+        for x in server:
+            if x.isalnum():
+                filename += x
+            else:
+                filename += '-'
+
+        filename = re.sub(r"\-+", "-", filename)
+        return Path(cache_folder / f"{filename}.xml")
