@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Display if the plugin has a WPS provider in its metadata.txt file
+* Fix Python error if the username is not found, when it's used in Docker for instance
 
 ## 1.1.3 - 2022-06-16
 

@@ -197,7 +197,12 @@ class LocalDirectory:
             folder = self.folder.joinpath(folder)
             stat_info = os.stat(folder)
             perms = stat.S_IMODE(os.stat(folder).st_mode)
-            permissions = f"{pwd.getpwuid(stat_info.st_uid)[0]} : {oct(perms)}"
+            user_info = stat_info.st_uid
+            try:
+                user_name = pwd.getpwuid(user_info)[0]
+            except KeyError:
+                user_name = user_info
+            permissions = f"{user_name} : {oct(perms)}"
             plugin_data.append(permissions)
             if permissions not in list_of_owners:
                 list_of_owners.append(permissions)
