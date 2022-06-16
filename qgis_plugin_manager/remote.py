@@ -15,7 +15,11 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
-from qgis_plugin_manager.utils import DEFAULT_QGIS_VERSION, qgis_server_version
+from qgis_plugin_manager.utils import (
+    DEFAULT_QGIS_VERSION,
+    current_user,
+    qgis_server_version,
+)
 
 
 class Remote:
@@ -306,9 +310,7 @@ class Remote:
 
         # Get current users
         sudo_user = os.environ.get('SUDO_USER')
-        current_user = os.environ.get('USER')
-        if current_user is None:
-            current_user = os.environ.get('UID')
+        user = current_user()
 
         # Saving the zip from the URL
         zip_file = Path(self.folder / file_name)
@@ -318,7 +320,7 @@ class Remote:
                 output.write(f.read())
         except PermissionError:
             file_path = self.folder.absolute()
-            print(f"\t{Level.Critical}Current user {current_user} can not write in {file_path}{Level.End}")
+            print(f"\t{Level.Critical}Current user {user} can not write in {file_path}{Level.End}")
             print("Check file permissions for the folder.")
             return False
 
@@ -343,9 +345,9 @@ class Remote:
 
         # Installation done !
         if sudo_user:
-            print(f"Installed with super user '{current_user}' instead of '{sudo_user}'")
+            print(f"Installed with super user '{user}' instead of '{sudo_user}'")
         else:
-            print(f"Installed with user '{current_user}'")
+            print(f"Installed with user '{user}'")
         print("Please check file permissions and owner according to the user running QGIS Server.")
         return True
 

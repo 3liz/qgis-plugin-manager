@@ -1,6 +1,8 @@
-__copyright__ = 'Copyright 2021, 3Liz'
+__copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
+
+import os
 
 from typing import Union
 
@@ -42,6 +44,36 @@ def parse_version(version: str) -> Union[None, list]:
     return version
 
 
+def current_user() -> str:
+    """ Return the current user if possible. """
+    import getpass
+
+    user = getpass.getuser()
+    if user:
+        return user
+
+    try:
+        user = os.getlogin()
+        if user:
+            return user
+    except OSError:
+        pass
+
+    user = os.getegid()
+    if user:
+        return str(user)
+
+    user = os.environ.get('USER')
+    if user:
+        return user
+
+    user = os.environ.get('UID')
+    if user:
+        return user
+
+    return 'Unknown'
+
+
 def qgis_server_version() -> str:
     """ Try to guess the QGIS Server version.
 
@@ -57,7 +89,6 @@ def qgis_server_version() -> str:
             f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
             f"{Level.End}"
         )
-        import os
-        print(f"Current user : {os.environ.get('USER')}")
+        print(f"Current user : {current_user()}")
         print(f'PYTHONPATH={os.getenv("PYTHONPATH")}')
     return ''
