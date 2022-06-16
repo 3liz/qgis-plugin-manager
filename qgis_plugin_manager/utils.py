@@ -48,9 +48,12 @@ def current_user() -> str:
     """ Return the current user if possible. """
     import getpass
 
-    user = getpass.getuser()
-    if user:
-        return user
+    try:
+        user = getpass.getuser()
+        if user:
+            return user
+    except KeyError:
+        pass
 
     try:
         user = os.getlogin()
