@@ -25,14 +25,17 @@ class Remote:
         self.folder = folder
         self.list = None
         self.list_plugins = None
+        self.setting_error = False
 
     def remote_is_ready(self) -> bool:
         """ Return if the remote is ready to be parsed. """
         source_list = Path(self.folder / 'sources.list')
         if not source_list.exists():
-            print(f"{Level.Critical}The sources.list file does not exist{Level.End}")
-            print("Use the 'init' command to create the file")
-            return False
+            if not self.setting_error:
+                print(f"{Level.Critical}The sources.list file does not exist{Level.End}")
+                print("Use the 'init' command to create the file")
+                self.setting_error = True
+                return False
 
         if self.list is None:
             self.remote_list()
@@ -42,13 +45,15 @@ class Remote:
             filename = self.server_cache_filename(cache, server)
 
             if not filename.exists():
-                print(
-                    f"{Level.Critical}"
-                    f"The 'update' command has not been done before. "
-                    f"The repository {server} has not been fetched before."
-                    f"{Level.End}"
-                )
-                return False
+                if not self.setting_error:
+                    print(
+                        f"{Level.Critical}"
+                        f"The 'update' command has not been done before. "
+                        f"The repository {server} has not been fetched before."
+                        f"{Level.End}"
+                    )
+                    self.setting_error = True
+                    return False
 
         return True
 

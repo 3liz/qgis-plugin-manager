@@ -5,6 +5,7 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import argparse
+import os
 
 from pathlib import Path
 
@@ -73,21 +74,27 @@ def main():  # noqa: C901
 
     exit_val = 0
 
+    # Default to the current directory
+    plugin_path = Path('.')
+    if os.environ.get('QGIS_PLUGINPATH'):
+        # Except if the QGIS_PLUGINPATH is set
+        plugin_path = Path(os.environ.get('QGIS_PLUGINPATH'))
+
     if args.command == "update":
-        remote = Remote(Path('.'))
+        remote = Remote(plugin_path)
         remote.update()
     elif args.command in ("list", "init", "upgrade"):
         qgis = qgis_server_version()
         if qgis:
             print(f"QGIS server version : {qgis}")
-        plugins = LocalDirectory(Path('.'), qgis_version=qgis)
+        plugins = LocalDirectory(plugin_path, qgis_version=qgis)
 
         if args.command == "list":
             plugins.print_table()
         elif args.command == "init":
             plugins.init()
         elif args.command == "upgrade":
-            remote = Remote(Path('.'))
+            remote = Remote(plugin_path)
             folders = plugins.plugin_list()
             for folder in folders:
                 plugin_object = plugins.plugin_info(folder)
@@ -97,11 +104,11 @@ def main():  # noqa: C901
             print(f"{Level.Warning}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
 
     elif args.command == "remote":
-        remote = Remote(Path('.'))
+        remote = Remote(plugin_path)
         remote.print_list()
 
     elif args.command == "cache":
-        remote = Remote(Path('.'))
+        remote = Remote(plugin_path)
         latest = remote.latest(args.plugin_name)
         if latest is None:
             print(f"{Level.Warning}Plugin not found{Level.End}")
@@ -109,13 +116,13 @@ def main():  # noqa: C901
             print(f"Plugin {args.plugin_name} : {latest} available")
 
     elif args.command == "search":
-        remote = Remote(Path('.'))
+        remote = Remote(plugin_path)
         results = remote.search(args.plugin_name)
         for result in results:
             print(result)
 
     elif args.command == "install":
-        remote = Remote(Path('.'))
+        remote = Remote(plugin_path)
         parameter = args.plugin_name.split('==')
         result = remote.install(*parameter)
         if not result:

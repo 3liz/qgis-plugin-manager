@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* If the environment variable `QGIS_PLUGINPATH` is set, this directory is used instead of the current directory
+* Fix display issue when the error was printed many times in the terminal
+
 ## 1.1.2 - 2022-06-13
 
 * Fix Python exception if the "init" or "update" commands were not executed
