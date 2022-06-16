@@ -29,6 +29,7 @@ class Plugin(NamedTuple):
     tags: str = None
     server: bool = False
     has_processing: bool = False
+    has_wps: bool = False
 
 
 class Level:

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Display if the plugin has a WPS provider in its metadata.txt file
+
 ## 1.1.3 - 2022-06-16
 
 * If the environment variable `QGIS_PLUGINPATH` is set, this directory is used instead of the current directory

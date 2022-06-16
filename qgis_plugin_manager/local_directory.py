@@ -134,6 +134,7 @@ class LocalDirectory:
                 plugin_folder, "server") in ('True', 'true', '1', 'yes', True),
             has_processing=self.plugin_metadata(
                 plugin_folder, "hasProcessingProvider") in ('True', 'true', '1', 'yes', True),
+            has_wps=self.plugin_metadata(plugin_folder, "wps") in ('True', 'true', '1', 'yes', True),
         )
         return data
 
@@ -171,6 +172,8 @@ class LocalDirectory:
             flags = []
             if info.server:
                 flags.append('Server')
+            if info.has_wps:
+                flags.append('WPS')
             if info.experimental in ('True', 'true', '1', 'yes', True):
                 flags.append('Experimental')
             if info.has_processing in ('True', 'true', '1', 'yes', True):
