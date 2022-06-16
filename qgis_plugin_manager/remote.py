@@ -307,6 +307,8 @@ class Remote:
         # Get current users
         sudo_user = os.environ.get('SUDO_USER')
         current_user = os.environ.get('USER')
+        if current_user is None:
+            current_user = os.environ.get('UID')
 
         # Saving the zip from the URL
         zip_file = Path(self.folder / file_name)
