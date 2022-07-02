@@ -88,6 +88,14 @@ List all plugins in /home/etienne/dev/qgis/server_plugin
 ------------------------------------------------------------------------------------------------------------------
 ```
 
+#### Install needed plugins only, mainly on QGIS server
+
+**Important note**, install **only** plugins you need **you**. On QGIS **desktop**, plugins can slow down your computer.
+On QGIS **server**, plugins are like **hooks** into QGIS server, they can alter input or output of QGIS server.
+They can produce **unexpected** result if you don't know how the plugin. Please refer to their respective documentation
+or the application that needs QGIS server plugins (For instance,
+[plugins for Lizmap Web Client](https://docs.lizmap.com/current/en/install/pre_requirements.html#qgis-server-plugins))
+
 ### Remote
 
 ```bash
