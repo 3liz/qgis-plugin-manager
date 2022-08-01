@@ -91,7 +91,7 @@ jobs:
         sed -i "s/__VERSION__/${VERSION}/g" setup.py
         sed -i "s/__VERSION__/${VERSION}/g" qgis_plugin_manager/__about__.py
 
-    - uses: actions/cache@v3.0.4
+    - uses: actions/cache@v3.0.5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('.github/requirements.txt') }}
