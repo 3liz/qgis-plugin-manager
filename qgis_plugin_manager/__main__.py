@@ -64,7 +64,7 @@ def main():  # noqa: C901
         )
         qgis = qgis_server_version()
         if qgis:
-            print(f"QGIS version {qgis_server_version()}")
+            print(f"QGIS version {qgis}")
         parser.exit()
 
     # if no command is passed, print the help and exit
@@ -86,7 +86,7 @@ def main():  # noqa: C901
     elif args.command in ("list", "init", "upgrade"):
         qgis = qgis_server_version()
         if qgis:
-            print(f"QGIS server version : {qgis}")
+            print(f"QGIS version : {qgis}")
         plugins = LocalDirectory(plugin_path, qgis_version=qgis)
 
         if args.command == "list":

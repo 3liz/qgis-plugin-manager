@@ -77,6 +77,18 @@ class Remote:
             qgis_version = DEFAULT_QGIS_VERSION
 
         qgis_version = qgis_version.split('.')
+        if int(qgis_version[1]) % 2 != 0:
+            print(
+                f"{Level.Alert}"
+                f"A development version is detected : {qgis_version[0]}.{qgis_version[1]}."
+                f"{Level.End}"
+            )
+            qgis_version[1] = str(int(qgis_version[1]) + 1)
+            print(
+                f"{Level.Alert}"
+                f"using {qgis_version[0]}.{qgis_version[1]} instead."
+                f"{Level.End}"
+            )
 
         with source_list.open(encoding='utf8') as f:
             for line in f.readlines():
