@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* New environment variable `QGIS_PLUGIN_MANAGER_SOURCES_FILE` and `QGIS_PLUGIN_MANAGER_CACHE_DIR` to store settings.
+
 ## 1.1.4 - 2022-06-16
 
 * Display if the plugin has a WPS provider in its metadata.txt file
