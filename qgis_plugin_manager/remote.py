@@ -84,7 +84,7 @@ class Remote:
                     raw_line = line.strip()
                     if raw_line.startswith("https://plugins.qgis.org") and "[VERSION]" not in raw_line:
                         print(
-                            f"{Level.Warning}"
+                            f"{Level.Alert}"
                             f"Your https://plugins.qgis.org remote is not using a dynamic QGIS version."
                             f"{Level.End}"
                         )
@@ -125,7 +125,7 @@ class Remote:
         if len(self.list):
             print('\n'.join(self.list))
         else:
-            print(f"{Level.Warning}No remote configured{Level.End}")
+            print(f"{Level.Alert}No remote configured{Level.End}")
 
     def update(self):
         """ For each remote, it updates the XML file. """
@@ -142,7 +142,7 @@ class Remote:
 
         cache.mkdir()
 
-        for i, server in enumerate(self.list):
+        for server in self.list:
             print(f"Downloading {server}...")
             request = urllib.request.Request(server, headers={'User-Agent': 'Mozilla/5.0'})
             try:
@@ -296,7 +296,7 @@ class Remote:
 
         xml_version = self.latest(plugin_name)
         if xml_version is None:
-            print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
+            print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
             similarity = self.similar_names(plugin_name)
             if similarity:
                 for plugin in similarity:
@@ -317,7 +317,7 @@ class Remote:
         try:
             f = urllib.request.urlopen(request)
         except urllib.error.HTTPError:
-            print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
+            print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
             return False
 
         # Get current users

@@ -101,7 +101,7 @@ def main():  # noqa: C901
                 result = remote.install(plugin_object.name)
                 if not result:
                     exit_val = 1
-            print(f"{Level.Warning}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+            print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
 
     elif args.command == "remote":
         remote = Remote(plugin_path)
@@ -111,7 +111,7 @@ def main():  # noqa: C901
         remote = Remote(plugin_path)
         latest = remote.latest(args.plugin_name)
         if latest is None:
-            print(f"{Level.Warning}Plugin not found{Level.End}")
+            print(f"{Level.Alert}Plugin not found{Level.End}")
         else:
             print(f"Plugin {args.plugin_name} : {latest} available")
 
@@ -128,7 +128,7 @@ def main():  # noqa: C901
         if not result:
             exit_val = 1
         else:
-            print(f"{Level.Warning}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+            print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
 
     return exit_val
 

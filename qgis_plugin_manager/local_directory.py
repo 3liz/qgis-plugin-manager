@@ -11,10 +11,13 @@ from pathlib import Path
 from typing import Dict, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
-from qgis_plugin_manager.utils import sources_file
-
-from .remote import Remote
-from .utils import DEFAULT_QGIS_VERSION, parse_version, pretty_table
+from qgis_plugin_manager.remote import Remote
+from qgis_plugin_manager.utils import (
+    DEFAULT_QGIS_VERSION,
+    parse_version,
+    pretty_table,
+    sources_file,
+)
 
 
 class LocalDirectory:
@@ -38,7 +41,7 @@ class LocalDirectory:
         """ Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = sources_file(self.folder)
         if source_file.exists():
-            print(f"{Level.Warning}{source_file.absolute()} is already existing. Quit{Level.End}")
+            print(f"{Level.Alert}{source_file.absolute()} is already existing. Quit{Level.End}")
             return False
 
         if self.qgis_version:
@@ -46,7 +49,7 @@ class LocalDirectory:
             print("Init https://plugins.qgis.org")
         else:
             print(
-                f"{Level.Warning}"
+                f"{Level.Alert}"
                 f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}"
                 f"{Level.End}"
             )
@@ -150,7 +153,8 @@ class LocalDirectory:
         print(f"List all plugins in {self.folder.absolute()}\n")
         headers = [
             'Folder ⬇', 'Name', 'Version', 'Flags', 'QGIS min', 'QGIS max', 'Author',
-            'Folder rights', 'Action ⚠', ]
+            'Folder rights', 'Action ⚠',
+        ]
         headers = [f"  {i}  " for i in headers]
         data = []
 
@@ -236,20 +240,20 @@ class LocalDirectory:
             else:
                 extra_info.append('Unknown version')
 
-            plugin_data.append(Level.Warning + ';'.join(extra_info) + Level.End)
+            plugin_data.append(Level.Alert + ';'.join(extra_info) + Level.End)
             data.append(plugin_data)
 
         if len(data):
             print(pretty_table(data, headers))
         else:
             print(
-                f"{Level.Warning}No plugin found in the current directory {self.folder.absolute()}{Level.End}"
+                f"{Level.Alert}No plugin found in the current directory {self.folder.absolute()}{Level.End}"
             )
 
         if len(list_of_owners) > 1:
             list_of_owners = [f"'{i}'" for i in list_of_owners]
             print(
-                f"{Level.Warning}"
+                f"{Level.Alert}"
                 f"Different rights have been detected : {','.join(list_of_owners)}"
                 f"{Level.End}. "
                 f"Please check user-rights."

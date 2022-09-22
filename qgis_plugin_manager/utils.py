@@ -30,7 +30,9 @@ def pretty_table(iterable, header) -> str:
             [
                 str(c) + ' ' * (
                     l - len(str(c))) + '|' for c, l in zip(
-                    row, max_len)]) + '\n'
+                    row, max_len)
+            ]
+        ) + '\n'
     output += '-' * (sum(max_len) + 1) + '\n'
     return output
 
@@ -89,7 +91,7 @@ def qgis_server_version() -> str:
         return Qgis.QGIS_VERSION.split('-')[0]
     except ImportError:
         print(
-            f"{Level.Warning}"
+            f"{Level.Alert}"
             f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
             f"{Level.End}"
         )
