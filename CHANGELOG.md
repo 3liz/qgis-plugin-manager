@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Switch to QGIS 3.22 for the default version
 * New environment variable `QGIS_PLUGIN_MANAGER_SOURCES_FILE` and `QGIS_PLUGIN_MANAGER_CACHE_DIR` to store settings.
 
 ## 1.1.4 - 2022-06-16

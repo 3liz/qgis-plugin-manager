@@ -9,7 +9,7 @@ from typing import Union
 
 from qgis_plugin_manager.definitions import Level
 
-DEFAULT_QGIS_VERSION = "3.16"
+DEFAULT_QGIS_VERSION = "3.22"
 
 
 def pretty_table(iterable, header) -> str:
