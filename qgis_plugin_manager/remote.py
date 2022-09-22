@@ -96,7 +96,7 @@ class Remote:
                             f"\n\n"
                             f"Can you remove the file sources.list ? 'qgis-plugin-manager init' will "
                             f"regenerate it using dynamic QGIS version if QGIS is well configured.\n"
-                            f"This just warning, the process will continue with the hardcoded QGIS version."
+                            f"This is only a warning, the process will continue with the hardcoded QGIS version."
                             f"\n\n"
                         )
 
