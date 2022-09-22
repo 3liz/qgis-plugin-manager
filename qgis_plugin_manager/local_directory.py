@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
+from qgis_plugin_manager.utils import sources_file
 
 from .remote import Remote
 from .utils import DEFAULT_QGIS_VERSION, parse_version, pretty_table
@@ -35,9 +36,9 @@ class LocalDirectory:
 
     def init(self) -> bool:
         """ Init this qgis-plugin-manager by creating the default sources.list."""
-        source_file = self.folder.joinpath('sources.list')
+        source_file = sources_file(self.folder)
         if source_file.exists():
-            print(f"{Level.Warning}sources.list already existing. Quit{Level.End}")
+            print(f"{Level.Warning}{source_file.absolute()} is already existing. Quit{Level.End}")
             return False
 
         if self.qgis_version:
@@ -56,6 +57,7 @@ class LocalDirectory:
         with open(source_file, 'w', encoding='utf8') as f:
             f.write(server)
 
+        print(f"{source_file.absolute()} has been written.")
         return True
 
     def plugin_list(self) -> Dict[str, str]:

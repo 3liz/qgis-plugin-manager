@@ -57,6 +57,15 @@ commands:
     install             Install a plugin
 ```
 
+## Environment variable
+
+QGIS-Plugin-Manager will take care of following variables :
+
+* `QGIS_PLUGIN_MANAGER_SOURCES_FILE` for storing a path to the `sources.list` otherwise, the current folder will be used.
+* `QGIS_PLUGIN_MANAGER_CACHE_DIR` for storing all XML files downloaded otherwise, the current folder will be used `.cache_qgis_plugin_manager`
+* `QGIS_PLUGINPATH` for storing plugins
+* `PYTHONPATH` for importing QGIS libraries
+
 ### Init
 
 To create the first `sources.list` in the directory with at least the default repository https://plugins.qgis.org :

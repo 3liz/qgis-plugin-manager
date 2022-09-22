@@ -4,6 +4,7 @@ __email__ = 'info@3liz.org'
 
 import os
 
+from pathlib import Path
 from typing import Union
 
 from qgis_plugin_manager.definitions import Level
@@ -95,3 +96,16 @@ def qgis_server_version() -> str:
         print(f"Current user : {current_user()}")
         print(f'PYTHONPATH={os.getenv("PYTHONPATH")}')
     return ''
+
+
+def sources_file(current_folder) -> Path:
+    """ Return the default path to the "sources.list" file.
+
+    The path by default or if it's defined with the environment variable.
+    """
+    env_path = os.getenv("QGIS_PLUGIN_MANAGER_SOURCES_FILE")
+    if env_path:
+        return Path(env_path)
+
+    source_file = current_folder.joinpath('sources.list')
+    return source_file

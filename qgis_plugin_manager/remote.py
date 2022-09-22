@@ -19,6 +19,7 @@ from qgis_plugin_manager.utils import (
     DEFAULT_QGIS_VERSION,
     current_user,
     qgis_server_version,
+    sources_file,
 )
 
 
@@ -33,10 +34,10 @@ class Remote:
 
     def remote_is_ready(self) -> bool:
         """ Return if the remote is ready to be parsed. """
-        source_list = Path(self.folder / 'sources.list')
+        source_list = sources_file(self.folder)
         if not source_list.exists():
             if not self.setting_error:
-                print(f"{Level.Critical}The sources.list file does not exist{Level.End}")
+                print(f"{Level.Critical}The {source_list.absolute()} file does not exist{Level.End}")
                 print("Use the 'init' command to create the file")
                 self.setting_error = True
                 return False
@@ -44,7 +45,7 @@ class Remote:
         if self.list is None:
             self.remote_list()
 
-        cache = Path(self.folder / ".cache_qgis_plugin_manager")
+        cache = self.cache_directory()
         for server in self.list:
             filename = self.server_cache_filename(cache, server)
 
@@ -67,7 +68,7 @@ class Remote:
         The token [VERSION] is replaced by the current version X.YY
         """
         self.list = []
-        source_list = Path(self.folder / 'sources.list')
+        source_list = sources_file(self.folder)
         if not source_list.exists():
             return []
 
@@ -104,6 +105,17 @@ class Remote:
 
         return self.list
 
+    def cache_directory(self) -> Path:
+        """ Return the cache directory.
+
+        The default one, or the one defined by environment variable.
+        """
+        env_path = os.getenv("QGIS_PLUGIN_MANAGER_CACHE_DIR")
+        if env_path:
+            return Path(env_path)
+
+        return Path(self.folder / ".cache_qgis_plugin_manager")
+
     def print_list(self):
         """ Print in the console the list of remotes. """
         if self.list is None:
@@ -120,7 +132,7 @@ class Remote:
         if self.list is None:
             self.remote_list()
 
-        cache = Path(self.folder / ".cache_qgis_plugin_manager")
+        cache = self.cache_directory()
         if cache.exists():
             try:
                 shutil.rmtree(cache)
@@ -152,7 +164,7 @@ class Remote:
         if not self.remote_is_ready():
             return []
 
-        cache = Path(self.folder / ".cache_qgis_plugin_manager")
+        cache = self.cache_directory()
         if not cache.exists():
             cache.mkdir()
             print("The 'update' has not been done before.")
