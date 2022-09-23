@@ -23,6 +23,15 @@ pip3 install qgis-plugin-manager
 python3 -m pip install qgis-plugin-manager
 ```
 
+## Environment variable
+
+QGIS-Plugin-Manager will take care of following variables :
+
+* `QGIS_PLUGIN_MANAGER_SOURCES_FILE` for storing a path to the `sources.list` otherwise, the current folder will be used.
+* `QGIS_PLUGIN_MANAGER_CACHE_DIR` for storing all XML files downloaded otherwise, the current folder will be used `.cache_qgis_plugin_manager`
+* `QGIS_PLUGINPATH` for storing plugins
+* `PYTHONPATH` for importing QGIS libraries
+
 ## Utilisation
 
 **Either** you need to go in the directory where you are storing plugins, **or** you can use the environment variable `QGIS_PLUGINPATH`.
@@ -56,15 +65,6 @@ commands:
     search              Search for plugins
     install             Install a plugin
 ```
-
-## Environment variable
-
-QGIS-Plugin-Manager will take care of following variables :
-
-* `QGIS_PLUGIN_MANAGER_SOURCES_FILE` for storing a path to the `sources.list` otherwise, the current folder will be used.
-* `QGIS_PLUGIN_MANAGER_CACHE_DIR` for storing all XML files downloaded otherwise, the current folder will be used `.cache_qgis_plugin_manager`
-* `QGIS_PLUGINPATH` for storing plugins
-* `PYTHONPATH` for importing QGIS libraries
 
 ### Init
 
