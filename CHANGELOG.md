@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Better wording when the remote XML has not been fetched and show the list of plugins
+* New environment variable `QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE` to show a warning when we don't need a `sources.list`
+
 ## 1.2.0 - 2022-09-23
 
 * Switch to QGIS 3.22 for the default version

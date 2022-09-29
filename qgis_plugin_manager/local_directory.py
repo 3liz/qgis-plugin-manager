@@ -17,6 +17,7 @@ from qgis_plugin_manager.utils import (
     parse_version,
     pretty_table,
     sources_file,
+    to_bool,
 )
 
 
@@ -238,7 +239,10 @@ class LocalDirectory:
                         extra_info.append(f"QGIS Maximum {info.qgis_maximum_version}")
 
             else:
-                extra_info.append('Unknown version')
+                # "qgis-plugin-manager update" is missing.
+                # We can't determine what to do
+                if not to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE"), False):
+                    extra_info.append('Remote unknown')
 
             plugin_data.append(Level.Alert + ';'.join(extra_info) + Level.End)
             data.append(plugin_data)

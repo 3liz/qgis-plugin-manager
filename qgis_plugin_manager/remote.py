@@ -20,6 +20,7 @@ from qgis_plugin_manager.utils import (
     current_user,
     qgis_server_version,
     sources_file,
+    to_bool,
 )
 
 
@@ -34,6 +35,9 @@ class Remote:
 
     def remote_is_ready(self) -> bool:
         """ Return if the remote is ready to be parsed. """
+        if to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE"), False):
+            return True
+
         source_list = sources_file(self.folder)
         if not source_list.exists():
             if not self.setting_error:
