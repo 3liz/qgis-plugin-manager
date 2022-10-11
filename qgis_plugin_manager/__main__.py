@@ -57,11 +57,8 @@ def main() -> int:  # noqa: C901
     if args.version:
         import pkg_resources
 
-        print(
-            "qgis-plugin-manager version: {}".format(
-                pkg_resources.get_distribution("qgis-plugin-manager").version
-            )
-        )
+        version = pkg_resources.get_distribution("qgis-plugin-manager").version
+        print(f"qgis-plugin-manager version: {version}")
         qgis = qgis_server_version()
         if qgis:
             print(f"QGIS version {qgis}")

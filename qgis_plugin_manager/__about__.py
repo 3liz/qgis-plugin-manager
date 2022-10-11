@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 __author__ = "Étienne Trimaille"
-__copyright__ = "2021 - {0}, {1}".format(date.today().year, __author__)
+__copyright__ = f"2021 - {date.today().year}, {__author__}"
 __email__ = "etrimaille@3liz.com"
 __license__ = "GNU General Public License v3.0"
 __summary__ = "Tool for downloading/managing QGIS plugins from CLI."
