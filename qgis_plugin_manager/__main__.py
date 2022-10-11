@@ -9,6 +9,7 @@ import os
 
 from pathlib import Path
 
+from qgis_plugin_manager.__about__ import __version__
 from qgis_plugin_manager.definitions import Level
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
@@ -20,9 +21,7 @@ def main() -> int:  # noqa: C901
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument(
-        "-v", "--version", help="Print the version and exit", action="store_true"
-    )
+    parser.add_argument("-v", "--version", action="version", version=__version__)
 
     subparsers = parser.add_subparsers(
         title="commands", description="qgis-plugin-manager command", dest="command"
@@ -52,17 +51,6 @@ def main() -> int:  # noqa: C901
             "is a space in its name."))
 
     args = parser.parse_args()
-
-    # print the version and exit
-    if args.version:
-        import pkg_resources
-
-        version = pkg_resources.get_distribution("qgis-plugin-manager").version
-        print(f"qgis-plugin-manager version: {version}")
-        qgis = qgis_server_version()
-        if qgis:
-            print(f"QGIS version {qgis}")
-        parser.exit()
 
     # if no command is passed, print the help and exit
     if not args.command:
