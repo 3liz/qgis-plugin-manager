@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Review some exit code when using as a CLI tool
+
 ## 1.2.1 - 2022-09-30
 
 * Better wording when the remote XML has not been fetched and show the list of plugins

@@ -15,7 +15,7 @@ from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import qgis_server_version
 
 
-def main():  # noqa: C901
+def main() -> int:  # noqa: C901
     """ Main function for the CLI menu. """
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -82,7 +82,7 @@ def main():  # noqa: C901
 
     if args.command == "update":
         remote = Remote(plugin_path)
-        remote.update()
+        exit_val = remote.update()
     elif args.command in ("list", "init", "upgrade"):
         qgis = qgis_server_version()
         if qgis:
@@ -92,7 +92,7 @@ def main():  # noqa: C901
         if args.command == "list":
             plugins.print_table()
         elif args.command == "init":
-            plugins.init()
+            exit_val = plugins.init()
         elif args.command == "upgrade":
             remote = Remote(plugin_path)
             folders = plugins.plugin_list()
@@ -129,6 +129,11 @@ def main():  # noqa: C901
             exit_val = 1
         else:
             print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+
+    if exit_val is None:
+        exit_val = 0
+    elif isinstance(exit_val, bool):
+        exit_val = 0 if exit_val else 1
 
     return exit_val
 
