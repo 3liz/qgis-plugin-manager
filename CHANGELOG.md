@@ -4,6 +4,7 @@
 
 * Review some exit code when using as a CLI tool
 * Manage ZIP files which are using `file:` protocol
+* Bump Python minimum version to 3.8
 
 ## 1.2.1 - 2022-09-30
 

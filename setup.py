@@ -10,7 +10,7 @@ from setuptools import setup
 
 from qgis_plugin_manager import __about__
 
-python_min_version = (3, 6)
+python_min_version = (3, 8)
 
 if sys.version_info < python_min_version:
     sys.exit(
@@ -58,8 +58,6 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
