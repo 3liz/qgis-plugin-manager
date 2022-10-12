@@ -12,3 +12,6 @@ venv/
 test/fixtures/plugins/QuickOSM
 test/fixtures/plugins/sources.list.back
 test/fixtures/xml_files/*/.cache_qgis_plugin_manager
+
+test/fixtures/xml_files/file_protocol/sources.list
+test/fixtures/xml_files/file_protocol/minimal_plugin/

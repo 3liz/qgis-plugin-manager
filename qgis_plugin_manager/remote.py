@@ -13,6 +13,7 @@ import zipfile
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List, Union
+from urllib.parse import unquote, urlparse
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import (
@@ -303,7 +304,7 @@ class Remote:
 
         return results
 
-    def install(self, plugin_name, version="latest") -> bool:
+    def install(self, plugin_name, version="latest", remove_zip=True) -> bool:
         """ Install the plugin with a specific version.
 
         Default version is latest.
@@ -330,27 +331,12 @@ class Remote:
             url = url.replace(actual, version)
             file_name = file_name.replace(actual, version)
 
-        request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        try:
-            f = urllib.request.urlopen(request)
-        except urllib.error.HTTPError:
-            print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
-            return False
-
         # Get current users
         sudo_user = os.environ.get('SUDO_USER')
         user = current_user()
 
-        # Saving the zip from the URL
-        zip_file = Path(self.folder / file_name)
-        try:
-            # Binary mode does not support encoding parameter
-            with open(zip_file, 'wb') as output:
-                output.write(f.read())
-        except PermissionError:
-            file_path = self.folder.absolute()
-            print(f"\t{Level.Critical}Current user {user} can not write in {file_path}{Level.End}")
-            print("Check file permissions for the folder.")
+        flag, zip_file = self._download_zip(url, version, plugin_name, file_name, user)
+        if not flag:
             return False
 
         # Removing existing plugin folder if needed
@@ -363,12 +349,17 @@ class Remote:
                 zip_file.unlink()
                 return False
 
+        if not zip_file.exists():
+            print(f"\t{Level.Critical}The zip file does not exist : {zip_file.absolute()}{Level.End}")
+            return False
+
         # Extracting the zip in the folder
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
             zip_ref.extractall(self.folder)
 
-        # Removing the zip file
-        zip_file.unlink()
+        if remove_zip:
+            # Removing the zip file
+            zip_file.unlink()
 
         print(f"\t{Level.Success}Ok {zip_file.name}{Level.End}")
 
@@ -379,6 +370,37 @@ class Remote:
             print(f"Installed with user '{user}'")
         print("Please check file permissions and owner according to the user running QGIS Server.")
         return True
+
+    def _download_zip(
+            self, url: str, version: str, plugin_name: str, file_name: str, user: str
+    ) -> tuple[bool, Union[None, Path]]:
+        """ Download the ZIP
+        """
+        if url.startswith('file:'):
+            zip_file = Path(unquote(urlparse(url).path))
+
+        else:
+            request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            try:
+                f = urllib.request.urlopen(request)
+            except urllib.error.HTTPError:
+                print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
+                return False, None
+
+            # Saving the zip from the URL
+            zip_file = Path(self.folder / file_name)
+
+            try:
+                # Binary mode does not support encoding parameter
+                with open(zip_file, 'wb') as output:
+                    output.write(f.read())
+            except PermissionError:
+                file_path = self.folder.absolute()
+                print(f"\t{Level.Critical}Current user {user} can not write in {file_path}{Level.End}")
+                print("Check file permissions for the folder.")
+                return False, None
+
+        return True, zip_file
 
     @staticmethod
     def server_cache_filename(cache_folder, server) -> Path:

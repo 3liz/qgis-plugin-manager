@@ -53,3 +53,35 @@ class FullInstallNetwork(unittest.TestCase):
         self.remote.install(self.plugin_name)
         self.assertTrue(Path(self.directory / 'QuickOSM').exists())
         self.assertNotEqual(version, self.local.plugin_metadata(self.plugin_name, 'version'))
+
+
+class FullInstallLocal(unittest.TestCase):
+
+    def tearDown(self) -> None:
+        destination = Path('fixtures/xml_files/file_protocol/minimal_plugin')
+        if destination.exists():
+            shutil.rmtree(destination)
+
+        cache_folder = Path('fixtures/xml_files/file_protocol/.cache_qgis_plugin_manager')
+        if cache_folder.exists():
+            shutil.rmtree(cache_folder)
+
+        Path('fixtures/xml_files/file_protocol/sources.list').unlink(missing_ok=True)
+
+    def test_install_local(self):
+        """ Test install local file. """
+        folder = Path('fixtures/xml_files/file_protocol/')
+        folder.joinpath('sources.list').touch()
+        folder.joinpath('.cache_qgis_plugin_manager').mkdir(parents=True, exist_ok=True)
+        shutil.copy(
+            folder.joinpath('plugin.xml'),
+            folder.joinpath('.cache_qgis_plugin_manager/plugins.xml')
+        )
+
+        local = LocalDirectory(folder)
+        remote = Remote(folder)
+        plugins = remote._parse_xml(folder.joinpath('plugin.xml'), {})
+        self.assertDictEqual({'Plugin': '1.0.0'}, plugins)
+        remote.list_plugins = plugins
+        remote.install("Plugin", remove_zip=False)
+        self.assertTrue('minimal_plugin' in list(local.plugin_list().keys()))

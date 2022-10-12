@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Review some exit code when using as a CLI tool
+* Manage ZIP files which are using `file:` protocol
 
 ## 1.2.1 - 2022-09-30
 

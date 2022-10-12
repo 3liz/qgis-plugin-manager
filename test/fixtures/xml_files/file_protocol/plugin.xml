@@ -1,0 +1,15 @@
+<plugins>
+    <pyqgis_plugin name="Plugin" version="1.0.0" plugin_id="72">
+        <description>Test minimal plugin</description>
+        <about>Test minimal plugin</about>
+        <version>1.0.0</version>
+        <qgis_minimum_version>3.4.0</qgis_minimum_version>
+        <qgis_maximum_version>3.99.0</qgis_maximum_version>
+        <homepage>https://docs.lizmap.com</homepage>
+        <file_name>plugin.zip</file_name>
+        <author_name>3Liz</author_name>
+        <download_url>file:fixtures/xml_files/minimal_plugin.zip</download_url>
+        <uploaded_by>Gustry</uploaded_by>
+        <tags>test</tags>
+    </pyqgis_plugin>
+</plugins>
