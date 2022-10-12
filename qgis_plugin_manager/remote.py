@@ -12,7 +12,7 @@ import zipfile
 
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 from urllib.parse import unquote, urlparse
 
 from qgis_plugin_manager.definitions import Level, Plugin
@@ -373,7 +373,7 @@ class Remote:
 
     def _download_zip(
             self, url: str, version: str, plugin_name: str, file_name: str, user: str
-    ) -> tuple[bool, Union[None, Path]]:
+    ) -> Tuple[bool, Union[None, Path]]:
         """ Download the ZIP
         """
         if url.startswith('file:'):
