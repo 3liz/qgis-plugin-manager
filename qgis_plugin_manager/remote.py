@@ -19,7 +19,6 @@ from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import (
     DEFAULT_QGIS_VERSION,
     current_user,
-    qgis_server_version,
     similar_names,
     sources_file,
     to_bool,
@@ -28,12 +27,13 @@ from qgis_plugin_manager.utils import (
 
 class Remote:
 
-    def __init__(self, folder: Path):
+    def __init__(self, folder: Path, qgis_version: str = None):
         """ Constructor. """
         self.folder = folder
         self.list = None
         self.list_plugins = None
         self.setting_error = False
+        self.qgis_version = qgis_version
 
     def remote_is_ready(self) -> bool:
         """ Return if the remote is ready to be parsed. """
@@ -78,11 +78,10 @@ class Remote:
         if not source_list.exists():
             return []
 
-        qgis_version = qgis_server_version()
-        if not qgis_version:
-            qgis_version = DEFAULT_QGIS_VERSION
+        if not self.qgis_version:
+            self.qgis_version = DEFAULT_QGIS_VERSION
 
-        qgis_version = qgis_version.split('.')
+        qgis_version = self.qgis_version.split('.')
         if int(qgis_version[1]) % 2 != 0:
             print(
                 f"{Level.Alert}"
@@ -115,7 +114,7 @@ class Remote:
                             f"Can you remove the file sources.list ? 'qgis-plugin-manager init' will "
                             f"regenerate it using dynamic QGIS version if QGIS is well configured.\n"
                             f"This is only a warning, the process will continue with the hardcoded QGIS "
-                            f"version."
+                            f"version : {DEFAULT_QGIS_VERSION}"
                             f"\n\n"
                         )
 
@@ -294,7 +293,7 @@ class Remote:
 
         return results
 
-    def install(self, plugin_name, version="latest", remove_zip=True) -> bool:
+    def install(self, plugin_name, version="latest", current_version: str = "", remove_zip=True) -> bool:
         """ Install the plugin with a specific version.
 
         Default version is latest.
@@ -313,13 +312,15 @@ class Remote:
                     print(f"Do you mean maybe '{plugin}' ?")
             return False
 
-        print(f"Installation {plugin_name} {version}")
-
         url = self.list_plugins[plugin_name].download_url
         file_name = self.list_plugins[plugin_name].file_name
+        actual = self.list_plugins[plugin_name].version
+
+        if current_version == actual:
+            print(f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}")
+            return False
 
         if version != 'latest':
-            actual = self.list_plugins[plugin_name].version
             url = url.replace(actual, version)
             file_name = file_name.replace(actual, version)
 
@@ -327,6 +328,7 @@ class Remote:
         sudo_user = os.environ.get('SUDO_USER')
         user = current_user()
 
+        print(f"Installation {plugin_name} {version}")
         flag, zip_file = self._download_zip(url, version, plugin_name, file_name, user)
         if not flag:
             return False

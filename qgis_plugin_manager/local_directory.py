@@ -147,6 +147,18 @@ class LocalDirectory:
         )
         return data
 
+    def plugin_installed_version(self, plugin_name) -> Union[str, None]:
+        """ If a plugin is installed or not. """
+        if self._plugins is None:
+            self.plugin_list()
+
+        for plugin_folder in self.plugin_list():
+            info = self.plugin_info(plugin_folder)
+            if info.name == plugin_name:
+                return info.version
+
+        return None
+
     def remove(self, plugin_name: str) -> bool:
         """ Remove a plugin by its human name. """
         if self._plugins is None:

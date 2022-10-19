@@ -68,55 +68,75 @@ def main() -> int:  # noqa: C901
         # Except if the QGIS_PLUGINPATH is set
         plugin_path = Path(os.environ.get('QGIS_PLUGINPATH'))
 
-    if args.command == "update":
+    if args.command in ("update", "remote", "cache", "search"):
+        # Remote only needed
         remote = Remote(plugin_path)
-        exit_val = remote.update()
-    elif args.command in ("list", "init", "upgrade"):
+        if args.command == "update":
+            exit_val = remote.update()
+        elif args.command == "remote":
+            remote.print_list()
+        elif args.command == "cache":
+            latest = remote.latest(args.plugin_name)
+            if latest is None:
+                print(f"{Level.Alert}Plugin not found{Level.End}")
+            else:
+                print(f"Plugin {args.plugin_name} : {latest} available")
+        elif args.command == "search":
+            results = remote.search(args.plugin_name)
+            for result in results:
+                print(result)
+
+    elif args.command in ("remove", ):
+        # Local needed only, without QGIS version
+        plugins = LocalDirectory(plugin_path)
+        exit_val = plugins.remove(args.plugin_name)
+
+    elif args.command in ("list", "init"):
+        # Local needed only, with QGIS version
         qgis = qgis_server_version()
         if qgis:
             print(f"QGIS version : {qgis}")
         plugins = LocalDirectory(plugin_path, qgis_version=qgis)
 
         if args.command == "list":
+            # The remote will be used inside this function
             plugins.print_table()
+
         elif args.command == "init":
             exit_val = plugins.init()
+
+    elif args.command in ("upgrade", "install"):
+        # Local and remote needed
+        qgis = qgis_server_version()
+        if qgis:
+            print(f"QGIS version : {qgis}")
+        remote = Remote(plugin_path, qgis_version=qgis)
+        plugins = LocalDirectory(plugin_path, qgis_version=qgis)
+        folders = plugins.plugin_list()
+
+        if args.command == "install":
+            parameter = args.plugin_name.split('==')
+            plugin_name = parameter[0]
+            if len(parameter) >= 2:
+                plugin_version = parameter[1]
+            else:
+                plugin_version = 'latest'
+
+            current_version = plugins.plugin_installed_version(plugin_name)
+            exit_val = remote.install(
+                plugin_name=plugin_name,
+                version=plugin_version,
+                current_version=current_version
+            )
+
         elif args.command == "upgrade":
-            remote = Remote(plugin_path)
-            folders = plugins.plugin_list()
             for folder in folders:
                 plugin_object = plugins.plugin_info(folder)
-                result = remote.install(plugin_object.name)
-                if not result:
-                    exit_val = 1
-            print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+                # Need to check version
+                result = remote.install(plugin_object.name, current_version=plugin_object.version)
+                if result:
+                    exit_val = True
 
-    elif args.command == "remote":
-        remote = Remote(plugin_path)
-        remote.print_list()
-
-    elif args.command == "remove":
-        plugins = LocalDirectory(plugin_path)
-        exit_val = plugins.remove(args.plugin_name)
-
-    elif args.command == "cache":
-        remote = Remote(plugin_path)
-        latest = remote.latest(args.plugin_name)
-        if latest is None:
-            print(f"{Level.Alert}Plugin not found{Level.End}")
-        else:
-            print(f"Plugin {args.plugin_name} : {latest} available")
-
-    elif args.command == "search":
-        remote = Remote(plugin_path)
-        results = remote.search(args.plugin_name)
-        for result in results:
-            print(result)
-
-    elif args.command == "install":
-        remote = Remote(plugin_path)
-        parameter = args.plugin_name.split('==')
-        exit_val = remote.install(*parameter)
         if exit_val:
             restart_qgis_server()
 
