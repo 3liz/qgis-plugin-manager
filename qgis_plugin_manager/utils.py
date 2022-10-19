@@ -42,6 +42,12 @@ def restart_qgis_server():
     """ Restart QGIS Server tip. """
     print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
 
+    restart_file = os.getenv("QGIS_PLUGIN_MANAGER_RESTART_FILE")
+    if not restart_file:
+        return
+
+    Path(restart_file).touch()
+
 
 def similar_names(expected: str, available: list) -> list:
     """ Returns a list of similar names available. """

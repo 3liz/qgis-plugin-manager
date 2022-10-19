@@ -5,7 +5,7 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/qgis-plugin-manager)](https://pypi.org/project/qgis-plugin-manager/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/qgis-plugin-manager)](https://pypi.org/project/qgis-plugin-manager/)
 
-Mainly designed for QGIS Server plugins.
+Mainly designed for QGIS Server plugins, but it works also for desktop.
 
 Not tested on Windows.
 
@@ -13,7 +13,7 @@ The **CLI** API is not stable yet.
 
 ## Installation
 
-Python 3.6 **minimum**, you can make a Python venv if needed.
+Python 3.8 **minimum**, you can make a Python venv if needed.
 ```bash
 python3 --version
 ```
@@ -30,7 +30,9 @@ QGIS-Plugin-Manager will take care of following variables :
 * `QGIS_PLUGIN_MANAGER_SOURCES_FILE` for storing a path to the `sources.list` otherwise, the current folder will be used.
 * `QGIS_PLUGIN_MANAGER_CACHE_DIR` for storing all XML files downloaded otherwise, the current folder will be used `.cache_qgis_plugin_manager`
 * `QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE`, boolean when we do not need a `sources.list` file, for instance to list plugins only
-* `QGIS_PLUGINPATH` for storing plugins
+* `QGIS_PLUGIN_MANAGER_RESTART_FILE`, path where the file must be created if QGIS server needs to be restarted.
+  Read [the documentation](README.md#notify-upstream-if-a-restart-is-needed).
+* `QGIS_PLUGINPATH` for storing plugins, from [QGIS Server documentation](https://docs.qgis.org/latest/en/docs/server_manual/config.html#environment-variables)
 * `PYTHONPATH` for importing QGIS libraries
 
 ## Utilisation
@@ -206,6 +208,13 @@ Plugin QuickOSM removed
 Tip : Do not forget to restart QGIS Server to reload plugins 😎
 ```
 
+### Notify upstream if a restart is needed
+
+When a plugin is installed or removed and if the environment variable `QGIS_PLUGIN_MANAGER_RESTART_FILE` is set,
+an empty file will be created or touched. It can notify you if QGIS Server needs to be restarted for instance.
+
+Note that you must manually remove this file.
+
 ## Run tests
 
 ```bash
@@ -214,9 +223,3 @@ cd test
 python3 -m unittest
 flake8
 ```
-
-## TODO
-
-* proper exit code
-* API
-* documentation
