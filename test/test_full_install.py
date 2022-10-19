@@ -82,10 +82,13 @@ class FullInstallLocal(unittest.TestCase):
         plugins = remote._parse_xml(folder.joinpath('plugin.xml'), {})
         self.assertDictEqual({'Minimal': '1.0.0'}, plugins)
         remote.list_plugins = plugins
-        remote.install("Minimal", remove_zip=False)
         local = LocalDirectory(folder)
+        self.assertIsNone(local.plugin_installed_version('Minimal'))
+        remote.install("Minimal", remove_zip=False)
+        self.assertEqual(local.plugin_installed_version('Minimal'), "1.0")
         self.assertTrue('minimal_plugin' in list(local.plugin_list().keys()))
 
         # Test to remove the plugin
         self.assertFalse(local.remove("minimal"))
         self.assertTrue(local.remove("Minimal"))
+        self.assertIsNone(local.plugin_installed_version('Minimal'))
