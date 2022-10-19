@@ -19,6 +19,7 @@ from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import (
     DEFAULT_QGIS_VERSION,
     current_user,
+    restart_qgis_server,
     similar_names,
     sources_file,
     to_bool,
@@ -318,7 +319,8 @@ class Remote:
 
         if current_version == actual:
             print(f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}")
-            return False
+            # Plugin is installed and correct version, it's exit code 0
+            return True
 
         if version != 'latest':
             url = url.replace(actual, version)
@@ -363,6 +365,8 @@ class Remote:
         else:
             print(f"Installed with user '{user}'")
         print("Please check file permissions and owner according to the user running QGIS Server.")
+
+        restart_qgis_server()
         return True
 
     def _download_zip(
