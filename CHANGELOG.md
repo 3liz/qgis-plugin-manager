@@ -2,11 +2,19 @@
 
 ## Unreleased
 
+### Added
+
 * Add a new `remove` command with the plugin name
 * New environment variable `QGIS_PLUGIN_MANAGER_RESTART_FILE` to notify if a restart of QGIS Server is needed
-* Review some exit code when using as a CLI tool
-* Only install or upgrade plugins if it's needed compare to the plugin already installed
 * Manage ZIP files which are using `file:` protocol
+
+### Fixed
+
+* Review some exit code when using as a CLI tool with Ansible for instance
+* Only install or upgrade plugins if it's needed, compared to the plugin already installed
+
+### Changed
+
 * Bump Python minimum version to 3.8
 
 ## 1.2.1 - 2022-09-30
