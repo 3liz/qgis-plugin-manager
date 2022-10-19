@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Add a new `remove` command to use the plugin name
 * Review some exit code when using as a CLI tool
 * Manage ZIP files which are using `file:` protocol
 * Bump Python minimum version to 3.8

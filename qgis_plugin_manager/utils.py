@@ -4,6 +4,7 @@ __email__ = 'info@3liz.org'
 
 import os
 
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Union
 
@@ -35,6 +36,21 @@ def pretty_table(iterable, header) -> str:
         ) + '\n'
     output += '-' * (sum(max_len) + 1) + '\n'
     return output
+
+
+def restart_qgis_server():
+    """ Restart QGIS Server tip. """
+    print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+
+
+def similar_names(expected: str, available: list) -> list:
+    """ Returns a list of similar names available. """
+    similar = []
+    for item in available:
+        ratio = SequenceMatcher(None, expected, item.lower()).ratio()
+        if ratio > 0.8:
+            similar.append(item)
+    return similar
 
 
 def to_bool(val: Union[str, int, float, bool], default_value: bool = True) -> bool:

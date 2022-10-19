@@ -18,12 +18,6 @@ class TestRemote(unittest.TestCase):
             ["https://my.url/plugins.xml", "https://my.repo/plugins.xml"],
             self.remote.remote_list())
 
-    def test_similar_names(self):
-        """ Test about similar names in the XML file. """
-        self.remote = Remote(Path('fixtures/xml_files/lizmap'))
-        self.remote._parse_xml(Path('fixtures/xml_files/lizmap/lizmap.xml'), {})
-        self.assertListEqual(['Lizmap'], self.remote.similar_names('lizmap'))
-
     def test_plugin_name_with_space_and_tags(self):
         """ Test plugin with different name, using tags. """
         self.remote = Remote(Path('fixtures/xml_files/dataplotly'))

@@ -12,7 +12,7 @@ import zipfile
 
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Tuple, Union
 from urllib.parse import unquote, urlparse
 
 from qgis_plugin_manager.definitions import Level, Plugin
@@ -20,6 +20,7 @@ from qgis_plugin_manager.utils import (
     DEFAULT_QGIS_VERSION,
     current_user,
     qgis_server_version,
+    similar_names,
     sources_file,
     to_bool,
 )
@@ -271,17 +272,6 @@ class Remote:
             self.list_plugins[xml_plugin_name] = plugin_obj
         return plugins
 
-    def similar_names(self, plugin_name_wanted: str) -> List[str]:
-        """ Return a list of similar plugin name found in the XML file. """
-        similar = []
-        plugin_name_wanted = plugin_name_wanted.lower()
-        for plugin_name in self.list_plugins.keys():
-            ratio = SequenceMatcher(None, plugin_name_wanted, plugin_name.lower()).ratio()
-            if ratio > 0.8:
-                similar.append(plugin_name)
-
-        return similar
-
     def search(self, search_string: str, strict=True) -> List:
         """ Search in plugin names and tags."""
         # strict is used in tests to not check if the remote is ready
@@ -315,7 +305,9 @@ class Remote:
         xml_version = self.latest(plugin_name)
         if xml_version is None:
             print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
-            similarity = self.similar_names(plugin_name)
+
+            available_plugins = [f.lower() for f in self.list_plugins.keys()]
+            similarity = similar_names(plugin_name.lower(), available_plugins)
             if similarity:
                 for plugin in similarity:
                     print(f"Do you mean maybe '{plugin}' ?")

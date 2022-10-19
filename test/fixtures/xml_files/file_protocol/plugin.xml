@@ -1,5 +1,5 @@
 <plugins>
-    <pyqgis_plugin name="Plugin" version="1.0.0" plugin_id="72">
+    <pyqgis_plugin name="Minimal" version="1.0.0" plugin_id="72">
         <description>Test minimal plugin</description>
         <about>Test minimal plugin</about>
         <version>1.0.0</version>

@@ -47,19 +47,20 @@ cd /usr/lib/qgis/plugins
 
 ```bash
 $ qgis-plugin-manager --help
-usage: qgis-plugin-manager [-h] [-v] {init,list,remote,update,upgrade,cache,search,install} ...
+usage: qgis-plugin-manager [-h] [-v] {init,list,remote,remove,update,upgrade,cache,search,install} ...
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -v, --version         Print the version and exit (default: False)
+  -v, --version         show program's version number and exit
 
 commands:
   qgis-plugin-manager command
 
-  {init,list,remote,update,upgrade,cache,search,install}
+  {init,list,remote,remove,update,upgrade,cache,search,install}
     init                Create the `sources.list` with plugins.qgis.org as remote
     list                List all plugins in the directory
     remote              List all remote server
+    remove              Remove a plugin by its name
     update              Update all index files
     upgrade             Upgrade all plugins installed
     cache               Look for a plugin in the cache
@@ -190,6 +191,20 @@ $ qgis-plugin-manager upgrade
 ```
 
 *Note*, like APT, `update` is needed before to refresh the cache.
+
+### Remove
+
+It's possible to use `rm -rf folder_dir` but you can also remove by the plugin name.
+It will take care of the `QGIS_PLUGINPATH` environment variable.
+
+```bash
+$ qgis-plugin-manager remove Quickosm
+Plugin name 'Quickosm' not found
+Do you mean maybe 'QuickOSM' ?
+$ qgis-plugin-manager remove QuickOSM
+Plugin QuickOSM removed
+Tip : Do not forget to restart QGIS Server to reload plugins 😎
+```
 
 ## Run tests
 

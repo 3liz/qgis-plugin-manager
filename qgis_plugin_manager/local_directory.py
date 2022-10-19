@@ -5,6 +5,7 @@ __email__ = 'info@3liz.org'
 import configparser
 import os
 import pwd
+import shutil
 import stat
 
 from pathlib import Path
@@ -16,6 +17,8 @@ from qgis_plugin_manager.utils import (
     DEFAULT_QGIS_VERSION,
     parse_version,
     pretty_table,
+    restart_qgis_server,
+    similar_names,
     sources_file,
     to_bool,
 )
@@ -143,6 +146,48 @@ class LocalDirectory:
             has_wps=self.plugin_metadata(plugin_folder, "wps") in ('True', 'true', '1', 'yes', True),
         )
         return data
+
+    def remove(self, plugin_name: str) -> bool:
+        """ Remove a plugin by its human name. """
+        if self._plugins is None:
+            self.plugin_list()
+
+        all_names = []
+
+        for plugin_folder in self.plugin_list():
+            info = self.plugin_info(plugin_folder)
+
+            # We fill all names available
+            all_names.append(info.name)
+
+            if info.name == plugin_name:
+                plugin_path = self.folder.joinpath(plugin_folder)
+                try:
+                    shutil.rmtree(plugin_path)
+                except Exception as e:
+                    print(f"{Level.Critical}Plugin {plugin_name} could not be removed : {str(e)}")
+
+                if not Path(self.folder.joinpath(plugin_folder)).exists():
+                    print(f"{Level.Success}Plugin {plugin_name} removed")
+                    restart_qgis_server()
+                    return True
+                else:
+                    print(
+                        f"{Level.Alert}"
+                        f"Plugin {plugin_name} using folder {plugin_folder} could not be removed "
+                        f"for unknown reason"
+                        f"{Level.End}"
+                    )
+                break
+        print(f"{Level.Alert}Plugin name '{plugin_name}' not found{Level.End}")
+
+        all_names = list(set(all_names))
+        similarity = similar_names(plugin_name.lower(), all_names)
+        if similarity:
+            for plugin in similarity:
+                print(f"Do you mean maybe '{plugin}' ?")
+
+        return False
 
     def print_table(self):  # noqa: C901
         """ Print all plugins installed as a table. """

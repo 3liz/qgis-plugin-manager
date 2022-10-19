@@ -13,7 +13,7 @@ from qgis_plugin_manager.__about__ import __version__
 from qgis_plugin_manager.definitions import Level
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
-from qgis_plugin_manager.utils import qgis_server_version
+from qgis_plugin_manager.utils import qgis_server_version, restart_qgis_server
 
 
 def main() -> int:  # noqa: C901
@@ -32,6 +32,9 @@ def main() -> int:  # noqa: C901
     subparsers.add_parser("list", help="List all plugins in the directory")
 
     subparsers.add_parser("remote", help="List all remote server")
+
+    remove = subparsers.add_parser("remove", help="Remove a plugin by its name")
+    remove.add_argument("plugin_name", help="The plugin to remove")
 
     subparsers.add_parser('update', help="Update all index files")
 
@@ -92,6 +95,10 @@ def main() -> int:  # noqa: C901
         remote = Remote(plugin_path)
         remote.print_list()
 
+    elif args.command == "remove":
+        plugins = LocalDirectory(plugin_path)
+        exit_val = plugins.remove(args.plugin_name)
+
     elif args.command == "cache":
         remote = Remote(plugin_path)
         latest = remote.latest(args.plugin_name)
@@ -109,11 +116,9 @@ def main() -> int:  # noqa: C901
     elif args.command == "install":
         remote = Remote(plugin_path)
         parameter = args.plugin_name.split('==')
-        result = remote.install(*parameter)
-        if not result:
-            exit_val = 1
-        else:
-            print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+        exit_val = remote.install(*parameter)
+        if exit_val:
+            restart_qgis_server()
 
     if exit_val is None:
         exit_val = 0

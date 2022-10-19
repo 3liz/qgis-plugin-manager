@@ -78,10 +78,14 @@ class FullInstallLocal(unittest.TestCase):
             folder.joinpath('.cache_qgis_plugin_manager/plugins.xml')
         )
 
-        local = LocalDirectory(folder)
         remote = Remote(folder)
         plugins = remote._parse_xml(folder.joinpath('plugin.xml'), {})
-        self.assertDictEqual({'Plugin': '1.0.0'}, plugins)
+        self.assertDictEqual({'Minimal': '1.0.0'}, plugins)
         remote.list_plugins = plugins
-        remote.install("Plugin", remove_zip=False)
+        remote.install("Minimal", remove_zip=False)
+        local = LocalDirectory(folder)
         self.assertTrue('minimal_plugin' in list(local.plugin_list().keys()))
+
+        # Test to remove the plugin
+        self.assertFalse(local.remove("minimal"))
+        self.assertTrue(local.remove("Minimal"))
