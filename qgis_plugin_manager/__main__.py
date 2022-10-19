@@ -13,7 +13,7 @@ from qgis_plugin_manager.__about__ import __version__
 from qgis_plugin_manager.definitions import Level
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
-from qgis_plugin_manager.utils import qgis_server_version, restart_qgis_server
+from qgis_plugin_manager.utils import qgis_server_version
 
 
 def main() -> int:  # noqa: C901
@@ -134,11 +134,8 @@ def main() -> int:  # noqa: C901
                 plugin_object = plugins.plugin_info(folder)
                 # Need to check version
                 result = remote.install(plugin_object.name, current_version=plugin_object.version)
-                if result:
-                    exit_val = True
-
-        if exit_val:
-            restart_qgis_server()
+                if not result:
+                    exit_val = False
 
     if exit_val is None:
         exit_val = 0
