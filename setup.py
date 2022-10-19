@@ -14,10 +14,9 @@ python_min_version = (3, 8)
 
 if sys.version_info < python_min_version:
     sys.exit(
-        "qgis-plugin-manager requires at least Python version {vmaj}.{vmin}.\n"
-        "You are currently running this installation with\n\n{curver}".format(
-            vmaj=python_min_version[0], vmin=python_min_version[1], curver=sys.version
-        )
+        "qgis-plugin-manager requires at least Python version "
+        f"{python_min_version[0]}.{python_min_version[1]}.\n"
+        f"You are currently running this installation with\n\n{sys.version}"
     )
 
 # This string might be updated on CI on runtime with a proper semantic version name with X.Y.Z
@@ -42,13 +41,11 @@ setup(
     entry_points={"console_scripts": ["qgis-plugin-manager = qgis_plugin_manager.__main__:main"]},
     version=VERSION,
     project_urls={
-        "Docs": __about__.__uri__,
-        "Bug Reports": "{}issues/".format(__about__.__uri__),
+        "Docs": f"{__about__.__uri__}/blob/master/README.md",
+        "Bug Reports": f"{__about__.__uri__}/issues/",
         "Source": __about__.__uri__,
     },
-    download_url="https://github.com/3liz/qgis-plugin-manager/archive/{}.tar.gz".format(
-        VERSION
-    ),
+    download_url=f"https://github.com/3liz/qgis-plugin-manager/archive/{VERSION}.tar.gz",
     keywords=["QGIS"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -65,7 +62,5 @@ setup(
         "Topic :: Scientific/Engineering :: GIS",
     ],
     install_requires=[],
-    python_requires=">={vmaj}.{vmin}".format(
-        vmaj=python_min_version[0], vmin=python_min_version[1]
-    ),
+    python_requires=f">={python_min_version[0]}.{python_min_version[1]}",
 )
