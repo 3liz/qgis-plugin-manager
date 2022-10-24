@@ -15,7 +15,7 @@
 
 ### Changed
 
-* Bump Python minimum version to 3.8
+* Bump Python minimum version to 3.7
 
 ## 1.2.1 - 2022-09-30
 
