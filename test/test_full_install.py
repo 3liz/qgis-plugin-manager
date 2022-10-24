@@ -66,7 +66,9 @@ class FullInstallLocal(unittest.TestCase):
         if cache_folder.exists():
             shutil.rmtree(cache_folder)
 
-        Path('fixtures/xml_files/file_protocol/sources.list').unlink(missing_ok=True)
+        sources_list = Path('fixtures/xml_files/file_protocol/sources.list')
+        if sources_list.exists():
+            sources_list.unlink()
 
     def test_install_local(self):
         """ Test install local file. """
