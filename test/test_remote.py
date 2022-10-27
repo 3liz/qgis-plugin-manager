@@ -68,6 +68,11 @@ class TestRemote(unittest.TestCase):
         # Test the search
         self.assertListEqual(['Lizmap', 'Lizmap server'], self.remote.search("lizmap", strict=False))
 
+    def test_qgis_dev_version(self):
+        """ Test check QGIS dev version number. """
+        self.assertListEqual(["3", "22", "11"], Remote.check_qgis_dev_version('3.22.11'))
+        self.assertListEqual(["3", "24", "0"], Remote.check_qgis_dev_version('3.23.0'))
+
     @unittest.expectedFailure
     def test_latest_pgmetadata(self):
         """ Test read multiple remotes. """

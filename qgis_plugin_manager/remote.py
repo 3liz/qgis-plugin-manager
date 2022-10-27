@@ -7,17 +7,16 @@ import re
 import shutil
 import urllib
 import urllib.request
-from xml.etree.ElementTree import parse
 import zipfile
 
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote, urlparse
+from xml.etree.ElementTree import parse
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import (
-    DEFAULT_QGIS_VERSION,
     current_user,
     restart_qgis_server,
     similar_names,
@@ -79,48 +78,49 @@ class Remote:
         if not source_list.exists():
             return []
 
-        if not self.qgis_version:
-            self.qgis_version = DEFAULT_QGIS_VERSION
-
-        qgis_version = self.qgis_version.split('.')
-        if int(qgis_version[1]) % 2 != 0:
-            print(
-                f"{Level.Alert}"
-                f"A development version is detected : {qgis_version[0]}.{qgis_version[1]}."
-                f"{Level.End}"
-            )
-            qgis_version[1] = str(int(qgis_version[1]) + 1)
-            print(
-                f"{Level.Alert}"
-                f"using {qgis_version[0]}.{qgis_version[1]} instead."
-                f"{Level.End}"
-            )
+        qgis_version = self.check_qgis_dev_version(self.qgis_version)
 
         with source_list.open(encoding='utf8') as f:
             for line in f.readlines():
-                if not line.startswith('#'):
-                    raw_line = line.strip()
-                    if raw_line.startswith("https://plugins.qgis.org") and "[VERSION]" not in raw_line:
+
+                raw_line = line.strip()
+
+                if line.startswith('#'):
+                    # Commented line
+                    continue
+
+                if raw_line.startswith("https://plugins.qgis.org") and "[VERSION]" not in raw_line:
+                    print(
+                        f"{Level.Alert}"
+                        f"Your https://plugins.qgis.org remote is not using a dynamic QGIS version."
+                        f"{Level.End}"
+                    )
+                    print(
+                        f"Instead of\n'{raw_line}'"
+                        f"\nin your 'sources.list' file, you should have"
+                        f"\n"
+                        f"'https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]'"
+                        f"\n\n"
+                        f"Can you remove the file sources.list ? 'qgis-plugin-manager init' will "
+                        f"regenerate it using dynamic QGIS version if QGIS is well configured.\n"
+                        f"This is only a warning, the process will continue with the hardcoded QGIS "
+                        f"version in your 'sources.list' file."
+                        f"\n\n"
+                    )
+
+                if "[VERSION]" in raw_line:
+                    if not qgis_version:
                         print(
                             f"{Level.Alert}"
-                            f"Your https://plugins.qgis.org remote is not using a dynamic QGIS version."
+                            f"Skipping line '{raw_line}' because it has a token [VERSION] but "
+                            f"no QGIS version could not be detected."
                             f"{Level.End}"
                         )
-                        print(
-                            f"Instead of\n'{raw_line}'"
-                            f"\nin your 'sources.list' file, you should have"
-                            f"\n"
-                            f"'https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]'"
-                            f"\n\n"
-                            f"Can you remove the file sources.list ? 'qgis-plugin-manager init' will "
-                            f"regenerate it using dynamic QGIS version if QGIS is well configured.\n"
-                            f"This is only a warning, the process will continue with the hardcoded QGIS "
-                            f"version : {DEFAULT_QGIS_VERSION}"
-                            f"\n\n"
-                        )
+                        continue
 
                     raw_line = raw_line.replace("[VERSION]", f"{qgis_version[0]}.{qgis_version[1]}")
-                    self.list.append(raw_line)
+
+                self.list.append(raw_line)
 
         return self.list
 
@@ -399,6 +399,27 @@ class Remote:
                 return False, None
 
         return True, zip_file
+
+    @staticmethod
+    def check_qgis_dev_version(qgis_version) -> Optional[List[str]]:
+        """ Check if the QGIS current version is odd number. """
+        if not qgis_version:
+            return None
+
+        qgis_version = qgis_version.split('.')
+        if int(qgis_version[1]) % 2 != 0:
+            print(
+                f"{Level.Alert}"
+                f"A QGIS development version is detected : {qgis_version[0]}.{qgis_version[1]}."
+                f"{Level.End}"
+            )
+            qgis_version[1] = str(int(qgis_version[1]) + 1)
+            print(
+                f"{Level.Alert}"
+                f"If needed, it will use {qgis_version[0]}.{qgis_version[1]} instead."
+                f"{Level.End}"
+            )
+        return qgis_version
 
     @staticmethod
     def server_cache_filename(cache_folder, server) -> Path:

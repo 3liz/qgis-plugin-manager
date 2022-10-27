@@ -8,6 +8,11 @@
 * New environment variable `QGIS_PLUGIN_MANAGER_RESTART_FILE` to notify if a restart of QGIS Server is needed
 * Manage ZIP files which are using `file:` protocol
 
+### Changed
+
+* Do not try to replace QGIS version when installing/upgrading a plugin. This will impact remotes having `[VERSION]`
+  and no QGIS version could not be detected
+
 ### Fixed
 
 * Review some exit code when using as a CLI tool with Ansible for instance
