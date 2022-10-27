@@ -7,7 +7,7 @@ import re
 import shutil
 import urllib
 import urllib.request
-import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import parse
 import zipfile
 
 from difflib import SequenceMatcher
@@ -216,7 +216,7 @@ class Remote:
             # Maybe only in tests
             self.list_plugins = {}
 
-        tree = ET.parse(xml_file.absolute())
+        tree = parse(xml_file.absolute())
         root = tree.getroot()
         for plugin in root:
 
@@ -253,10 +253,10 @@ class Remote:
             data['qgis_maximum_version'] = ''
 
             # Add more search fields
-            if data.get('tags'):
-                tags = data['tags'].split(',')
-            else:
-                tags = []
+            tags = []
+            data_tags = data.get('tags')
+            if data_tags:
+                tags = data_tags.split(',')
 
             search_text = [
                 xml_plugin_name.lower(),
@@ -382,7 +382,7 @@ class Remote:
             try:
                 f = urllib.request.urlopen(request)
             except urllib.error.HTTPError:
-                print(f"{Level.Warning}Plugin {plugin_name} {version} not found.{Level.End}")
+                print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
                 return False, None
 
             # Saving the zip from the URL

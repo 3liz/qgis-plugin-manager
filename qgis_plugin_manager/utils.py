@@ -131,7 +131,7 @@ def qgis_server_version() -> str:
         )
         print(f"Current user : {current_user()}")
         print(f'PYTHONPATH={os.getenv("PYTHONPATH")}')
-    return ''
+        return ''
 
 
 def sources_file(current_folder) -> Path:

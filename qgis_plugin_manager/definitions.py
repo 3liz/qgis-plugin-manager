@@ -14,7 +14,7 @@ class Plugin(NamedTuple):
     qgis_minimum_version: str = None
     qgis_maximum_version: str = None
     homepage: str = None
-    prerelease: str = None
+    pre_release: str = None
     file_name: str = None
     icon: str = None
     author_name: str = None
