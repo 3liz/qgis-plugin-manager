@@ -13,7 +13,7 @@ The **CLI** API is not stable yet.
 
 ## Installation
 
-Python 3.8 **minimum**, you can make a Python venv if needed.
+Python 3.7 **minimum**, you can make a Python venv if needed.
 ```bash
 python3 --version
 ```
