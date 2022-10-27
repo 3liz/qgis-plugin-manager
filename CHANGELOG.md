@@ -2,21 +2,23 @@
 
 ## Unreleased
 
+## 1.3.0 - 2022-10-27
+
 ### Added
 
-* Add a new `remove` command with the plugin name
+* Add a new `remove` command with the plugin name (not the folder name)
 * New environment variable `QGIS_PLUGIN_MANAGER_RESTART_FILE` to notify if a restart of QGIS Server is needed
 * Manage ZIP files which are using `file:` protocol
 
 ### Changed
 
 * Do not try to replace QGIS version when installing/upgrading a plugin. This will impact remotes having `[VERSION]`
-  and no QGIS version could not be detected
+  and no QGIS version could be detected at runtime
 * The `update` is not done anymore automatically when the cache was not present
 
 ### Fixed
 
-* Review some exit code when using as a CLI tool with Ansible for instance
+* Review some exit codes when using as a CLI tool with Ansible for instance
 * Only install or upgrade plugins if it's needed, compared to the plugin already installed
 
 ### Changed
