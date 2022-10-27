@@ -84,7 +84,7 @@ def main() -> int:  # noqa: C901
             for result in results:
                 print(result)
 
-    elif args.command in ("remote", ):
+    elif args.command in ("update", ):
         # Remote only needed, QGIS version needed
         remote = Remote(plugin_path, qgis_server_version())
         if args.command == "update":
