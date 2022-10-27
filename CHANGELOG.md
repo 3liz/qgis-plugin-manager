@@ -12,6 +12,7 @@
 
 * Do not try to replace QGIS version when installing/upgrading a plugin. This will impact remotes having `[VERSION]`
   and no QGIS version could not be detected
+* The `update` is not done anymore automatically when the cache was not present
 
 ### Fixed
 

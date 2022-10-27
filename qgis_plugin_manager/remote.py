@@ -84,6 +84,9 @@ class Remote:
             for line in f.readlines():
 
                 raw_line = line.strip()
+                if not raw_line:
+                    # Empty line
+                    continue
 
                 if line.startswith('#'):
                     # Commented line
@@ -146,10 +149,14 @@ class Remote:
         else:
             print(f"{Level.Alert}No remote configured{Level.End}")
 
-    def update(self):
+    def update(self) -> bool:
         """ For each remote, it updates the XML file. """
         if self.list is None:
             self.remote_list()
+
+        if not self.list:
+            print(f"\t{Level.Critical}No remote found.{Level.End}")
+            return False
 
         cache = self.cache_directory()
         if cache.exists():
@@ -157,10 +164,11 @@ class Remote:
                 shutil.rmtree(cache)
             except OSError as e:
                 print(f"\t{Level.Critical}{e}{Level.End}")
-                return
+                return False
 
         cache.mkdir()
 
+        flag = False
         for server in self.list:
             print(f"Downloading {server}...")
             request = urllib.request.Request(server, headers={'User-Agent': 'Mozilla/5.0'})
@@ -177,6 +185,9 @@ class Remote:
                 output.write(f.read())
 
             print(f"\t{Level.Success}Ok{Level.End}")
+            flag = True
+
+        return flag
 
     def xml_in_folder(self) -> List[Path]:
         """ Returns the list of XML files in the folder. """
@@ -187,8 +198,7 @@ class Remote:
         if not cache.exists():
             cache.mkdir()
             print("The 'update' has not been done before.")
-            print("Running the update to download XML files first.")
-            self.update()
+            return []
 
         xml = []
         for xml_file in cache.iterdir():
@@ -305,7 +315,11 @@ class Remote:
         xml_version = self.latest(plugin_name)
         if xml_version is None:
             print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
+            if self.list_plugins is None:
+                # When no remote was found, it's not a dict
+                return False
 
+            # self.list_plugins is a dict at this stage
             available_plugins = [f.lower() for f in self.list_plugins.keys()]
             similarity = similar_names(plugin_name.lower(), available_plugins)
             if similarity:
