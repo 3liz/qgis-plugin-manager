@@ -116,7 +116,7 @@ class Remote:
                         print(
                             f"{Level.Alert}"
                             f"Skipping line '{raw_line}' because it has a token [VERSION] but "
-                            f"no QGIS version could not be detected."
+                            f"no QGIS version could be detected."
                             f"{Level.End}"
                         )
                         continue
