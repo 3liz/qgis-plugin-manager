@@ -38,7 +38,16 @@ def main() -> int:  # noqa: C901
 
     subparsers.add_parser('update', help="Update all index files")
 
-    subparsers.add_parser('upgrade', help="Upgrade all plugins installed")
+    upgrade_parser = subparsers.add_parser('upgrade', help="Upgrade all plugins installed")
+    upgrade_parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help=(
+            "If specified, the upgrade will be forced for all plugins. Otherwise, it will be done only if the version "
+            "is different."
+        ),
+    )
 
     cache = subparsers.add_parser("cache", help="Look for a plugin in the cache")
     cache.add_argument("plugin_name", help="The plugin to look for")
@@ -52,6 +61,14 @@ def main() -> int:  # noqa: C901
         help=(
             "The plugin to install, suffix '==version' is optional. The plugin might require quotes if there "
             "is a space in its name."))
+    install.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help=(
+            "If specified, the install will be forced for the plugin, even if the version is already installed."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -130,14 +147,19 @@ def main() -> int:  # noqa: C901
             exit_val = remote.install(
                 plugin_name=plugin_name,
                 version=plugin_version,
-                current_version=current_version
+                current_version=current_version,
+                force=args.force,
             )
 
         elif args.command == "upgrade":
             for folder in folders:
                 plugin_object = plugins.plugin_info(folder)
                 # Need to check version
-                result = remote.install(plugin_object.name, current_version=plugin_object.version)
+                result = remote.install(
+                    plugin_name=plugin_object.name,
+                    current_version=plugin_object.version,
+                    force=args.force,
+                )
                 if not result:
                     exit_val = False
 

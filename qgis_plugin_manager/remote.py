@@ -304,7 +304,10 @@ class Remote:
 
         return results
 
-    def install(self, plugin_name, version="latest", current_version: str = "", remove_zip=True) -> bool:
+    def install(
+            self, plugin_name, version="latest", current_version: str = "", force: bool = False,
+            remove_zip=True
+    ) -> bool:
         """ Install the plugin with a specific version.
 
         Default version is latest.
@@ -332,9 +335,12 @@ class Remote:
         actual = self.list_plugins[plugin_name].version
 
         if current_version == actual:
-            print(f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}")
-            # Plugin is installed and correct version, it's exit code 0
-            return True
+            if not force:
+                print(f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}")
+                # Plugin is installed and correct version, it's exit code 0
+                return True
+
+            # print(f"Same plugin version detected {plugin_name} {current_version}, forcing…")
 
         if version != 'latest':
             url = url.replace(actual, version)

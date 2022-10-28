@@ -184,6 +184,8 @@ Installation QuickOSM 1.14.0
 	Ok QuickOSM.1.14.0.zip
 ```
 
+You can use `--force` or `-f` to force the installation even if the plugin with the same version is already installed.
+
 ### Upgrade
 
 Upgrade all plugins installed :
@@ -191,6 +193,8 @@ Upgrade all plugins installed :
 ```bash
 $ qgis-plugin-manager upgrade
 ```
+
+You can use `--force` or `-f` to force the upgrade for all plugins despite their version.
 
 *Note*, like APT, `update` is needed before to refresh the cache.
 

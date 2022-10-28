@@ -33,9 +33,10 @@ class LocalDirectory:
         self._plugins = None
         self._invalid = []
 
+        self.qgis_version_str = qgis_version
         self.qgis_version = None
-        if qgis_version:
-            self.qgis_version = qgis_version.split('.')
+        if self.qgis_version_str:
+            self.qgis_version = self.qgis_version_str.split('.')
             if len(self.qgis_version) != 3:
                 self.qgis_version = None
             else:
@@ -206,7 +207,7 @@ class LocalDirectory:
         if self._plugins is None:
             self.plugin_list()
 
-        remote = Remote(self.folder)
+        remote = Remote(self.folder, qgis_version=self.qgis_version_str)
 
         print(f"List all plugins in {self.folder.absolute()}\n")
         headers = [
