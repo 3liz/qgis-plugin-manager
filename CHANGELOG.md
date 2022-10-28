@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+* Add new `--force` or `-f` to `install` and `upgrade` commands
+
+### Fixed
+
+* Fix QGIS version detection when showing the list of plugin
+
 ## 1.3.2 - 2022-10-27
 
 ### Fixed

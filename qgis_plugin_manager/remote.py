@@ -336,7 +336,9 @@ class Remote:
 
         if current_version == actual:
             if not force:
-                print(f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}")
+                print(
+                    f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}"
+                )
                 # Plugin is installed and correct version, it's exit code 0
                 return True
 

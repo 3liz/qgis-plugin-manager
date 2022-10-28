@@ -44,8 +44,8 @@ def main() -> int:  # noqa: C901
         "--force",
         action="store_true",
         help=(
-            "If specified, the upgrade will be forced for all plugins. Otherwise, it will be done only if the version "
-            "is different."
+            "If specified, the upgrade will be forced for all plugins. Otherwise, it will be done only if "
+            "the version is different."
         ),
     )
 
@@ -59,14 +59,15 @@ def main() -> int:  # noqa: C901
     install.add_argument(
         "plugin_name",
         help=(
-            "The plugin to install, suffix '==version' is optional. The plugin might require quotes if there "
-            "is a space in its name."))
+            "The plugin to install, suffix '==version' is optional. The plugin might require quotes if "
+            "there is a space in its name."))
     install.add_argument(
         "-f",
         "--force",
         action="store_true",
         help=(
-            "If specified, the install will be forced for the plugin, even if the version is already installed."
+            "If specified, the install will be forced for the plugin, even if the version is already "
+            "installed."
         ),
     )
 
