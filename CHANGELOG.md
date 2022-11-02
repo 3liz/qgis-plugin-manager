@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.4.0 - 2022-10-27
+
 ### Added
 
 * Add new `--force` or `-f` to `install` and `upgrade` commands
