@@ -3,6 +3,7 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import configparser
+import logging
 import os
 import shutil
 import stat
@@ -21,6 +22,8 @@ from qgis_plugin_manager.utils import (
     sources_file,
     to_bool,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class LocalDirectory:
@@ -45,14 +48,14 @@ class LocalDirectory:
         """ Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = sources_file(self.folder)
         if source_file.exists():
-            print(f"{Level.Alert}{source_file.absolute()} is already existing. Quit{Level.End}")
+            logger.warning(f"{Level.Alert}{source_file.absolute()} is already existing. Quit{Level.End}")
             return False
 
         if self.qgis_version:
             version = "[VERSION]"
-            print("Init https://plugins.qgis.org")
+            logger.info("Init https://plugins.qgis.org")
         else:
-            print(
+            logger.warning(
                 f"{Level.Alert}"
                 f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}"
                 f"{Level.End}",
@@ -182,21 +185,21 @@ class LocalDirectory:
                 try:
                     shutil.rmtree(plugin_path)
                 except Exception as e:
-                    print(f"{Level.Critical}Plugin {plugin_name} could not be removed : {e!s}")
+                    logger.error(f"{Level.Critical}Plugin {plugin_name} could not be removed : {e!s}")
 
                 if not Path(self.folder.joinpath(plugin_folder)).exists():
-                    print(f"{Level.Success}Plugin {plugin_name} removed")
+                    logger.info(f"{Level.Success}Plugin {plugin_name} removed")
                     restart_qgis_server()
                     return True
                 else:
-                    print(
+                    logger.error(
                         f"{Level.Alert}"
                         f"Plugin {plugin_name} using folder {plugin_folder} could not be removed "
                         f"for unknown reason"
                         f"{Level.End}",
                     )
                 break
-        print(f"{Level.Alert}Plugin name '{plugin_name}' not found{Level.End}")
+        logger.error(f"{Level.Alert}Plugin name '{plugin_name}' not found{Level.End}")
 
         all_names = list(set(all_names))
         similarity = similar_names(plugin_name.lower(), all_names)
@@ -321,13 +324,13 @@ class LocalDirectory:
         if len(data):
             print(pretty_table(data, headers))
         else:
-            print(
-                f"{Level.Alert}No plugin found in the current directory {self.folder.absolute()}{Level.End}",
+            logger.error(
+                f"{Level.Alert}No plugin found in the current directory {self.folder.absolute()}{Level.End}"
             )
 
         if len(list_of_owners) > 1:
             list_of_owners = [f"'{i}'" for i in list_of_owners]
-            print(
+            logger.error(
                 f"{Level.Alert}"
                 f"Different rights have been detected : {','.join(list_of_owners)}"
                 f"{Level.End}. "
