@@ -23,7 +23,7 @@ pip3 install qgis-plugin-manager
 python3 -m pip install qgis-plugin-manager
 ```
 
-## Environment variable
+## Environment variables
 
 QGIS-Plugin-Manager will take care of following variables :
 
