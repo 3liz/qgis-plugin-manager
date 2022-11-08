@@ -196,9 +196,8 @@ class LocalDirectory:
 
         all_names = list(set(all_names))
         similarity = similar_names(plugin_name.lower(), all_names)
-        if similarity:
-            for plugin in similarity:
-                print(f"Do you mean maybe '{plugin}' ?")
+        for plugin in similarity:
+            print(f"Do you mean maybe '{plugin}' ?")
 
         return False
 

@@ -9,7 +9,6 @@ import urllib
 import urllib.request
 import zipfile
 
-from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote, urlparse
@@ -291,15 +290,13 @@ class Remote:
         if self.list is None:
             self.remote_list()
 
-        results = []
-
         if self.list_plugins is None:
             self.available_plugins()
 
+        results = []
         for plugin_name, plugin in self.list_plugins.items():
-            for item in plugin.search:
-                ratio = SequenceMatcher(None, search_string.lower(), item.lower()).ratio()
-                if ratio > 0.8 and plugin_name not in results:
+            if plugin_name not in results:
+                if similar_names(search_string, plugin.search):
                     results.append(plugin_name)
 
         return results
@@ -323,11 +320,9 @@ class Remote:
                 return False
 
             # self.list_plugins is a dict at this stage
-            available_plugins = [f.lower() for f in self.list_plugins.keys()]
-            similarity = similar_names(plugin_name.lower(), available_plugins)
-            if similarity:
-                for plugin in similarity:
-                    print(f"Do you mean maybe '{plugin}' ?")
+            similarity = similar_names(plugin_name, list(self.list_plugins.keys()))
+            for plugin in similarity:
+                print(f"Do you mean maybe '{plugin}' ?")
             return False
 
         url = self.list_plugins[plugin_name].download_url

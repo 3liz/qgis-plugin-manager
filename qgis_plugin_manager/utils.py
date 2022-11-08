@@ -53,7 +53,7 @@ def similar_names(expected: str, available: list) -> list:
     """ Returns a list of similar names available. """
     similar = []
     for item in available:
-        ratio = SequenceMatcher(None, expected, item.lower()).ratio()
+        ratio = SequenceMatcher(None, expected.lower(), item.lower()).ratio()
         if ratio > 0.8:
             similar.append(item)
     return similar

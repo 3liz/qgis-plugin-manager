@@ -17,10 +17,22 @@ class TestUtils(unittest.TestCase):
 
     def test_similar_names(self):
         """ Test about similar names in the XML file. """
+        # typo wanted
         self.assertListEqual(
             ['Lizmap'],
-            similar_names(
-                'lizma',  # typo wanted
-                ['a', 'Lizmap', 'QuickOSM', ]
-            )
+            similar_names('lizma', ['a', 'Lizmap', 'QuickOSM'])
+        )
+
+        existing = ['data plotly', 'DATA PLOTLY', 'Data   PLOTLY']
+
+        # lower case
+        self.assertListEqual(
+            existing,
+            similar_names('dataplotly', existing)
+        )
+
+        # upper case
+        self.assertListEqual(
+            existing,
+            similar_names('DATA PLOT LY', existing)
         )
