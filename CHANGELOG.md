@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.4.1 - 2022-11-08
+
 ### Fixed
 
 * Fix display of plugin name when the plugin was not found
