@@ -43,8 +43,10 @@ on QGIS Server about this variable.
 
 ```bash
 cd /path/where/you/have/plugins
-# usually
+# usually on a server
 cd /usr/lib/qgis/plugins
+# or
+export QGIS_PLUGINPATH=/path/where/you/have/plugins
 ```
 
 ```bash
