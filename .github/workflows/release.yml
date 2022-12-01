@@ -95,7 +95,7 @@ jobs:
 
     - name: Read the changelog
       id: changelog
-      uses: 3liz/changelog-release@0.2.0
+      uses: 3liz/changelog-release@0.2.1
 
     - name: Build package
       run: |
