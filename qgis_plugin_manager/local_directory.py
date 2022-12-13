@@ -200,14 +200,18 @@ class LocalDirectory:
 
         return False
 
-    def print_table(self):  # noqa: C901
+    def print_table(self, current_directory: bool = True):  # noqa: C901
         """ Print all plugins installed as a table. """
         if self._plugins is None:
             self.plugin_list()
 
         remote = Remote(self.folder, qgis_version=self.qgis_version_str)
 
-        print(f"List all plugins in {self.folder.absolute()}\n")
+        if current_directory:
+            print(f"List all plugins in the current working directory : {self.folder.absolute()}\n")
+        else:
+            print(f"List all plugins in the directory set by environment variable : {self.folder.absolute()}\n")
+
         headers = [
             'Folder ⬇', 'Name', 'Version', 'Flags', 'QGIS min', 'QGIS max', 'Author',
             'Folder rights', 'Action ⚠',

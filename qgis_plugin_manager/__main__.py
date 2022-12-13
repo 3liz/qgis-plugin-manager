@@ -81,10 +81,13 @@ def main() -> int:  # noqa: C901
     exit_val = 0
 
     # Default to the current directory
+    current_directory = True
     plugin_path = Path('.')
-    if os.environ.get('QGIS_PLUGINPATH'):
+    qgis_plugin_path = os.environ.get('QGIS_PLUGINPATH')
+    if qgis_plugin_path:
+        current_directory = False
         # Except if the QGIS_PLUGINPATH is set
-        plugin_path = Path(os.environ.get('QGIS_PLUGINPATH'))
+        plugin_path = Path(qgis_plugin_path)
 
     if args.command in ("remote", "cache", "search"):
         # Remote only needed, no QGIS version needed
@@ -122,7 +125,7 @@ def main() -> int:  # noqa: C901
 
         if args.command == "list":
             # The remote will be used inside this function
-            plugins.print_table()
+            plugins.print_table(current_directory)
 
         elif args.command == "init":
             exit_val = plugins.init()

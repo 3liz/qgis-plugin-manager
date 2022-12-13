@@ -5,6 +5,7 @@
 ### Fixed
 
 * Improve compatibility with Windows
+* Improve wording when the `QGIS_PLUGINPATH` environment variable was used or not
 
 ### Added
 
