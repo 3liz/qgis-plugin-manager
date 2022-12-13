@@ -210,7 +210,8 @@ class LocalDirectory:
         if current_directory:
             print(f"List all plugins in the current working directory : {self.folder.absolute()}\n")
         else:
-            print(f"List all plugins in the directory set by environment variable : {self.folder.absolute()}\n")
+            print(
+                f"List all plugins in the directory set by environment variable : {self.folder.absolute()}\n")
 
         headers = [
             'Folder ⬇', 'Name', 'Version', 'Flags', 'QGIS min', 'QGIS max', 'Author',

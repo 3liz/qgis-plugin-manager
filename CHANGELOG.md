@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.4.2 - 2022-12-13
+
 ### Fixed
 
 * Improve compatibility with Windows
