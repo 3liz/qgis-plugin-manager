@@ -4,7 +4,6 @@ __email__ = 'info@3liz.org'
 
 import configparser
 import os
-import pwd
 import shutil
 import stat
 
@@ -263,8 +262,13 @@ class LocalDirectory:
             perms = stat.S_IMODE(os.stat(folder).st_mode)
             user_info = stat_info.st_uid
             try:
-                user_name = pwd.getpwuid(user_info)[0]
-            except KeyError:
+                import pwd
+                try:
+                    user_name = pwd.getpwuid(user_info)[0]
+                except KeyError:
+                    user_name = user_info
+            except ModuleNotFoundError:
+                # On Windows, pwd does not exist
                 user_name = user_info
             permissions = f"{user_name} : {oct(perms)}"
             plugin_data.append(permissions)

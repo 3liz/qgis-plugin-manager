@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* Improve compatibility with Windows
+
 ### Added
 
 * Support for Python 3.11
