@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+## 1.5.0 - 2023-01-24
+
 ### Added
 
 * Add a new `ignorePlugins.list` file to ignore some plugins when using the `upgrade` command.
 
 ### Fixed
 
+* Update the readme about QGIS desktop and plugin activation
 * Catch Python exception if :
   * the remote does not exist when downloading
   * the directory is not writable
