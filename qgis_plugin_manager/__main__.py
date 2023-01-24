@@ -156,8 +156,25 @@ def main() -> int:  # noqa: C901
             )
 
         elif args.command == "upgrade":
+
+            ignored_plugins = []
+            plugin_ignore_file = plugin_path.joinpath('ignorePlugins.list')
+            if plugin_ignore_file.exists():
+                with open(plugin_ignore_file, encoding='utf8') as f:
+                    ignored_plugins = [plugin.rstrip() for plugin in f.readlines()]
+
             for folder in folders:
                 plugin_object = plugins.plugin_info(folder)
+
+                if plugin_object.name in ignored_plugins:
+                    print(
+                        f"{Level.Alert}"
+                        f"Plugin {plugin_object.name} skipped from the upgrade command, because the plugin "
+                        f"is in the ignored list."
+                        f"{Level.End}"
+                    )
+                    continue
+
                 # Need to check version
                 result = remote.install(
                     plugin_name=plugin_object.name,

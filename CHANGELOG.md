@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+* Add a new `ignorePlugins.list` file to ignore some plugins when using the `upgrade` command.
+
 ### Fixed
 
 * Catch Python exception if the remote does not exist

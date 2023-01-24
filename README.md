@@ -200,6 +200,14 @@ You can use `--force` or `-f` to force the upgrade for all plugins despite their
 
 *Note*, like APT, `update` is needed before to refresh the cache.
 
+#### Ignore plugins from the upgrade
+
+Some plugins might be installed by hand, without being installed with a remote. This command will try to upgrade
+**all valid** plugins found. However, the command will fail because the plugin has been installed without a remote.
+
+It's possible to ignore such plugin by adding a file `ignorePlugins.list`, next to the `sources.list` file,
+with a list of **plugin name** on each line. The `upgrade` will not try to upgrade them.
+
 ### Remove
 
 It's possible to use `rm -rf folder_dir` but you can also remove by the plugin name.
