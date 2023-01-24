@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* Catch Python exception if the remote does not exist
+
 ## 1.4.2 - 2022-12-13
 
 ### Fixed

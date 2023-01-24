@@ -176,6 +176,9 @@ class Remote:
             except urllib.error.HTTPError as e:
                 print(f"\t{e}")
                 continue
+            except urllib.error.URLError as e:
+                print(f"\t{e}")
+                continue
 
             filename = self.server_cache_filename(cache, server)
 
