@@ -45,6 +45,8 @@ on QGIS Server about this variable.
 cd /path/where/you/have/plugins
 # usually on a server
 cd /usr/lib/qgis/plugins
+# on unix desktop with the default QGIS profile
+cd /home/${USER}/.local/share/QGIS/QGIS3/profiles/default/python/plugins
 # or
 export QGIS_PLUGINPATH=/path/where/you/have/plugins
 ```
@@ -187,6 +189,26 @@ Installation QuickOSM 1.14.0
 ```
 
 You can use `--force` or `-f` to force the installation even if the plugin with the same version is already installed.
+
+#### Enable a plugin
+
+On QGIS **server**, there isn't any setting to enable/disable a plugin.
+
+However, on **desktop**, you still need to enable a plugin, the equivalent of the checkbox in the QGIS graphical plugin
+manager.
+
+For instance, with the default profile, usually located in :
+
+```bash
+/home/${USER}/.local/share/QGIS/QGIS3/profiles/default/QGIS/
+```
+
+you need to edit the `QGIS.ini` file with :
+
+```ini
+[PythonPlugins]
+nameOfThePlugin=true
+```
 
 ### Upgrade
 
