@@ -8,7 +8,9 @@
 
 ### Fixed
 
-* Catch Python exception if the remote does not exist
+* Catch Python exception if :
+  * the remote does not exist when downloading
+  * the directory is not writable
 
 ## 1.4.2 - 2022-12-13
 

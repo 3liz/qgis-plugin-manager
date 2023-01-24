@@ -61,8 +61,13 @@ class LocalDirectory:
 
         server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"
 
-        with open(source_file, 'w', encoding='utf8') as f:
-            f.write(server)
+        try:
+            with open(source_file, 'w', encoding='utf8') as f:
+                f.write(server)
+        except PermissionError:
+            # https://github.com/3liz/qgis-plugin-manager/issues/53
+            print(f"{Level.Critical}The directory is not writable.{Level.End}")
+            return False
 
         print(f"{source_file.absolute()} has been written.")
         return True

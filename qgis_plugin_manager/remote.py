@@ -162,6 +162,7 @@ class Remote:
             try:
                 shutil.rmtree(cache)
             except OSError as e:
+                # https://github.com/3liz/qgis-plugin-manager/issues/53
                 print(f"\t{Level.Critical}{e}{Level.End}")
                 return False
 
@@ -183,8 +184,13 @@ class Remote:
             filename = self.server_cache_filename(cache, server)
 
             # Binary mode does not support encoding parameter
-            with open(filename, 'wb') as output:
-                output.write(f.read())
+            try:
+                with open(filename, 'wb') as output:
+                    output.write(f.read())
+            except PermissionError:
+                # https://github.com/3liz/qgis-plugin-manager/issues/53
+                print(f"{Level.Critical}The directory is not writable.{Level.End}")
+                return False
 
             print(f"\t{Level.Success}Ok{Level.End}")
             flag = True
@@ -361,6 +367,7 @@ class Remote:
             try:
                 shutil.rmtree(existing)
             except OSError as e:
+                # https://github.com/3liz/qgis-plugin-manager/issues/53
                 print(f"\t{Level.Critical}{e}{Level.End}")
                 zip_file.unlink()
                 return False
