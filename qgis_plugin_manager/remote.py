@@ -2,6 +2,7 @@ __copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+import base64
 import os
 import re
 import shutil
@@ -11,7 +12,7 @@ import zipfile
 
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote, urlencode, urlparse, urlunparse, parse_qs
 from xml.etree.ElementTree import parse
 
 from qgis_plugin_manager.definitions import Level, Plugin
@@ -144,7 +145,7 @@ class Remote:
 
         print("List of remotes :\n")
         if len(self.list):
-            print('\n'.join(self.list))
+            print('\n'.join([self.public_remote_name(s) for s in self.list]))
         else:
             print(f"{Level.Alert}No remote configured{Level.End}")
 
@@ -170,8 +171,15 @@ class Remote:
 
         flag = False
         for server in self.list:
-            print(f"Downloading {server}...")
-            request = urllib.request.Request(server, headers={'User-Agent': 'Mozilla/5.0'})
+            print(f"Downloading {self.public_remote_name(server)}…")
+            url, login, password = self.credentials(server)
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+            }
+            if login:
+                token = base64.b64encode(f"{login}:{password}".encode())
+                headers["Authorization"] = b"Basic %s" % token
+            request = urllib.request.Request(url, headers=headers)
             try:
                 f = urllib.request.urlopen(request)
             except urllib.error.HTTPError as e:
@@ -405,10 +413,31 @@ class Remote:
             zip_file = Path(unquote(urlparse(url).path))
 
         else:
-            request = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+            }
+            request = urllib.request.Request(url, headers=headers)
+            result = False
             try:
                 f = urllib.request.urlopen(request)
-            except urllib.error.HTTPError:
+                result = True
+            except urllib.error.HTTPError as e:
+                if e.code == 401:
+                    print("Require authentication")
+                    for _, login, password in self.all_credentials():
+                        # Hack to try all logins until we find the one working…
+                        token = base64.b64encode(f"{login}:{password}".encode())
+                        headers["Authorization"] = b"Basic %s" % token
+
+                        request = urllib.request.Request(url, headers=headers)
+                        try:
+                            f = urllib.request.urlopen(request)
+                            result = True
+                            break
+                        except urllib.error.HTTPError:
+                            continue
+
+            if not result:
                 print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
                 return False, None
 
@@ -451,6 +480,7 @@ class Remote:
     @staticmethod
     def server_cache_filename(cache_folder, server) -> Path:
         """ Return the path for XML file. """
+        server, login, _ = Remote.credentials(server)
         filename = ""
         for x in server:
             if x.isalnum():
@@ -459,4 +489,42 @@ class Remote:
                 filename += '-'
 
         filename = re.sub(r"\-+", "-", filename)
+        if login:
+            filename += '-protected'
         return Path(cache_folder / f"{filename}.xml")
+
+    @classmethod
+    def credentials(cls, server: str) -> Tuple[str, str, str]:
+        """ Parse for login and password if needed. """
+        u = urlparse(server)
+        query = parse_qs(u.query, keep_blank_values=True)
+        login = query.get('username', '')
+        password = query.get('password', '')
+
+        query.pop('username', None)
+        query.pop('password', None)
+
+        u = u._replace(query=urlencode(query, True))
+        if login and password:
+            return urlunparse(u), login[0], password[0]
+
+        return urlunparse(u), '', ''
+
+    def all_credentials(self):
+        """ Dirty hack to get all credentials for now… """
+        if self.list is None:
+            self.remote_list()
+
+        for server in self.list:
+            url, login, password = self.credentials(server)
+            yield url, login, password
+
+    @classmethod
+    def public_remote_name(cls, server: str) -> str:
+        """ Clean a URL from a password if needed. """
+        u = urlparse(server)
+        query = parse_qs(u.query, keep_blank_values=True)
+        if 'password' in query.keys():
+            query['password'] = 'XXXXX'
+        u = u._replace(query=urlencode(query, True))
+        return urlunparse(u)

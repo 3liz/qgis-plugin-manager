@@ -73,6 +73,32 @@ class TestRemote(unittest.TestCase):
         self.assertListEqual(["3", "22", "11"], Remote.check_qgis_dev_version('3.22.11'))
         self.assertListEqual(["3", "24", "0"], Remote.check_qgis_dev_version('3.23.0'))
 
+    def test_parse_url(self):
+        """ Test to parse a URL for login&password. """
+        self.assertTupleEqual(
+            ('https://foo.bar/plugins.xml?qgis=3.10', 'login', 'pass'),
+            Remote.credentials("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass")
+        )
+        self.assertTupleEqual(
+            ('https://foo.bar/plugins.xml?qgis=3.10', '', ''),
+            Remote.credentials("https://foo.bar/plugins.xml?qgis=3.10")
+        )
+
+    def test_clean_remote(self):
+        """ Test to clean a URL from login&password. """
+        self.assertEqual(
+            "https://foo.bar/plugins.xml?qgis=3.10&username=login&password=XXXXX",
+            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass")
+        )
+        self.assertEqual(
+            "https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass",
+            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass")
+        )
+        self.assertEqual(
+            "https://foo.bar/plugins.xml?qgis=3.10",
+            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10")
+        )
+
     @unittest.expectedFailure
     def test_latest_pgmetadata(self):
         """ Test read multiple remotes. """

@@ -132,6 +132,17 @@ You don't have to set the TOKEN for all URL :
 
 `https://docs.3liz.org/plugins.xml` is valid.
 
+#### Basic authentication
+
+It's possible to add a login and password in the remote URL :
+
+```bash
+https://docs.3liz.org/private/repo.xml?username=loginwpd&password=pass
+```
+
+Every URL is parsed, and if some credentials are found, the URL is cleaned and the request is done using the
+basic authentication.
+
 ### Update
 
 To fetch the XML files from each repository :
