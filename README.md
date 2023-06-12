@@ -134,7 +134,7 @@ You don't have to set the TOKEN for all URL :
 
 #### Basic authentication
 
-It's possible to add a login and password in the remote URL :
+It's possible to add a login and password in the remote URL, with `username` and `password` in the query string :
 
 ```bash
 https://docs.3liz.org/private/repo.xml?username=loginwpd&password=pass
