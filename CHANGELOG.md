@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.6.0 - 2023-06-12
+
+### Added
+
+* Add support for basic authentication when downloading XML and ZIP files which are in a private repository.
+
 ## 1.5.0 - 2023-01-24
 
 ### Added
