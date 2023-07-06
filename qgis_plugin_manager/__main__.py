@@ -89,9 +89,9 @@ def main() -> int:  # noqa: C901
         # Except if the QGIS_PLUGINPATH is set
         plugin_path = Path(qgis_plugin_path)
 
-    if args.command in ("remote", "cache", "search"):
-        # Remote only needed, no QGIS version needed
-        remote = Remote(plugin_path)
+    if args.command in ("remote", "cache", "search", "update"):
+        # Remote only needed, with QGIS version
+        remote = Remote(plugin_path, qgis_server_version())
         if args.command == "remote":
             remote.print_list()
         elif args.command == "cache":
@@ -104,11 +104,7 @@ def main() -> int:  # noqa: C901
             results = remote.search(args.plugin_name)
             for result in results:
                 print(result)
-
-    elif args.command in ("update", ):
-        # Remote only needed, QGIS version needed
-        remote = Remote(plugin_path, qgis_server_version())
-        if args.command == "update":
+        elif args.command == "update":
             exit_val = remote.update()
 
     elif args.command in ("remove", ):
