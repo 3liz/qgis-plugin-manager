@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.6.1 - 2023-07-06
+
+### Fixed
+
+* Always provide a QGIS version when using `remote`, `cache` and `search`
+
 ## 1.6.0 - 2023-06-12
 
 ### Added
