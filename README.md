@@ -9,8 +9,6 @@ Mainly designed for QGIS Server plugins, but it works also for desktop.
 
 Not tested on Windows.
 
-The **CLI** API is not stable yet.
-
 ## Installation
 
 Python 3.7 **minimum**, you can make a Python venv if needed.
