@@ -65,4 +65,5 @@ setup(
     ],
     install_requires=[],
     python_requires=f">={python_min_version[0]}.{python_min_version[1]}",
+    include_package_data=True
 )
