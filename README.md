@@ -36,7 +36,7 @@ QGIS-Plugin-Manager will take care of following variables :
 ## Utilisation
 
 **Either** you need to go in the directory where you are storing plugins, **or** you can use the environment variable `QGIS_PLUGINPATH`.
-You can read the [documentation](https://docs.qgis.org/3.22/en/docs/server_manual/config.html#environment-variables)
+You can read the [documentation](https://docs.qgis.org/latest/en/docs/server_manual/config.html#environment-variables)
 on QGIS Server about this variable.
 
 ```bash
@@ -258,6 +258,8 @@ Tip : Do not forget to restart QGIS Server to reload plugins 😎
 
 When a plugin is installed or removed and if the environment variable `QGIS_PLUGIN_MANAGER_RESTART_FILE` is set,
 an empty file will be created or touched. It can notify you if QGIS Server needs to be restarted for instance.
+
+This is useful for a deployment with [Ansible](https://www.ansible.com/) for instance.
 
 Note that you must manually remove this file.
 
