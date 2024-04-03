@@ -525,6 +525,6 @@ class Remote:
         u = urlparse(server)
         query = parse_qs(u.query, keep_blank_values=True)
         if 'password' in query.keys():
-            query['password'] = 'XXXXX'
+            query['password'] = '******'
         u = u._replace(query=urlencode(query, True))
         return urlunparse(u)

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+* Change from `X` to `*` for password when showing them
+
 ## 1.6.1 - 2023-07-06
 
 ### Fixed

@@ -86,14 +86,17 @@ class TestRemote(unittest.TestCase):
 
     def test_clean_remote(self):
         """ Test to clean a URL from login&password. """
+        # "password", the keyword to look for
         self.assertEqual(
-            "https://foo.bar/plugins.xml?qgis=3.10&username=login&password=XXXXX",
+            "https://foo.bar/plugins.xml?qgis=3.10&username=login&password=%2A%2A%2A%2A%2A%2A",
             Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass")
         )
+        # "pass", not the keyword to look for
         self.assertEqual(
             "https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass",
             Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass")
         )
+        # Nothing
         self.assertEqual(
             "https://foo.bar/plugins.xml?qgis=3.10",
             Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10")
