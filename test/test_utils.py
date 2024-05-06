@@ -20,7 +20,7 @@ class TestUtils(unittest.TestCase):
         # typo wanted
         self.assertListEqual(
             ['Lizmap'],
-            similar_names('lizma', ['a', 'Lizmap', 'QuickOSM'])
+            similar_names('lizma', ['a', 'Lizmap', 'QuickOSM']),
         )
 
         existing = ['data plotly', 'DATA PLOTLY', 'Data   PLOTLY']
@@ -28,11 +28,11 @@ class TestUtils(unittest.TestCase):
         # lower case
         self.assertListEqual(
             existing,
-            similar_names('dataplotly', existing)
+            similar_names('dataplotly', existing),
         )
 
         # upper case
         self.assertListEqual(
             existing,
-            similar_names('DATA PLOT LY', existing)
+            similar_names('DATA PLOT LY', existing),
         )

@@ -11,7 +11,7 @@ from qgis_plugin_manager.local_directory import LocalDirectory
 
 class TestLocal(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.local = LocalDirectory(Path('fixtures/plugins'))
 
     def test_list_existing_plugins(self):

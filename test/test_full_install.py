@@ -15,7 +15,7 @@ from qgis_plugin_manager.remote import Remote
 @unittest.skipIf(os.getenv('CI') != 'true', "Only run on CI")
 class FullInstallNetwork(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.plugin_name = 'QuickOSM'
         self.repository = "https://plugins.qgis.org/plugins/plugins.xml?qgis=3.10"
         self.directory = Path('fixtures/plugins')
@@ -28,7 +28,7 @@ class FullInstallNetwork(unittest.TestCase):
 
         shutil.copy(Path(self.directory / 'sources.list'), Path(self.directory / 'sources.list.back'))
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         if self.plugin_path.exists():
             shutil.rmtree(self.plugin_path)
 
@@ -57,7 +57,7 @@ class FullInstallNetwork(unittest.TestCase):
 
 class FullInstallLocal(unittest.TestCase):
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         destination = Path('fixtures/xml_files/file_protocol/minimal_plugin')
         if destination.exists():
             shutil.rmtree(destination)
@@ -77,7 +77,7 @@ class FullInstallLocal(unittest.TestCase):
         folder.joinpath('.cache_qgis_plugin_manager').mkdir(parents=True, exist_ok=True)
         shutil.copy(
             folder.joinpath('plugin.xml'),
-            folder.joinpath('.cache_qgis_plugin_manager/plugins.xml')
+            folder.joinpath('.cache_qgis_plugin_manager/plugins.xml'),
         )
 
         remote = Remote(folder)

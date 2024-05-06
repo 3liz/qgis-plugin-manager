@@ -16,7 +16,7 @@ if sys.version_info < python_min_version:
     sys.exit(
         "qgis-plugin-manager requires at least Python version "
         f"{python_min_version[0]}.{python_min_version[1]}.\n"
-        f"You are currently running this installation with\n\n{sys.version}"
+        f"You are currently running this installation with\n\n{sys.version}",
     )
 
 # This string might be updated on CI on runtime with a proper semantic version name with X.Y.Z
@@ -65,5 +65,5 @@ setup(
     ],
     install_requires=[],
     python_requires=f">={python_min_version[0]}.{python_min_version[1]}",
-    include_package_data=True
+    include_package_data=True,
 )

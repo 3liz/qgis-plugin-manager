@@ -34,8 +34,8 @@ class TestRemote(unittest.TestCase):
             plugin.search,
             [
                 'data plotly', 'dataplotly', 'vector', 'python', 'd3', 'plots', 'graphs', 'datavis',
-                'dataviz', 'data', 'plotly'
-            ]
+                'dataviz', 'data', 'plotly',
+            ],
         )
 
         # Test the search
@@ -53,7 +53,7 @@ class TestRemote(unittest.TestCase):
                 'Lizmap': '3.7.4',
                 'Lizmap server': '1.0.0',
             },
-            plugins
+            plugins,
         )
 
         plugin = self.remote.list_plugins.get('Lizmap server')
@@ -62,7 +62,7 @@ class TestRemote(unittest.TestCase):
 
         self.assertListEqual(
             plugin.search,
-            ['lizmap server', 'lizmapserver', 'web', 'cloud', 'lizmap', 'server']
+            ['lizmap server', 'lizmapserver', 'web', 'cloud', 'lizmap', 'server'],
         )
 
         # Test the search
@@ -77,11 +77,11 @@ class TestRemote(unittest.TestCase):
         """ Test to parse a URL for login&password. """
         self.assertTupleEqual(
             ('https://foo.bar/plugins.xml?qgis=3.10', 'login', 'pass'),
-            Remote.credentials("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass")
+            Remote.credentials("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass"),
         )
         self.assertTupleEqual(
             ('https://foo.bar/plugins.xml?qgis=3.10', '', ''),
-            Remote.credentials("https://foo.bar/plugins.xml?qgis=3.10")
+            Remote.credentials("https://foo.bar/plugins.xml?qgis=3.10"),
         )
 
     def test_clean_remote(self):
@@ -89,17 +89,17 @@ class TestRemote(unittest.TestCase):
         # "password", the keyword to look for
         self.assertEqual(
             "https://foo.bar/plugins.xml?qgis=3.10&username=login&password=%2A%2A%2A%2A%2A%2A",
-            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass")
+            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&password=pass"),
         )
         # "pass", not the keyword to look for
         self.assertEqual(
             "https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass",
-            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass")
+            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10&username=login&pass=pass"),
         )
         # Nothing
         self.assertEqual(
             "https://foo.bar/plugins.xml?qgis=3.10",
-            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10")
+            Remote.public_remote_name("https://foo.bar/plugins.xml?qgis=3.10"),
         )
 
     @unittest.expectedFailure

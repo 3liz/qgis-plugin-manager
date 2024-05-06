@@ -13,7 +13,7 @@ from qgis_plugin_manager.definitions import Level
 DEFAULT_QGIS_VERSION = "3.22"
 
 
-def pretty_table(iterable, header) -> str:
+def pretty_table(iterable: list, header: list) -> str:
     """ Copy/paste from http://stackoverflow.com/a/40426743/2395485 """
     max_len = [len(x) for x in header]
     for row in iterable:
@@ -23,16 +23,16 @@ def pretty_table(iterable, header) -> str:
                 max_len[index] = len(str(col))
     output = '-' * (sum(max_len) + 1) + '\n'
     output += '|' + ''.join(
-        [h + ' ' * (l - len(h)) + '|' for h, l in zip(header, max_len)]) + '\n'
+        [a_header + ' ' * (a_line - len(a_header)) + '|' for a_header, a_line in zip(header, max_len)]) + '\n'
     output += '-' * (sum(max_len) + 1) + '\n'
     for row in iterable:
         row = [row] if type(row) not in (list, tuple) else row
         output += '|' + ''.join(
             [
                 str(c) + ' ' * (
-                    l - len(str(c))) + '|' for c, l in zip(
+                    a_line - len(str(c))) + '|' for c, a_line in zip(
                     row, max_len)
-            ]
+            ],
         ) + '\n'
     output += '-' * (sum(max_len) + 1) + '\n'
     return output
@@ -127,14 +127,14 @@ def qgis_server_version() -> str:
         print(
             f"{Level.Alert}"
             f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
-            f"{Level.End}"
+            f"{Level.End}",
         )
         print(f"Current user : {current_user()}")
         print(f'PYTHONPATH={os.getenv("PYTHONPATH")}')
         return ''
 
 
-def sources_file(current_folder) -> Path:
+def sources_file(current_folder: Path) -> Path:
     """ Return the default path to the "sources.list" file.
 
     The path by default or if it's defined with the environment variable.

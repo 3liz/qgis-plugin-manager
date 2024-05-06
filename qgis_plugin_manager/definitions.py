@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import List, NamedTuple
 
 __copyright__ = 'Copyright 2021, 3Liz'
 __license__ = 'GPL version 3'
@@ -10,7 +10,7 @@ class Plugin(NamedTuple):
     name: str = None
     description: str = None
     version: str = None
-    search: list = []
+    search: List = None
     qgis_minimum_version: str = None
     qgis_maximum_version: str = None
     homepage: str = None

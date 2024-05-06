@@ -8,7 +8,7 @@ import shutil
 import stat
 
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.remote import Remote
@@ -25,7 +25,7 @@ from qgis_plugin_manager.utils import (
 
 class LocalDirectory:
 
-    def __init__(self, folder: Path, qgis_version: str = None):
+    def __init__(self, folder: Path, qgis_version: Optional[str] = None):
         """ Constructor"""
         self.folder = folder
         # Dictionary : folder : plugin name
@@ -55,7 +55,7 @@ class LocalDirectory:
             print(
                 f"{Level.Alert}"
                 f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}"
-                f"{Level.End}"
+                f"{Level.End}",
             )
             version = DEFAULT_QGIS_VERSION
 
@@ -152,7 +152,7 @@ class LocalDirectory:
         )
         return data
 
-    def plugin_installed_version(self, plugin_name) -> Union[str, None]:
+    def plugin_installed_version(self, plugin_name: str) -> Union[str, None]:
         """ If a plugin is installed or not. """
         if self._plugins is None:
             self.plugin_list()
@@ -182,7 +182,7 @@ class LocalDirectory:
                 try:
                     shutil.rmtree(plugin_path)
                 except Exception as e:
-                    print(f"{Level.Critical}Plugin {plugin_name} could not be removed : {str(e)}")
+                    print(f"{Level.Critical}Plugin {plugin_name} could not be removed : {e!s}")
 
                 if not Path(self.folder.joinpath(plugin_folder)).exists():
                     print(f"{Level.Success}Plugin {plugin_name} removed")
@@ -193,7 +193,7 @@ class LocalDirectory:
                         f"{Level.Alert}"
                         f"Plugin {plugin_name} using folder {plugin_folder} could not be removed "
                         f"for unknown reason"
-                        f"{Level.End}"
+                        f"{Level.End}",
                     )
                 break
         print(f"{Level.Alert}Plugin name '{plugin_name}' not found{Level.End}")
@@ -205,7 +205,7 @@ class LocalDirectory:
 
         return False
 
-    def print_table(self, current_directory: bool = True):  # noqa: C901
+    def print_table(self, current_directory: bool = True):
         """ Print all plugins installed as a table. """
         if self._plugins is None:
             self.plugin_list()
@@ -322,7 +322,7 @@ class LocalDirectory:
             print(pretty_table(data, headers))
         else:
             print(
-                f"{Level.Alert}No plugin found in the current directory {self.folder.absolute()}{Level.End}"
+                f"{Level.Alert}No plugin found in the current directory {self.folder.absolute()}{Level.End}",
             )
 
         if len(list_of_owners) > 1:
@@ -331,7 +331,7 @@ class LocalDirectory:
                 f"{Level.Alert}"
                 f"Different rights have been detected : {','.join(list_of_owners)}"
                 f"{Level.End}. "
-                f"Please check user-rights."
+                f"Please check user-rights.",
             )
 
         if len(self._invalid) >= 1:

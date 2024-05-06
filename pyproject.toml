@@ -1,0 +1,42 @@
+[tool.setuptools]
+license-files = "LICENSE"
+
+# Ruff configuration
+# See https://doc.astral.sh/ruff/configuration
+
+[tool.ruff]
+line-length = 110
+target-version = "py37"
+exclude = [
+    ".venv",
+    ".local",
+]
+
+[tool.ruff.format]
+indent-style = "space"
+
+[tool.ruff.lint]
+extend-select = ["E", "F", "I", "ANN", "W", "T", "COM", "RUF"]
+ignore = [
+    "ANN101",
+    "ANN102",
+    "ANN204",
+    "T201",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"test/*" = [
+    "ANN201",
+]
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+known-third-party = [
+    "qgis",
+]
+order-by-type = true
+
+[tool.ruff.lint.flake8-annotations]
+#ignore-fully-untyped = true
+suppress-none-returning = true
+#suppress-dummy-args = true

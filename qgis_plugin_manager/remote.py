@@ -11,8 +11,8 @@ import urllib.request
 import zipfile
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
-from urllib.parse import unquote, urlencode, urlparse, urlunparse, parse_qs
+from typing import Dict, Iterator, List, Optional, Tuple, Union
+from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 from xml.etree.ElementTree import parse
 
 from qgis_plugin_manager.definitions import Level, Plugin
@@ -27,7 +27,7 @@ from qgis_plugin_manager.utils import (
 
 class Remote:
 
-    def __init__(self, folder: Path, qgis_version: str = None):
+    def __init__(self, folder: Path, qgis_version: Optional[str] = None):
         """ Constructor. """
         self.folder = folder
         self.list = None
@@ -61,7 +61,7 @@ class Remote:
                         f"{Level.Critical}"
                         f"The 'update' command has not been done before. "
                         f"The repository {server} has not been fetched before."
-                        f"{Level.End}"
+                        f"{Level.End}",
                     )
                     self.setting_error = True
                     return False
@@ -96,7 +96,7 @@ class Remote:
                     print(
                         f"{Level.Alert}"
                         f"Your https://plugins.qgis.org remote is not using a dynamic QGIS version."
-                        f"{Level.End}"
+                        f"{Level.End}",
                     )
                     print(
                         f"Instead of\n'{raw_line}'"
@@ -108,7 +108,7 @@ class Remote:
                         f"regenerate it using dynamic QGIS version if QGIS is well configured.\n"
                         f"This is only a warning, the process will continue with the hardcoded QGIS "
                         f"version in your 'sources.list' file."
-                        f"\n\n"
+                        f"\n\n",
                     )
 
                 if "[VERSION]" in raw_line:
@@ -117,7 +117,7 @@ class Remote:
                             f"{Level.Alert}"
                             f"Skipping line '{raw_line}' because it has a token [VERSION] but "
                             f"no QGIS version could be detected."
-                            f"{Level.End}"
+                            f"{Level.End}",
                         )
                         continue
 
@@ -298,7 +298,7 @@ class Remote:
             self.list_plugins[xml_plugin_name] = plugin_obj
         return plugins
 
-    def search(self, search_string: str, strict=True) -> List:
+    def search(self, search_string: str, strict: bool = True) -> List:
         """ Search in plugin names and tags."""
         # strict is used in tests to not check if the remote is ready
         if strict and not self.remote_is_ready():
@@ -319,8 +319,8 @@ class Remote:
         return results
 
     def install(
-            self, plugin_name, version="latest", current_version: str = "", force: bool = False,
-            remove_zip=True
+            self, plugin_name: str, version: str = "latest", current_version: str = "", force: bool = False,
+            remove_zip: bool = True,
     ) -> bool:
         """ Install the plugin with a specific version.
 
@@ -349,7 +349,7 @@ class Remote:
         if current_version == actual:
             if not force:
                 print(
-                    f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}"
+                    f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}",
                 )
                 # Plugin is installed and correct version, it's exit code 0
                 return True
@@ -405,7 +405,7 @@ class Remote:
         return True
 
     def _download_zip(
-            self, url: str, version: str, plugin_name: str, file_name: str, user: str
+            self, url: str, version: str, plugin_name: str, file_name: str, user: str,
     ) -> Tuple[bool, Union[None, Path]]:
         """ Download the ZIP
         """
@@ -457,7 +457,7 @@ class Remote:
         return True, zip_file
 
     @staticmethod
-    def check_qgis_dev_version(qgis_version) -> Optional[List[str]]:
+    def check_qgis_dev_version(qgis_version: str) -> Optional[List[str]]:
         """ Check if the QGIS current version is odd number. """
         if not qgis_version:
             return None
@@ -467,18 +467,18 @@ class Remote:
             print(
                 f"{Level.Alert}"
                 f"A QGIS development version is detected : {qgis_version[0]}.{qgis_version[1]}."
-                f"{Level.End}"
+                f"{Level.End}",
             )
             qgis_version[1] = str(int(qgis_version[1]) + 1)
             print(
                 f"{Level.Alert}"
                 f"If needed, it will use {qgis_version[0]}.{qgis_version[1]} instead."
-                f"{Level.End}"
+                f"{Level.End}",
             )
         return qgis_version
 
     @staticmethod
-    def server_cache_filename(cache_folder, server) -> Path:
+    def server_cache_filename(cache_folder: str, server: str) -> Path:
         """ Return the path for XML file. """
         server, login, _ = Remote.credentials(server)
         filename = ""
@@ -510,7 +510,7 @@ class Remote:
 
         return urlunparse(u), '', ''
 
-    def all_credentials(self):
+    def all_credentials(self) -> Iterator[Tuple[str, str, str]]:
         """ Dirty hack to get all credentials for now… """
         if self.list is None:
             self.remote_list()

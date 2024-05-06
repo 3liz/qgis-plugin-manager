@@ -16,15 +16,15 @@ from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import qgis_server_version
 
 
-def main() -> int:  # noqa: C901
+def main() -> int:
     """ Main function for the CLI menu. """
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("-v", "--version", action="version", version=__version__)
 
     subparsers = parser.add_subparsers(
-        title="commands", description="qgis-plugin-manager command", dest="command"
+        title="commands", description="qgis-plugin-manager command", dest="command",
     )
 
     subparsers.add_parser("init", help="Create the `sources.list` with plugins.qgis.org as remote")
@@ -167,7 +167,7 @@ def main() -> int:  # noqa: C901
                         f"{Level.Alert}"
                         f"Plugin {plugin_object.name} skipped from the upgrade command, because the plugin "
                         f"is in the ignored list."
-                        f"{Level.End}"
+                        f"{Level.End}",
                     )
                     continue
 
