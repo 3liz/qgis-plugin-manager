@@ -78,7 +78,7 @@ To create the first `sources.list` in the directory with at least the default re
 ```bash
 $ qgis-plugin-manager init
 $ cat sources.list 
-https://plugins.qgis.org/plugins/plugins.xml?qgis=3.19
+https://plugins.qgis.org/plugins/plugins.xml?qgis=3.34
 ```
 
 You can have one or many servers, one on each line.
@@ -89,7 +89,7 @@ List all plugins installed :
 
 ```bash
 $ qgis-plugin-manager list
-QGIS server version 3.19.0
+QGIS server version 3.34.2
 List all plugins in /home/etienne/dev/qgis/server_plugin
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -117,13 +117,13 @@ or the application that needs QGIS server plugins (for instance,
 $ qgis-plugin-manager remote
 List of remotes :
 
-https://plugins.qgis.org/plugins/plugins.xml?qgis=3.22
+https://plugins.qgis.org/plugins/plugins.xml?qgis=3.34
 
 $ cat sources.list 
 https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]
 ```
 
-`[VERSION]` is a token in the `sources.list` file to be replaced by the QGIS version, for instance `3.22`.
+`[VERSION]` is a token in the `sources.list` file to be replaced by the QGIS version, for instance `3.34`.
 If QGIS is upgraded, the XML file will be updated as well.
 
 You don't have to set the TOKEN for all URL : 
@@ -147,10 +147,10 @@ To fetch the XML files from each repository :
 
 ```bash
 $ qgis-plugin-manager update
-Downloading https://plugins.qgis.org/plugins/plugins.xml?qgis=3.19...
+Downloading https://plugins.qgis.org/plugins/plugins.xml?qgis=3.34...
 	Ok
 $ ls .cache_qgis_plugin_manager/
-https-plugins-qgis-org-plugins-plugins-xml-qgis-3-19.xml
+https-plugins-qgis-org-plugins-plugins-xml-qgis-3-34.xml
 ```
 
 ### Cache
