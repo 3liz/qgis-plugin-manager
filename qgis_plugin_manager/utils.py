@@ -1,4 +1,4 @@
-__copyright__ = 'Copyright 2022, 3Liz'
+__copyright__ = 'Copyright 2024, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
@@ -10,7 +10,7 @@ from typing import Union
 
 from qgis_plugin_manager.definitions import Level
 
-DEFAULT_QGIS_VERSION = "3.22"
+DEFAULT_QGIS_VERSION = "3.34"
 
 
 def pretty_table(iterable: list, header: list) -> str:
