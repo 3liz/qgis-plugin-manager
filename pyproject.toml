@@ -1,5 +1,9 @@
+[project]
+name = 'qgis-plugin-manager'
+version = "__VERSION__"
+
 [tool.setuptools]
-license-files = "LICENSE"
+license-files = ["LICENSE"]
 
 # Ruff configuration
 # See https://doc.astral.sh/ruff/configuration
