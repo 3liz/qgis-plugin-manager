@@ -122,6 +122,8 @@ def qgis_server_version() -> str:
     """
     try:
         from qgis.core import Qgis
+
+        # 3.34.6
         return Qgis.QGIS_VERSION.split('-')[0]
     except ImportError:
         print(

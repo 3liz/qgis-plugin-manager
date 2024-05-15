@@ -4,6 +4,7 @@ __email__ = 'info@3liz.org'
 
 import base64
 import os
+import platform
 import re
 import shutil
 import urllib
@@ -17,6 +18,7 @@ from xml.etree.ElementTree import parse
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.utils import (
+    DEFAULT_QGIS_VERSION,
     current_user,
     restart_qgis_server,
     similar_names,
@@ -34,6 +36,18 @@ class Remote:
         self.list_plugins = None
         self.setting_error = False
         self.qgis_version = qgis_version
+
+    def user_agent(self) -> str:
+        """ User agent. """
+        # https://github.com/3liz/qgis-plugin-manager/issues/66
+        # https://lists.osgeo.org/pipermail/qgis-user/2024-May/054439.html
+        if not self.qgis_version:
+            qgis_version = f"{DEFAULT_QGIS_VERSION}00"
+        else:
+            qgis_version = self.qgis_version
+
+        qgis_version = qgis_version.replace(".", "")
+        return f"Mozilla/5.0 QGIS/{qgis_version}/{platform.system()}"
 
     def remote_is_ready(self) -> bool:
         """ Return if the remote is ready to be parsed. """
@@ -174,7 +188,7 @@ class Remote:
             print(f"Downloading {self.public_remote_name(server)}…")
             url, login, password = self.credentials(server)
             headers = {
-                'User-Agent': 'Mozilla/5.0',
+                'User-Agent': self.user_agent(),
             }
             if login:
                 token = base64.b64encode(f"{login}:{password}".encode())
@@ -414,7 +428,7 @@ class Remote:
 
         else:
             headers = {
-                'User-Agent': 'Mozilla/5.0',
+                'User-Agent': self.user_agent(),
             }
             request = urllib.request.Request(url, headers=headers)
             result = False

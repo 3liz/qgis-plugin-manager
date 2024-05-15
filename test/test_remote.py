@@ -73,6 +73,11 @@ class TestRemote(unittest.TestCase):
         self.assertListEqual(["3", "22", "11"], Remote.check_qgis_dev_version('3.22.11'))
         self.assertListEqual(["3", "24", "0"], Remote.check_qgis_dev_version('3.23.0'))
 
+    def test_user_agent(self):
+        """ Test the User-Agent. """
+        self.remote = Remote(Path('fixtures/xml_files/lizmap'))
+        self.assertIn("Mozilla/5.0 QGIS/", self.remote.user_agent())
+
     def test_parse_url(self):
         """ Test to parse a URL for login&password. """
         self.assertTupleEqual(
