@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.6.3 - 2024-05-15
+
+### Fixed
+
+* Fix packaging issue
+
 ## 1.6.2 - 2024-05-15
 
 ### Added

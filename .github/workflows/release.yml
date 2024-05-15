@@ -95,6 +95,10 @@ jobs:
         sed -i "s/__VERSION__/${VERSION}/g" pyproject.toml
         sed -i "s/__VERSION__/${VERSION}/g" qgis_plugin_manager/__about__.py
 
+    - name: Use setup.py instead of pyproject.toml
+      # Temporary, until the migration is done
+      run: rm pyproject.toml
+
     - name: Read the changelog
       id: changelog
       uses: 3liz/changelog-release@0.3.0
