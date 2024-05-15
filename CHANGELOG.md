@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+## 1.6.2 - 2024-05-15
+
+### Added
+
+* Support for Python 3.12
+
 ### Changed
 
-* Change from `X` to `*` for password when showing them
+* Change the User-Agent to be compliant with https://plugins.qgis.org
+* Change from `X` to `*` for passwords when showing them
 
 ## 1.6.1 - 2023-07-06
 
