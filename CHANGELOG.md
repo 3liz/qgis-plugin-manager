@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 1.6.4 - 2025-05-20
+
+### Added
+
+* Support for Python 3.13
+
+### Removed
+
+* Drop support for Python 3.7
+
 ## 1.6.3 - 2024-05-15
 
 ### Fixed
