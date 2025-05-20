@@ -1,4 +1,4 @@
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 
 __copyright__ = 'Copyright 2021, 3Liz'
 __license__ = 'GPL version 3'
@@ -7,11 +7,11 @@ __email__ = 'info@3liz.org'
 
 class Plugin(NamedTuple):
     """ Definition of a plugin in the XML file. """
-    name: str = None
-    description: str = None
-    version: str = None
-    search: List = None
-    qgis_minimum_version: str = None
+    name: Optional[str] = None
+    description: str = ''
+    version: str = ''
+    search: List = ''
+    qgis_minimum_version: str = ''
     qgis_maximum_version: str = None
     homepage: str = None
     pre_release: str = None
