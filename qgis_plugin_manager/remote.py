@@ -289,6 +289,9 @@ class Remote:
             # Add the real name of the plugin
             data['name'] = plugin.attrib['name']
 
+            # Add the version of the plugin
+            data['version'] = plugin.attrib['version']
+
             # Not present in XML, but property available in metadata.txt
             data['qgis_maximum_version'] = ''
 
