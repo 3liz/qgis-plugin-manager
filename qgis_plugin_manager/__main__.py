@@ -5,11 +5,12 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import argparse
+import logging
 import os
 
 from pathlib import Path
 
-from qgis_plugin_manager.__about__ import __version__
+from qgis_plugin_manager.__about__ import __title_clean__, __version__
 from qgis_plugin_manager.definitions import Level
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
@@ -22,6 +23,16 @@ def main() -> int:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("-v", "--version", action="version", version=__version__)
+
+    parser.add_argument(
+        "-v",
+        "-v",
+        "--verbose",
+        action="count",
+        default=1,
+        dest="verbosity",
+        help="Verbosity level: None = WARNING, -v = INFO, -vv = DEBUG",
+    )
 
     subparsers = parser.add_subparsers(
         title="commands", description="qgis-plugin-manager command", dest="command",
@@ -72,6 +83,23 @@ def main() -> int:
     )
 
     args = parser.parse_args()
+
+    # set log level depending on verbosity argument
+    # by default 1 =>
+    args.verbosity = 40 - (10 * args.verbosity) if args.verbosity > 0 else 0
+    logging.basicConfig(
+        level=args.verbosity,
+        # format="%(asctime)s||%(levelname)s||%(module)s||%(message)s",
+        format='%(levelname)s:%(message)s',
+        # datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    console = logging.StreamHandler()
+    console.setLevel(args.verbosity)
+
+    # add the handler to the root logger
+    logger = logging.getLogger(__title_clean__)
+    logger.debug(f"Log level set: {logging}")
 
     # if no command is passed, print the help and exit
     if not args.command:
