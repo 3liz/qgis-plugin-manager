@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.6.5 - 2025-06-13
+
+### Fixed
+
+* Fix for installing a specific version of a plugin, contribution from @benz0li
+
 ## 1.6.4 - 2025-05-20
 
 ### Added
