@@ -108,7 +108,7 @@ jobs:
         python setup.py sdist
 
     - name: Create release on GitHub
-      uses: ncipollo/release-action@v1.16.0
+      uses: ncipollo/release-action@v1.18.0
       with:
         body: ${{ steps.changelog.outputs.markdown }}
         token: ${{ secrets.BOT_HUB_TOKEN }}
