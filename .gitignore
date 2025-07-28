@@ -8,6 +8,8 @@ __pycache__/
 .venv/
 venv/
 
+*.swp
+
 # Tests
 test/fixtures/plugins/QuickOSM
 test/fixtures/plugins/sources.list.back

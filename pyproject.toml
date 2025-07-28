@@ -1,16 +1,66 @@
-[project]
-name = 'qgis-plugin-manager'
-version = "__VERSION__"
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
+[project]
+name = "qgis-plugin-manager"
+description = "Tool for downloading/managing QGIS plugins from CLI."
+requires-python = ">= 3.8"
+license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
+readme = "README.md"
+keywords = ["QGIS"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+
+dependencies = []
+dynamic = ["version"]
+
+[projects.scripts]
+qgis-plugin-manager = "qgis_plugin_manager.__main__:main"
+
+[[project.authors]]
+name = "Étienne Trimaille"
+
+[[project.maintainers]]
+name = "David Marteau"
+email = "dmarteau@3liz.com"
+
+[tool.setuptools.packages.find]
+exclude = [ "tests/*" ]
+include = [
+    "qgis_plugin_manager",
+    "qgis_plugin_manager.*",
+]
+
+[tool.setuptools.dynamic]
+version = { file = ["VERSION"] }
+
+[projects.urls]
+homepage = "https://github.com/3liz/qgis-plugin-manager"
+repository = "https://github.com/3liz/qgis-plugin-manager"
+documentation = "https://github.com/3liz/qgis-plugin-manager/blob/master/README.md"
+"Bug Reports" = "https://github.com/3liz/qgis-plugin-manager/issues/"
 
 # Ruff configuration
 # See https://doc.astral.sh/ruff/configuration
 
 [tool.ruff]
 line-length = 110
-target-version = "py37"
+target-version = "py38"
 exclude = [
     ".venv",
     ".local",
@@ -22,8 +72,6 @@ indent-style = "space"
 [tool.ruff.lint]
 extend-select = ["E", "F", "I", "ANN", "W", "T", "COM", "RUF"]
 ignore = [
-    "ANN101",
-    "ANN102",
     "ANN204",
     "T201",
 ]

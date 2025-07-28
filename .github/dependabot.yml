@@ -7,4 +7,4 @@ updates:
       interval: "cron"
       cronjob: "0 6 5 */4 *"
     assignees:
-      - "Gustry"
+      - "dmarteau"

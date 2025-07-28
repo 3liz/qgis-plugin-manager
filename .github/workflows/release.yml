@@ -91,13 +91,7 @@ jobs:
       run: |
         VERSION=${GITHUB_REF:-0.0.0}
         VERSION=${VERSION##*/}
-        sed -i "s/__VERSION__/${VERSION}/g" setup.py
-        sed -i "s/__VERSION__/${VERSION}/g" pyproject.toml
-        sed -i "s/__VERSION__/${VERSION}/g" qgis_plugin_manager/__about__.py
-
-    - name: Use setup.py instead of pyproject.toml
-      # Temporary, until the migration is done
-      run: rm pyproject.toml
+        echo ${VERSION} > VERSION
 
     - name: Read the changelog
       id: changelog
@@ -105,7 +99,7 @@ jobs:
 
     - name: Build package
       run: |
-        python setup.py sdist
+        python3 -m build --no-isolation --sdist
 
     - name: Create release on GitHub
       uses: ncipollo/release-action@v1.18.0

@@ -1,10 +1,25 @@
-.PHONY: test
+.PHONY: test dist
+
+PYTHON=python3
 
 PYTHON_PKG=qgis_plugin_manager
 TESTDIR=test
 
+
+dist: clean
+	$(PYTHON) -m build --no-isolation --sdist
+
+clean:
+	rm -rf *.egg-info ./dist
+
+install: 
+	pip install -U --upgrade-strategy=eager -e .
+
+install-dev:
+	pip install -U --upgrade-strategy=eager -r requirements-dev.txt
+
 test:
-	cd test && python3 -m unittest
+	cd $(TESTDIR) && $(PYTHON) -m unittest
 
 lint:
 	@ruff check $(PYTHON_PKG) $(TESTDIR)

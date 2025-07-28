@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Move packaging configuration to pyproject.toml 
+
+
 ## 1.6.5 - 2025-06-13
 
 ### Fixed

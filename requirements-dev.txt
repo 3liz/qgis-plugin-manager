@@ -1,1 +1,6 @@
+pytest
 ruff
+mypy
+mypy-extensions
+pipdeptree
+build
