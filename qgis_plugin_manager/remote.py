@@ -3,6 +3,7 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import base64
+import logging
 import os
 import platform
 import re
@@ -57,7 +58,7 @@ class Remote:
         source_list = sources_file(self.folder)
         if not source_list.exists():
             if not self.setting_error:
-                print(f"{Level.Critical}The {source_list.absolute()} file does not exist{Level.End}")
+                logger.error(f"{Level.Critical}The {source_list.absolute()} file does not exist{Level.End}")
                 print("Use the 'init' command to create the file")
                 self.setting_error = True
                 return False
