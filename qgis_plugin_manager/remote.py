@@ -423,7 +423,7 @@ class Remote:
 
     def _download_zip(
             self, url: str, version: str, plugin_name: str, file_name: str, user: str,
-    ) -> Tuple[bool, Union[None, Path]]:
+    ) -> Tuple[bool, Optional[Path]]:
         """ Download the ZIP
         """
         if url.startswith('file:'):

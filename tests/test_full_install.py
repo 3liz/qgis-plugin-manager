@@ -1,0 +1,98 @@
+import os
+import shutil
+
+from pathlib import Path
+
+import pytest
+
+from qgis_plugin_manager.local_directory import LocalDirectory
+from qgis_plugin_manager.remote import Remote
+
+
+@pytest.fixture
+def remote_sources(fixtures: Path):
+    sources_file = fixtures.joinpath("remote_sources.list")
+    os.environ["QGIS_PLUGIN_MANAGER_SOURCES_FILE"] = sources_file
+    yield sources_file
+    del os.environ["QGIS_PLUGIN_MANAGER_SOURCES_FILE"]
+
+
+@pytest.mark.skipif(os.getenv("CI") != "true", reason="Only run on CI")
+def test_install_network(plugins: Path, remote_sources: Path):
+
+    plugin_name = "QuickOSM"
+    plugin_path = plugins.joinpath(plugin_name)
+
+    if plugin_path.exists():
+        shutil.rmtree(plugin_path)
+
+    """ Test install QuickOSM with a specific version, remove and try the latest. """
+    assert not plugin_path.exists()
+
+    local = LocalDirectory(plugins)
+    assert plugin_name not in local.plugin_list()
+
+    remote = Remote(plugins)
+    remote.update()
+
+    version = '1.1.1'
+    remote.install(plugin_name, version)
+    assert plugin_path.exists()
+
+    local.plugin_list()
+    assert version == local.plugin_metadata(plugin_name, "version")
+
+    remote.install(plugin_name)
+    assert plugin_path.exists()
+    assert version != local.plugin_metadata(plugin_name, "version")
+
+
+@pytest.fixture
+def protocols(fixtures: Path) -> Path:
+    return fixtures.joinpath("xml_files", "file_protocol")
+
+
+@pytest.fixture
+def teardown_local(protocols: Path):
+
+    yield
+
+    destinations = protocols.joinpath("minimal_plugin")
+    if destinations.exists():
+        shutil.rmtree(destinations)
+
+    cache_folder = protocols.joinpath(".cache_qgis_plugin_manager")
+    if cache_folder.exists():
+        shutil.rmtree(cache_folder)
+
+    sources_list = protocols.joinpath("sources.list")
+    if sources_list.exists():
+        sources_list.unlink()
+
+
+def test_install_local(protocols: Path, teardown_local: None):
+    """ Test install local file. """
+    folder = protocols
+    folder.joinpath('sources.list').touch()
+    folder.joinpath('.cache_qgis_plugin_manager').mkdir(parents=True, exist_ok=True)
+    shutil.copy(
+        folder.joinpath('plugin.xml'),
+        folder.joinpath('.cache_qgis_plugin_manager/plugins.xml'),
+    )
+
+    remote = Remote(folder)
+    plugins = remote._parse_xml(folder.joinpath('plugin.xml'), {})
+    assert {'Minimal': '1.0.0'} == plugins
+
+    remote.list_plugins = plugins
+    local = LocalDirectory(folder)
+    assert local.plugin_installed_version('Minimal') is None
+
+    remote.install("Minimal", remove_zip=False)
+    assert local.plugin_installed_version('Minimal') == "1.0"
+    assert 'minimal_plugin' in list(local.plugin_list().keys())
+
+    # Test to remove the plugin
+    assert not local.remove("minimal")
+    assert local.remove("Minimal")
+    assert local.plugin_installed_version('Minimal') is None

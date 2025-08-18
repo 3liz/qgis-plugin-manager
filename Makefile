@@ -3,7 +3,7 @@
 PYTHON=python3
 
 PYTHON_PKG=qgis_plugin_manager
-TESTDIR=test
+TESTDIR=tests
 
 
 dist: clean
@@ -19,7 +19,7 @@ install-dev:
 	pip install -U --upgrade-strategy=eager -r requirements-dev.txt
 
 test:
-	cd $(TESTDIR) && $(PYTHON) -m unittest
+	cd $(TESTDIR) && pytest -v
 
 lint:
 	@ruff check $(PYTHON_PKG) $(TESTDIR)

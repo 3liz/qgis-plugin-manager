@@ -122,7 +122,7 @@ class LocalDirectory:
         """
         return self._invalid
 
-    def plugin_info(self, plugin: str) -> Union[None, Plugin]:
+    def plugin_info(self, plugin: str) -> Optional[Plugin]:
         """ For a given plugin, retrieve all metadata."""
         if self._plugins is None:
             self.plugin_list()
