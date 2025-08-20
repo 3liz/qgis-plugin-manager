@@ -8,22 +8,32 @@ import pytest
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
 
-
 @pytest.fixture
 def remote_sources(fixtures: Path):
     sources_file = fixtures.joinpath("remote_sources.list")
-    os.environ["QGIS_PLUGIN_MANAGER_SOURCES_FILE"] = sources_file
+    os.environ["QGIS_PLUGIN_MANAGER_SOURCES_FILE"] = str(sources_file)
     yield sources_file
     del os.environ["QGIS_PLUGIN_MANAGER_SOURCES_FILE"]
 
 
+@pytest.fixture
+def teardown_downloaded_plugins(plugins: Path):
+    yield
+
+    plugin_path = plugins.joinpath("QuickOSM")
+    if plugin_path.exists():
+        print("\n::removing", plugin_path)
+        shutil.rmtree(plugin_path)
+
+
 @pytest.mark.skipif(os.getenv("CI") != "true", reason="Only run on CI")
-def test_install_network(plugins: Path, remote_sources: Path):
+def test_install_network(
+    plugins: Path, 
+    remote_sources: Path, 
+    teardown_downloaded_plugins: None,
+):
     plugin_name = "QuickOSM"
     plugin_path = plugins.joinpath(plugin_name)
-
-    if plugin_path.exists():
-        shutil.rmtree(plugin_path)
 
     """ Test install QuickOSM with a specific version, remove and try the latest. """
     assert not plugin_path.exists()
@@ -31,14 +41,14 @@ def test_install_network(plugins: Path, remote_sources: Path):
     local = LocalDirectory(plugins)
     assert plugin_name not in local.plugin_list()
 
-    remote = Remote(plugins)
+    remote = Remote(plugins, qgis_version="3.34")
     remote.update()
 
     version = "1.1.1"
     remote.install(plugin_name, version)
     assert plugin_path.exists()
 
-    local.plugin_list()
+    local.list_plugins()
     assert version == local.plugin_metadata(plugin_name, "version")
 
     remote.install(plugin_name)

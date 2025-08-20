@@ -35,13 +35,13 @@ jobs:
         python-version: ${{ matrix.python }}
 
     - name: Upgrade PIP
-      run: pip install --upgrade pip
+      run: pip install --upgrade pip pytest
 
     - name: Run tests
       working-directory: tests
       run: |
         export PYTHONPATH="${{ github.workspace }}"
-        python -m unittest
+        pytest -v
 
   ruff:
     name: "❄ Ruff"
