@@ -12,7 +12,8 @@ from typing import Dict, Iterator, List, Optional, Tuple
 from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 from xml.etree.ElementTree import parse
 
-from qgis_plugin_manager.definitions import Level, Plugin
+from qgis_plugin_manager import echo
+from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.utils import (
     PluginManagerError,
     current_user,
@@ -58,8 +59,8 @@ class Remote:
         source_list = sources_file(self.folder)
         if not source_list.exists():
             if not self.setting_error:
-                print(f"{Level.Critical}The {source_list.absolute()} file does not exist{Level.End}")
-                print("Use the 'init' command to create the file")
+                echo.critical(f"The {source_list.absolute()} file does not exist")
+                echo.info("Use the 'init' command to create the file")
                 self.setting_error = True
                 return False
 
@@ -69,11 +70,9 @@ class Remote:
 
             if not filename.exists():
                 if not self.setting_error:
-                    print(
-                        f"{Level.Critical}"
-                        f"The 'update' command has not been done before. "
+                    echo.critical(
+                        "The 'update' command has not been done before. "
                         f"The repository {server} has not been fetched before."
-                        f"{Level.End}",
                     )
                     self.setting_error = True
                     return False
@@ -107,11 +106,10 @@ class Remote:
 
                 if "[VERSION]" in raw_line:
                     if not qgis_version:
-                        print(
-                            f"{Level.Alert}"
-                            f"Skipping line '{raw_line}' because it has a token [VERSION] but "
-                            f"no QGIS version could be detected."
-                            f"{Level.End}",
+                        echo.alert(
+                            f"Skipping line '{raw_line}' because it has a "
+                            "token [VERSION] but "
+                            "no QGIS version could be detected."
                         )
                         continue
 
@@ -135,17 +133,17 @@ class Remote:
     def print_list(self):
         """Print in the console the list of remotes."""
 
-        print("List of remotes :\n")
+        echo.echo("List of remotes :\n")
         if len(self.list):
-            print("\n".join([self.public_remote_name(s) for s in self.list]))
+            echo.echo("\n".join([self.public_remote_name(s) for s in self.list]))
         else:
-            print(f"{Level.Alert}No remote configured{Level.End}")
+            echo.alert("No remote configured")
 
     def update(self) -> bool:
         """For each remote, it updates the XML file."""
 
         if not self.list:
-            print(f"\t{Level.Critical}No remote found.{Level.End}")
+            echo.critical("\tNo remote found.")
             return False
 
         cache = self.cache_directory()
@@ -154,14 +152,14 @@ class Remote:
                 shutil.rmtree(cache)
             except OSError as e:
                 # https://github.com/3liz/qgis-plugin-manager/issues/53
-                print(f"\t{Level.Critical}{e}{Level.End}")
+                echo.critical(f"{e}")
                 return False
 
         cache.mkdir()
 
         flag = False
         for server in self.list:
-            print(f"Downloading {self.public_remote_name(server)}…")
+            echo.info(f"Downloading {self.public_remote_name(server)}…")
             url, login, password = self.credentials(server)
             headers = {
                 "User-Agent": self.user_agent(),
@@ -173,10 +171,10 @@ class Remote:
             try:
                 f = urllib.request.urlopen(request)
             except urllib.error.HTTPError as e:
-                print(f"\t{e}")
+                echo.critical(f"ERROR: {e}")
                 continue
             except urllib.error.URLError as e:
-                print(f"\t{e}")
+                echo.critical(f"ERROR: {e}")
                 continue
 
             filename = self.server_cache_filename(cache, server)
@@ -187,10 +185,10 @@ class Remote:
                     output.write(f.read())
             except PermissionError:
                 # https://github.com/3liz/qgis-plugin-manager/issues/53
-                print(f"{Level.Critical}The directory is not writable.{Level.End}")
+                echo.critical("The directory is not writable.")
                 return False
 
-            print(f"\t{Level.Success}Ok{Level.End}")
+            echo.success("\tOk")
             flag = True
 
         return flag
@@ -203,7 +201,7 @@ class Remote:
         cache = self.cache_directory()
         if not cache.exists():
             cache.mkdir()
-            print("The 'update' has not been done before.")
+            echo.info("The 'update' has not been done before.")
             return []
 
         xml = []
@@ -320,7 +318,7 @@ class Remote:
 
         xml_version = self.latest(plugin_name)
         if xml_version is None:
-            print(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
+            echo.alert(f"Plugin {plugin_name} {version} not found.")
             if not self.list_plugins:
                 raise PluginManagerError("No available plugins")
 
@@ -334,12 +332,8 @@ class Remote:
 
         if current_version == actual:
             if not force:
-                print(
-                    f"\t{Level.Alert}Same version detected on the remote, skipping {plugin_name}{Level.End}",
-                )
+                echo.alert(f"\tSame version detected on the remote, skipping {plugin_name}")
                 # Plugin is installed and correct version, it's exit code 0
-
-            # print(f"Same plugin version detected {plugin_name} {current_version}, forcing…")
 
         # Check consistency
         if not file_name:
@@ -367,11 +361,11 @@ class Remote:
             except OSError as e:
                 # https://github.com/3liz/qgis-plugin-manager/issues/53
                 zip_file.unlink()
-                raise PluginManagerError(f"\t{Level.Critical}{e}{Level.End}")
+                raise PluginManagerError(echo.format_critical(f"{e}"))
 
         if not zip_file.exists():
             raise PluginManagerError(
-                f"\t{Level.Critical}The zip file does not exist : {zip_file.absolute()}{Level.End}",
+                echo.format_critical(f"The zip file does not exist : {zip_file.absolute()}"),
             )
         # Extracting the zip in the folder
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
@@ -381,7 +375,7 @@ class Remote:
             # Removing the zip file
             zip_file.unlink()
 
-        print(f"\t{Level.Success}Ok {zip_file.name}{Level.End}")
+        echo.success(f"\tOk {zip_file.name}")
 
         # Installation done !
         if sudo_user:
@@ -429,7 +423,7 @@ class Remote:
                             continue
 
             if not result:
-                raise PluginManagerError(f"{Level.Alert}Plugin {plugin_name} {version} not found.{Level.End}")
+                raise PluginManagerError(echo.format_alert(f"Plugin {plugin_name} {version} not found."))
 
             # Saving the zip from the URL
             zip_file = self.folder.joinpath(file_name)
@@ -440,7 +434,7 @@ class Remote:
                     output.write(f.read())
             except PermissionError:
                 file_path = self.folder.absolute()
-                print(f"\t{Level.Critical}Current user {user} can not write in {file_path}{Level.End}")
+                echo.critical(f"\tCurrent user {user} can not write in {file_path}")
                 raise RuntimeError("Check file permissions for the folder.")
 
         return zip_file
@@ -453,17 +447,11 @@ class Remote:
 
         qgis_version_info = qgis_version.split(".")
         if int(qgis_version_info[1]) % 2 != 0:
-            print(
-                f"{Level.Alert}"
+            echo.alert(
                 f"A QGIS development version is detected : {qgis_version_info[0]}.{qgis_version_info[1]}."
-                f"{Level.End}",
             )
             qgis_version_info[1] = str(int(qgis_version_info[1]) + 1)
-            print(
-                f"{Level.Alert}"
-                f"If needed, it will use {qgis_version_info[0]}.{qgis_version_info[1]} instead."
-                f"{Level.End}",
-            )
+            echo.alert(f"If needed, it will use {qgis_version_info[0]}.{qgis_version_info[1]} instead.")
         return qgis_version_info
 
     @staticmethod

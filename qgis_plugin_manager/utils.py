@@ -4,7 +4,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
-from qgis_plugin_manager.definitions import Level
+from qgis_plugin_manager import echo
 
 DEFAULT_REMOTE_REPOSITORY = "https://plugins.qgis.org"
 
@@ -49,7 +49,9 @@ def pretty_table(iterable: list, header: list) -> str:
 
 def restart_qgis_server():
     """Restart QGIS Server tip."""
-    print(f"{Level.Alert}Tip{Level.End} : Do not forget to restart QGIS Server to reload plugins 😎")
+    echo.info(
+        f"{echo.format_alert('Tip')} : Do not forget to restart QGIS Server to reload plugins 😎",
+    )
 
     restart_file = os.getenv("QGIS_PLUGIN_MANAGER_RESTART_FILE")
     if not restart_file:
@@ -133,13 +135,9 @@ def qgis_server_version() -> str:
         # 3.34.6
         return Qgis.QGIS_VERSION.split("-")[0]
     except ImportError:
-        print(
-            f"{Level.Alert}"
-            f"Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH"
-            f"{Level.End}",
-        )
-        print(f"Current user : {current_user()}")
-        print(f"PYTHONPATH={os.getenv('PYTHONPATH')}")
+        echo.alert("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
+        echo.info(f"Current user : {current_user()}")
+        echo.info(f"PYTHONPATH={os.getenv('PYTHONPATH')}")
         return ""
 
 

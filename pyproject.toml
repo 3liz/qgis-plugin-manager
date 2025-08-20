@@ -72,11 +72,13 @@ indent-style = "space"
 
 [tool.ruff.lint]
 extend-select = ["E", "F", "I", "ANN", "W", "T", "COM", "RUF"]
+# COM812 conflict with formatter
 ignore = [
     "ANN002",
     "ANN003",
     "ANN204",
     "T201",
+    "COM812",
 ]
 
 [tool.ruff.lint.per-file-ignores]

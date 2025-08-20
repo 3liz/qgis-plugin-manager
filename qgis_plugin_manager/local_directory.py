@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from qgis_plugin_manager.definitions import Level, Plugin
+from qgis_plugin_manager import echo
+from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import (
     PluginManagerError,
@@ -52,7 +53,7 @@ class LocalDirectory:
         """Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = sources_file(self.folder)
         if source_file.exists():
-            print(f"{Level.Alert}{source_file.absolute()} is already existing. Quit{Level.End}")
+            echo.alert(f"{source_file.absolute()} is already existing. Quit")
             return False
 
         repository = get_default_remote_repository()
@@ -67,10 +68,10 @@ class LocalDirectory:
                 f.write(server)
         except PermissionError:
             # https://github.com/3liz/qgis-plugin-manager/issues/53
-            print(f"{Level.Critical}The directory is not writable.{Level.End}")
+            echo.critical("The directory is not writable.")
             return False
 
-        print(f"{source_file.absolute()} has been written.")
+        echo.info(f"{source_file.absolute()} has been written.")
         return True
 
     def plugin_list(self) -> Dict[str, str]:
@@ -174,25 +175,24 @@ class LocalDirectory:
                 try:
                     shutil.rmtree(plugin_path)
                 except Exception as e:
-                    print(f"{Level.Critical}Plugin {plugin_name} could not be removed : {e!s}")
+                    echo.critical(f"Plugin {plugin_name} could not be removed : {e!s}")
 
                 if not Path(self.folder.joinpath(plugin_folder)).exists():
-                    print(f"{Level.Success}Plugin {plugin_name} removed")
+                    echo.success(f"Plugin {plugin_name} removed")
                     restart_qgis_server()
                     return True
                 else:
-                    print(
-                        f"{Level.Alert}"
-                        f"Plugin {plugin_name} using folder {plugin_folder} could not be removed "
-                        f"for unknown reason"
-                        f"{Level.End}",
+                    echo.alert(
+                        f"Plugin {plugin_name} using folder {plugin_folder} "
+                        "could not be removed "
+                        "for unknown reason."
                     )
                 break
-        print(f"{Level.Alert}Plugin name '{plugin_name}' not found{Level.End}")
+        echo.alert(f"Plugin name '{plugin_name}' not found")
 
         similarity = similar_names(plugin_name.lower(), list(all_names))
         for plugin in similarity:
-            print(f"Do you mean maybe '{plugin}' ?")
+            echo.info(f"Do you mean maybe '{plugin}' ?")
 
         return False
 
@@ -306,24 +306,21 @@ class LocalDirectory:
                 if not to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE")):
                     extra_info.append("Remote unknown")
 
-            plugin_data.append(Level.Alert + ";".join(extra_info) + Level.End)
+            plugin_data.append(echo.format_alert(";".join(extra_info)))
             data.append(plugin_data)
 
         if len(data):
-            print(pretty_table(data, headers))
+            echo.echo(pretty_table(data, headers))
         else:
-            print(
-                f"{Level.Alert}No plugin found in the current directory {self.folder.absolute()}{Level.End}",
+            echo.alert(
+                f"No plugin found in the current directory {self.folder.absolute()}",
             )
 
         if len(list_of_owners) > 1:
             list_of_owners = [f"'{i}'" for i in list_of_owners]
-            print(
-                f"{Level.Alert}"
-                f"Different rights have been detected : {','.join(list_of_owners)}"
-                f"{Level.End}. "
-                f"Please check user-rights.",
+            echo.alert(
+                f"Different rights have been detected : {','.join(list_of_owners)}Please check user-rights.",
             )
 
         if len(self._invalid) >= 1:
-            print(pretty_table(self._invalid, ["Invalid"]))
+            echo.echo(pretty_table(self._invalid, ["Invalid"]))

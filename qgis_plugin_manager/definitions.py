@@ -31,12 +31,3 @@ class Plugin(NamedTuple):
     server: bool = False
     has_processing: bool = False
     has_wps: bool = False
-
-
-class Level:
-    """Color in terminal."""
-
-    Success = "\033[92m"
-    Alert = "\033[93m"
-    Critical = "\033[91m"
-    End = "\033[0m"
