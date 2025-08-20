@@ -1,191 +1,268 @@
-#!/usr/bin/env python3
-
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import argparse
 import os
+import sys
 
+from argparse import Namespace
 from pathlib import Path
+from typing import (
+    Callable,
+)
 
 from qgis_plugin_manager.__about__ import __version__
 from qgis_plugin_manager.definitions import Level
 from qgis_plugin_manager.local_directory import LocalDirectory
-from qgis_plugin_manager.remote import Remote
-from qgis_plugin_manager.utils import qgis_server_version
+from qgis_plugin_manager.remote import PluginNotFoundError, Remote
+from qgis_plugin_manager.utils import PluginManagerError, qgis_server_version
+
+cli = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+
+cli.add_argument("-v", "--version", action="version", version=__version__)
+
+subparsers = cli.add_subparsers(
+    title="commands",
+    description="qgis-plugin-manager command",
+)
 
 
-def main() -> int:
-    """ Main function for the CLI menu. """
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument("-v", "--version", action="version", version=__version__)
+def command(name: str, **kwargs) -> Callable:
+    """Wrap subcommand function"""
 
-    subparsers = parser.add_subparsers(
-        title="commands", description="qgis-plugin-manager command", dest="command",
-    )
+    def decorator(fun):
+        if isinstance(fun, tuple):
+            func, options = fun
+        else:
+            func = fun
+            options = ()
+        parser = subparsers.add_parser(name, description=func.__doc__, **kwargs)
+        for opt in options:
+            parser.add_argument(*opt[0], **opt[1])
+        parser.set_defaults(func=func)
 
-    subparsers.add_parser("init", help="Create the `sources.list` with plugins.qgis.org as remote")
+    return decorator
 
-    subparsers.add_parser("list", help="List all plugins in the directory")
 
-    subparsers.add_parser("remote", help="List all remote server")
+def argument(*args, **kwargs):
+    arg = (args, kwargs)
 
-    remove = subparsers.add_parser("remove", help="Remove a plugin by its name")
-    remove.add_argument("plugin_name", help="The plugin to remove")
+    def decorator(fun):
+        if isinstance(fun, tuple):
+            # tuple(Callable, tuple[option])
+            return (fun[0], (*fun[1], arg))
+        else:
+            return (fun, (arg,))
 
-    subparsers.add_parser('update', help="Update all index files")
+    return decorator
 
-    upgrade_parser = subparsers.add_parser('upgrade', help="Upgrade all plugins installed")
-    upgrade_parser.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        help=(
-            "If specified, the upgrade will be forced for all plugins. Otherwise, it will be done only if "
-            "the version is different."
-        ),
-    )
 
-    cache = subparsers.add_parser("cache", help="Look for a plugin in the cache")
-    cache.add_argument("plugin_name", help="The plugin to look for")
+#
+# Context utils
+#
 
-    search = subparsers.add_parser('search', help="Search for plugins")
-    search.add_argument("plugin_name", help="Search in tags and plugin names")
 
-    install = subparsers.add_parser('install', help="Install a plugin")
-    install.add_argument(
-        "plugin_name",
-        help=(
-            "The plugin to install, suffix '==version' is optional. The plugin might require quotes if "
-            "there is a space in its name."))
-    install.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        help=(
-            "If specified, the install will be forced for the plugin, even if the version is already "
-            "installed."
-        ),
-    )
-
-    args = parser.parse_args()
-
-    # if no command is passed, print the help and exit
-    if not args.command:
-        parser.print_help()
-        parser.exit()
-
-    exit_val = 0
-
-    # Default to the current directory
-    current_directory = True
-    plugin_path = Path('.')
-    qgis_plugin_path = os.environ.get('QGIS_PLUGINPATH')
+def get_plugin_path() -> Path:
+    """Get the plugin path"""
+    qgis_plugin_path = os.environ.get("QGIS_PLUGINPATH")
     if qgis_plugin_path:
-        current_directory = False
         # Except if the QGIS_PLUGINPATH is set
         plugin_path = Path(qgis_plugin_path)
+        print(f"Plugin's directory set by environment variable : {plugin_path.absolute()}\n")
+    else:
+        plugin_path = Path(".")
+        print(f"Plugin's directory set to current directory : {plugin_path.absolute()}\n")
+    return plugin_path
 
-    if args.command in ("remote", "cache", "search", "update"):
-        # Remote only needed, with QGIS version
-        remote = Remote(plugin_path, qgis_server_version())
-        if args.command == "remote":
-            remote.print_list()
-        elif args.command == "cache":
-            latest = remote.latest(args.plugin_name)
-            if latest is None:
-                print(f"{Level.Alert}Plugin not found{Level.End}")
-            else:
-                print(f"Plugin {args.plugin_name} : {latest} available")
-        elif args.command == "search":
-            results = remote.search(args.plugin_name)
-            for result in results:
-                print(result)
-        elif args.command == "update":
-            exit_val = remote.update()
 
-    elif args.command in ("remove", ):
-        # Local needed only, without QGIS version
-        plugins = LocalDirectory(plugin_path)
-        exit_val = plugins.remove(args.plugin_name)
+#
+# Commands
+#
 
-    elif args.command in ("list", "init"):
-        # Local needed only, with QGIS version
-        qgis = qgis_server_version()
-        if qgis:
-            print(f"QGIS version : {qgis}")
-        plugins = LocalDirectory(plugin_path, qgis_version=qgis)
 
-        if args.command == "list":
-            # The remote will be used inside this function
-            plugins.print_table(current_directory)
+# List
+@command("list", help="List all plugins in the directory")
+def list_plugins(args: Namespace):
+    qgis = qgis_server_version()
+    if qgis:
+        print(f"QGIS version : {qgis}")
+    plugins = LocalDirectory(get_plugin_path(), qgis_version=qgis)
+    plugins.print_table()
 
-        elif args.command == "init":
-            exit_val = plugins.init()
 
-    elif args.command in ("upgrade", "install"):
-        # Local and remote needed
-        qgis = qgis_server_version()
-        if qgis:
-            print(f"QGIS version : {qgis}")
-        remote = Remote(plugin_path, qgis_version=qgis)
-        plugins = LocalDirectory(plugin_path, qgis_version=qgis)
-        folders = plugins.plugin_list()
+# Init
+@command(
+    "init",
+    help="Create the `sources.list` with plugins.qgis.org as remote",
+)
+@argument("--qgis-version", help="Set the qgis version")
+def init_sources(args: Namespace):
+    """If qgis-version is set to 'auto', then detect the current QGIS version"""
+    # Local needed only, with QGIS version
+    qgis_version = args.qgis_version
+    if qgis_version == "auto":
+        qgis_version = qgis_server_version()
+    plugins = LocalDirectory(get_plugin_path(), qgis_version=qgis_version)
+    plugins.init()
 
-        if args.command == "install":
-            parameter = args.plugin_name.split('==')
-            plugin_name = parameter[0]
-            if len(parameter) >= 2:
-                plugin_version = parameter[1]
-            else:
-                plugin_version = 'latest'
 
-            current_version = plugins.plugin_installed_version(plugin_name)
-            exit_val = remote.install(
-                plugin_name=plugin_name,
-                version=plugin_version,
-                current_version=current_version,
+# Remote
+@command("remote", help="List all remote servers")
+def list_remote_servers(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    remote.print_list()
+
+
+# Remove
+@command("remove", help="Remove a plugin by its name")
+@argument("plugin_name", help="The plugin to remove")
+def remove_plugin(args: Namespace):
+    # Local needed only, without QGIS version
+    plugins = LocalDirectory(get_plugin_path())
+    if not plugins.remove(args.plugin_name):
+        cli.exit(1)
+
+
+# Cache
+@command("cache", help="Look for a plugin in the cache")
+@argument("plugin_name", help="The plugin to look for")
+def look_for_plugin(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    latest = remote.latest(args.plugin_name)
+    if latest is None:
+        print(f"{Level.Alert}Plugin not found{Level.End}")
+        cli.exit(1)
+    else:
+        print(f"Plugin {args.plugin_name} : {latest} available")
+
+
+# Update
+@command("update", help="Update all index files")
+def update_index(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    if not remote.update():
+        cli.exit(1)
+
+
+# Upgrade
+@command("upgrade", help="Upgrade all plugins installed")
+@argument(
+    "-f",
+    "--force",
+    action="store_true",
+    help="Force reinstall all plugins",
+)
+def upgrade_plugins(args: Namespace):
+    """Upgrade all plugins for which a
+    newer version is available
+    """
+    plugin_path = get_plugin_path()
+
+    qgis = qgis_server_version()
+    remote = Remote(plugin_path, qgis_version=qgis)
+    plugins = LocalDirectory(plugin_path, qgis_version=qgis)
+    folders = plugins.plugin_list()
+
+    # Check for ignored plugins
+    ignored_plugins = []
+    plugin_ignore_file = plugin_path.joinpath("ignorePlugins.list")
+    if plugin_ignore_file.exists():
+        with open(plugin_ignore_file, encoding="utf8") as f:
+            ignored_plugins = [plugin.rstrip() for plugin in f.readlines()]
+
+    for folder in folders:
+        plugin_object = plugins.plugin_info(folder)
+
+        if plugin_object.name in ignored_plugins:
+            print(
+                f"{Level.Alert}{plugin_object.name}: Ignored{Level.End}",
+            )
+            continue
+
+        # Need to check version
+        try:
+            remote.install(
+                plugin_name=plugin_object.name,
+                current_version=plugin_object.version,
                 force=args.force,
             )
+        except PluginNotFoundError:
+            print(
+                f"{Level.Alert}{plugin_object.name}: Removed, not updating{Level.End}",
+            )
 
-        elif args.command == "upgrade":
 
-            ignored_plugins = []
-            plugin_ignore_file = plugin_path.joinpath('ignorePlugins.list')
-            if plugin_ignore_file.exists():
-                with open(plugin_ignore_file, encoding='utf8') as f:
-                    ignored_plugins = [plugin.rstrip() for plugin in f.readlines()]
+# Search
+@command("search", help="Search for plugins")
+@argument("plugin_name", help="Search in tags and plugin names")
+def search_plugin(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    found = False
+    for result in remote.search(args.plugin_name):
+        print(result)
+        found = True
+    if not found:
+        print("No plugins found", file=sys.stderr)
 
-            for folder in folders:
-                plugin_object = plugins.plugin_info(folder)
 
-                if plugin_object.name in ignored_plugins:
-                    print(
-                        f"{Level.Alert}"
-                        f"Plugin {plugin_object.name} skipped from the upgrade command, because the plugin "
-                        f"is in the ignored list."
-                        f"{Level.End}",
-                    )
-                    continue
+# Install
+@command("install", help="Install a plugin")
+@argument("plugin_name", help="The plugin to install")
+@argument(
+    "-f",
+    "--force",
+    action="store_true",
+    help="Force installation",
+)
+def install_plugin(args: Namespace):
+    """The version may be specified by appending the suffix '==version'.
+    'plugin_name' might require quotes if there is space in its name.
+    """
+    plugin_path = get_plugin_path()
 
-                # Need to check version
-                result = remote.install(
-                    plugin_name=plugin_object.name,
-                    current_version=plugin_object.version,
-                    force=args.force,
-                )
-                if not result:
-                    exit_val = False
+    qgis = qgis_server_version()
+    if qgis:
+        print(f"QGIS version : {qgis}")
+    remote = Remote(plugin_path, qgis_version=qgis)
+    plugins = LocalDirectory(plugin_path, qgis_version=qgis)
 
-    if exit_val is None:
-        exit_val = 0
-    elif isinstance(exit_val, bool):
-        exit_val = 0 if exit_val else 1
+    parameter = args.plugin_name.split("==")
+    plugin_name = parameter[0]
+    if len(parameter) >= 2:
+        plugin_version = parameter[1]
+    else:
+        plugin_version = "latest"
 
-    return exit_val
+    current_version = plugins.plugin_installed_version(plugin_name)
+    try:
+        remote.install(
+            plugin_name=plugin_name,
+            version=plugin_version,
+            current_version=current_version,
+            force=args.force,
+        )
+    except PluginNotFoundError:
+        similars = remote.check_similar_names(plugin_name)
+        name = next(similars, None)
+        if name:
+            print("\nPlugins with similar name:")
+            print("\t", name)
+            for name in similars:
+                print(name)
+        cli.exit(1)
+
+
+def main() -> None:
+    """Main function for the CLI menu."""
+
+    args = cli.parse_args()
+    if "func" not in args:
+        cli.print_help()
+        cli.exit(1)
+    else:
+        try:
+            args.func(args)
+        except PluginManagerError as e:
+            print(f"{Level.Critical}{e}{Level.End}", file=sys.stderr)
 
 
 if __name__ == "__main__":

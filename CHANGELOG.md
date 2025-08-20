@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed
+
+* Use templated remote definition in init as default
+    - Allow forcing QGIS version
+
+### Added
+
 * Move packaging configuration to pyproject.toml 
 
 

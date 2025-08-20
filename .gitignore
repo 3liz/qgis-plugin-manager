@@ -21,3 +21,5 @@ test/fixtures/xml_files/file_protocol/minimal_plugin/
 # Local
 sources.list
 .cache_qgis_plugin_manager
+
+.local

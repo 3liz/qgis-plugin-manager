@@ -1,40 +1,41 @@
-from typing import List, NamedTuple, Optional
-
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
+from typing import (
+    NamedTuple,
+    Optional,
+)
 
 
 class Plugin(NamedTuple):
-    """ Definition of a plugin in the XML file. """
+    """Definition of a plugin in the XML file."""
+
+    file_name: Optional[str] = None
     name: Optional[str] = None
-    description: str = ''
-    version: str = ''
-    search: List = ''
-    qgis_minimum_version: str = ''
-    qgis_maximum_version: str = None
-    homepage: str = None
-    pre_release: str = None
-    file_name: str = None
-    icon: str = None
-    author_name: str = None
-    download_url: str = None
-    uploaded_by: str = None
-    create_date: str = None
-    update_date: str = None
-    experimental: str = None
-    deprecated: str = None
-    tracker: str = None
-    repository: str = None
-    tags: str = None
+    description: str = ""
+    version: str = ""
+    search: list[str] = []  # field(default_factory=list)
+    qgis_minimum_version: Optional[str] = None
+    qgis_maximum_version: Optional[str] = None
+    homepage: Optional[str] = None
+    pre_release: Optional[str] = None
+    icon: Optional[str] = None
+    author_name: Optional[str] = None
+    download_url: Optional[str] = None
+    uploaded_by: Optional[str] = None
+    create_date: Optional[str] = None
+    update_date: Optional[str] = None
+    experimental: Optional[str] = None
+    deprecated: Optional[str] = None
+    tracker: Optional[str] = None
+    repository: Optional[str] = None
+    tags: Optional[str] = None
     server: bool = False
     has_processing: bool = False
     has_wps: bool = False
 
 
 class Level:
-    """ Color in terminal. """
-    Success = '\033[92m'
-    Alert = '\033[93m'
-    Critical = '\033[91m'
-    End = '\033[0m'
+    """Color in terminal."""
+
+    Success = "\033[92m"
+    Alert = "\033[93m"
+    Critical = "\033[91m"
+    End = "\033[0m"

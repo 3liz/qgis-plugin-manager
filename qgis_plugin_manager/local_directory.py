@@ -1,19 +1,17 @@
-__copyright__ = 'Copyright 2022, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import configparser
 import os
 import shutil
 import stat
+import sys
 
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import (
-    DEFAULT_QGIS_VERSION,
+    PluginManagerError,
+    get_default_remote_repository,
     parse_version,
     pretty_table,
     restart_qgis_server,
@@ -24,45 +22,48 @@ from qgis_plugin_manager.utils import (
 
 
 class LocalDirectory:
-
     def __init__(self, folder: Path, qgis_version: Optional[str] = None):
-        """ Constructor"""
+        """Constructor"""
         self.folder = folder
         # Dictionary : folder : plugin name
-        self._plugins = None
-        self._invalid = []
+        self._plugins: dict[str, str] = {}
+        self._invalid: list[str] = []
 
-        self.qgis_version_str = qgis_version
-        self.qgis_version = None
-        if self.qgis_version_str:
-            self.qgis_version = self.qgis_version_str.split('.')
-            if len(self.qgis_version) != 3:
-                self.qgis_version = None
+        self.qgis_version: Optional[list[int]] = None
+        self.qgis_version_str: Optional[str] = None
+        if qgis_version:
+            try:
+                version = [int(i) for i in qgis_version.split(".")]
+            except ValueError:
+                raise PluginManagerError(f"{version} is not a valid QGIS version") from None
+            if len(version) == 2:
+                version.append(0)
+                self.qgis_version_str = f"{version[0]}.{version[1]}"
+            elif len(version) == 3:
+                self.qgis_version_str = f"{version[0]}.{version[1]}.{version[2]}"
             else:
-                self.qgis_version = [int(i) for i in self.qgis_version]
+                raise PluginManagerError(f"{version} is not a valid QGIS version")
+
+            self.qgis_version = version
+
+        self.list_plugins()
 
     def init(self) -> bool:
-        """ Init this qgis-plugin-manager by creating the default sources.list."""
+        """Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = sources_file(self.folder)
         if source_file.exists():
             print(f"{Level.Alert}{source_file.absolute()} is already existing. Quit{Level.End}")
             return False
 
-        if self.qgis_version:
-            version = "[VERSION]"
-            print("Init https://plugins.qgis.org")
-        else:
-            print(
-                f"{Level.Alert}"
-                f"QGIS version is unknown, creating with a default {DEFAULT_QGIS_VERSION}"
-                f"{Level.End}",
-            )
-            version = DEFAULT_QGIS_VERSION
+        repository = get_default_remote_repository()
+        version = self.qgis_version_str or "[VERSION]"
+
+        print(f"Init {repository}", file=sys.stderr)
 
         server = f"https://plugins.qgis.org/plugins/plugins.xml?qgis={version}\n"
 
         try:
-            with open(source_file, 'w', encoding='utf8') as f:
+            with open(source_file, "w", encoding="utf8") as f:
                 f.write(server)
         except PermissionError:
             # https://github.com/3liz/qgis-plugin-manager/issues/53
@@ -72,21 +73,23 @@ class LocalDirectory:
         print(f"{source_file.absolute()} has been written.")
         return True
 
-    def plugin_list(self) -> Dict[str, str]:
-        """ Get the list of plugins installed in the current directory. """
-        self._plugins = {}
-        for folder in self.folder.iterdir():
+    def plugin_list(self) -> dict[str, str]:
+        return self._plugins
 
+    def list_plugins(self):
+        """Get the list of plugins installed in the current directory."""
+        for folder in self.folder.iterdir():
             if not folder.is_dir():
                 continue
 
-            if folder.name.startswith('.'):
+            # Skip hidden folders
+            if folder.name.startswith("."):
                 continue
 
-            have_python = list(folder.glob('*.py'))
-            have_metadata = list(folder.glob('metadata.txt'))
+            have_python = list(folder.glob("*.py"))
+            have_metadata = list(folder.glob("metadata.txt"))
             if have_python and have_metadata:
-                name = self.plugin_metadata(folder.name, 'name')
+                name = self.plugin_metadata(folder.name, "name")
                 self._plugins[folder.name] = name
             else:
                 self._invalid.append(folder.name)
@@ -94,36 +97,31 @@ class LocalDirectory:
         # Weird issue, there are duplicates
         self._invalid = list(dict.fromkeys(self._invalid))
 
-        return self._plugins
-
     def plugin_metadata(self, plugin_folder: str, key: str) -> Union[str, None]:
-        """ For a given plugin installed, get a metadata item. """
-        if self._plugins is None:
-            self.plugin_list()
-
+        """For a given plugin installed, get a metadata item."""
         if plugin_folder not in self._plugins.keys():
             return None
 
         config_parser = configparser.ConfigParser()
 
-        with Path(self.folder / Path(f"{plugin_folder}/metadata.txt")).open(encoding='utf8') as f:
+        with self.folder.joinpath(f"{plugin_folder}", "metadata.txt").open(encoding="utf8") as f:
             config_parser.read_file(f)
 
         try:
-            return config_parser.get('general', key)
+            return config_parser.get("general", key)
         except configparser.NoOptionError:
-            return ''
+            return ""
 
     @property
     def invalid(self) -> list:
-        """ List of invalid plugins.
+        """List of invalid plugins.
 
         Maybe not a valid folder ? No metadata.txt ?
         """
         return self._invalid
 
     def plugin_info(self, plugin: str) -> Optional[Plugin]:
-        """ For a given plugin, retrieve all metadata."""
+        """For a given plugin, retrieve all metadata."""
         if self._plugins is None:
             self.plugin_list()
 
@@ -144,19 +142,15 @@ class LocalDirectory:
             qgis_minimum_version=self.plugin_metadata(plugin_folder, "qgisMinimumVersion"),
             qgis_maximum_version=self.plugin_metadata(plugin_folder, "qgisMaximumVersion"),
             author_name=self.plugin_metadata(plugin_folder, "author"),
-            server=self.plugin_metadata(
-                plugin_folder, "server") in ('True', 'true', '1', 'yes', True),
-            has_processing=self.plugin_metadata(
-                plugin_folder, "hasProcessingProvider") in ('True', 'true', '1', 'yes', True),
-            has_wps=self.plugin_metadata(plugin_folder, "wps") in ('True', 'true', '1', 'yes', True),
+            server=self.plugin_metadata(plugin_folder, "server") in ("True", "true", "1", "yes", True),
+            has_processing=self.plugin_metadata(plugin_folder, "hasProcessingProvider")
+            in ("True", "true", "1", "yes", True),
+            has_wps=self.plugin_metadata(plugin_folder, "wps") in ("True", "true", "1", "yes", True),
         )
         return data
 
     def plugin_installed_version(self, plugin_name: str) -> Union[str, None]:
-        """ If a plugin is installed or not. """
-        if self._plugins is None:
-            self.plugin_list()
-
+        """If a plugin is installed or not."""
         for plugin_folder in self.plugin_list():
             info = self.plugin_info(plugin_folder)
             if info.name == plugin_name:
@@ -165,17 +159,15 @@ class LocalDirectory:
         return None
 
     def remove(self, plugin_name: str) -> bool:
-        """ Remove a plugin by its human name. """
-        if self._plugins is None:
-            self.plugin_list()
+        """Remove a plugin by its human name."""
 
-        all_names = []
+        all_names: set[str] = set()
 
         for plugin_folder in self.plugin_list():
             info = self.plugin_info(plugin_folder)
 
             # We fill all names available
-            all_names.append(info.name)
+            all_names.add(info.name)
 
             if info.name == plugin_name:
                 plugin_path = self.folder.joinpath(plugin_folder)
@@ -198,29 +190,27 @@ class LocalDirectory:
                 break
         print(f"{Level.Alert}Plugin name '{plugin_name}' not found{Level.End}")
 
-        all_names = list(set(all_names))
-        similarity = similar_names(plugin_name.lower(), all_names)
+        similarity = similar_names(plugin_name.lower(), list(all_names))
         for plugin in similarity:
             print(f"Do you mean maybe '{plugin}' ?")
 
         return False
 
-    def print_table(self, current_directory: bool = True):
-        """ Print all plugins installed as a table. """
-        if self._plugins is None:
-            self.plugin_list()
+    def print_table(self):
+        """Print all plugins installed as a table."""
 
         remote = Remote(self.folder, qgis_version=self.qgis_version_str)
 
-        if current_directory:
-            print(f"List all plugins in the current working directory : {self.folder.absolute()}\n")
-        else:
-            print(
-                f"List all plugins in the directory set by environment variable : {self.folder.absolute()}\n")
-
         headers = [
-            'Folder ⬇', 'Name', 'Version', 'Flags', 'QGIS min', 'QGIS max', 'Author',
-            'Folder rights', 'Action ⚠',
+            "Folder ⬇",
+            "Name",
+            "Version",
+            "Flags",
+            "QGIS min",
+            "QGIS max",
+            "Author",
+            "Folder rights",
+            "Action ⚠",
         ]
         headers = [f"  {i}  " for i in headers]
         data = []
@@ -244,16 +234,16 @@ class LocalDirectory:
             # Flags column
             flags = []
             if info.server:
-                flags.append('Server')
+                flags.append("Server")
             if info.has_wps:
-                flags.append('WPS')
-            if info.experimental in ('True', 'true', '1', 'yes', True):
-                flags.append('Experimental')
-            if info.has_processing in ('True', 'true', '1', 'yes', True):
-                flags.append('Processing')
-            if info.deprecated in ('True', 'true', '1', 'yes', True):
-                flags.append('Deprecated')
-            plugin_data.append(','.join(flags))
+                flags.append("WPS")
+            if info.experimental in ("True", "true", "1", "yes", True):
+                flags.append("Experimental")
+            if info.has_processing in ("True", "true", "1", "yes", True):
+                flags.append("Processing")
+            if info.deprecated in ("True", "true", "1", "yes", True):
+                flags.append("Deprecated")
+            plugin_data.append(",".join(flags))
 
             # QGIS Min
             plugin_data.append(info.qgis_minimum_version)
@@ -273,6 +263,7 @@ class LocalDirectory:
             user_info = stat_info.st_uid
             try:
                 import pwd
+
                 try:
                     user_name = pwd.getpwuid(user_info)[0]
                 except KeyError:
@@ -291,11 +282,11 @@ class LocalDirectory:
 
             extra_info = []
 
-            if len(current.split('.')) == 1:
+            if len(current.split(".")) == 1:
                 extra_info.append("Not a semantic version")
 
             elif latest:
-                if latest.startswith('v'):
+                if latest.startswith("v"):
                     latest = latest[1:]
 
                 if latest > current:
@@ -312,10 +303,10 @@ class LocalDirectory:
             else:
                 # "qgis-plugin-manager update" is missing.
                 # We can't determine what to do
-                if not to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE"), False):
-                    extra_info.append('Remote unknown')
+                if not to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE")):
+                    extra_info.append("Remote unknown")
 
-            plugin_data.append(Level.Alert + ';'.join(extra_info) + Level.End)
+            plugin_data.append(Level.Alert + ";".join(extra_info) + Level.End)
             data.append(plugin_data)
 
         if len(data):
@@ -335,4 +326,4 @@ class LocalDirectory:
             )
 
         if len(self._invalid) >= 1:
-            print(pretty_table(self._invalid, ['Invalid']))
+            print(pretty_table(self._invalid, ["Invalid"]))

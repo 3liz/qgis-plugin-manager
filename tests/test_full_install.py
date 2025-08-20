@@ -19,7 +19,6 @@ def remote_sources(fixtures: Path):
 
 @pytest.mark.skipif(os.getenv("CI") != "true", reason="Only run on CI")
 def test_install_network(plugins: Path, remote_sources: Path):
-
     plugin_name = "QuickOSM"
     plugin_path = plugins.joinpath(plugin_name)
 
@@ -35,7 +34,7 @@ def test_install_network(plugins: Path, remote_sources: Path):
     remote = Remote(plugins)
     remote.update()
 
-    version = '1.1.1'
+    version = "1.1.1"
     remote.install(plugin_name, version)
     assert plugin_path.exists()
 
@@ -54,7 +53,6 @@ def protocols(fixtures: Path) -> Path:
 
 @pytest.fixture
 def teardown_local(protocols: Path):
-
     yield
 
     destinations = protocols.joinpath("minimal_plugin")
@@ -71,28 +69,33 @@ def teardown_local(protocols: Path):
 
 
 def test_install_local(protocols: Path, teardown_local: None):
-    """ Test install local file. """
+    """Test install local file."""
     folder = protocols
-    folder.joinpath('sources.list').touch()
-    folder.joinpath('.cache_qgis_plugin_manager').mkdir(parents=True, exist_ok=True)
+    folder.joinpath("sources.list").touch()
+    folder.joinpath(".cache_qgis_plugin_manager").mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        folder.joinpath('plugin.xml'),
-        folder.joinpath('.cache_qgis_plugin_manager/plugins.xml'),
+        folder.joinpath("plugin.xml"),
+        folder.joinpath(".cache_qgis_plugin_manager/plugins.xml"),
     )
 
     remote = Remote(folder)
-    plugins = remote._parse_xml(folder.joinpath('plugin.xml'), {})
-    assert {'Minimal': '1.0.0'} == plugins
+    plugins = {}
+    remote._parse_xml(folder.joinpath("plugin.xml"), plugins)
+    assert {"Minimal": "1.0.0"} == plugins
 
     remote.list_plugins = plugins
     local = LocalDirectory(folder)
-    assert local.plugin_installed_version('Minimal') is None
+    assert local.plugin_installed_version("Minimal") is None
 
     remote.install("Minimal", remove_zip=False)
-    assert local.plugin_installed_version('Minimal') == "1.0"
-    assert 'minimal_plugin' in list(local.plugin_list().keys())
+
+    local.list_plugins()
+    assert local.plugin_installed_version("Minimal") == "1.0"
+    assert "minimal_plugin" in list(local.plugin_list().keys())
 
     # Test to remove the plugin
     assert not local.remove("minimal")
     assert local.remove("Minimal")
-    assert local.plugin_installed_version('Minimal') is None
+
+    local = LocalDirectory(folder)
+    assert local.plugin_installed_version("Minimal") is None

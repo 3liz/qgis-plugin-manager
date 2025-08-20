@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: GIS",
 ]
@@ -29,7 +30,7 @@ classifiers = [
 dependencies = []
 dynamic = ["version"]
 
-[projects.scripts]
+[project.scripts]
 qgis-plugin-manager = "qgis_plugin_manager.__main__:main"
 
 [[project.authors]]
@@ -72,6 +73,8 @@ indent-style = "space"
 [tool.ruff.lint]
 extend-select = ["E", "F", "I", "ANN", "W", "T", "COM", "RUF"]
 ignore = [
+    "ANN002",
+    "ANN003",
     "ANN204",
     "T201",
 ]
@@ -89,6 +92,18 @@ known-third-party = [
 order-by-type = true
 
 [tool.ruff.lint.flake8-annotations]
-#ignore-fully-untyped = true
+ignore-fully-untyped = true
 suppress-none-returning = true
-#suppress-dummy-args = true
+suppress-dummy-args = true
+
+#
+# Mypy
+#
+[tool.mypy]
+python_version = "3.9"
+
+[[tool.mypy.overrides]]
+module = "qgis.*"
+ignore_missing_imports = true
+
+
