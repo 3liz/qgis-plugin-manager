@@ -2,7 +2,7 @@ import os
 
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Iterator, Optional, Union
+from typing import Iterator, List, Optional, Union
 
 from qgis_plugin_manager.definitions import Level
 
@@ -58,7 +58,7 @@ def restart_qgis_server():
     Path(restart_file).touch()
 
 
-def similar_names(expected: str, available: list[str]) -> Iterator[str]:
+def similar_names(expected: str, available: List[str]) -> Iterator[str]:
     """Returns a list of similar names available."""
     for item in available:
         ratio = SequenceMatcher(None, expected.lower(), item.lower()).ratio()
@@ -76,7 +76,7 @@ def to_bool(val: Optional[Union[str, int, float, bool]]) -> bool:
         return bool(val)
 
 
-def parse_version(version_str: Optional[str]) -> Optional[list[int]]:
+def parse_version(version_str: Optional[str]) -> Optional[List[int]]:
     if version_str is None or version_str == "":
         return None
 

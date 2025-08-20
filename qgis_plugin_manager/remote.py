@@ -8,7 +8,7 @@ import urllib.request
 import zipfile
 
 from pathlib import Path
-from typing import Iterator, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 from xml.etree.ElementTree import parse
 
@@ -31,8 +31,8 @@ class Remote:
     def __init__(self, folder: Path, qgis_version: Optional[str] = None):
         """Constructor."""
         self.folder = folder
-        self.list: list[str] = []
-        self.list_plugins: dict[str, Plugin] = {}
+        self.list: List[str] = []
+        self.list_plugins: Dict[str, Plugin] = {}
         self.setting_error = False
         self.qgis_version = qgis_version
 
@@ -195,7 +195,7 @@ class Remote:
 
         return flag
 
-    def xml_in_folder(self) -> list[Path]:
+    def xml_in_folder(self) -> List[Path]:
         """Returns the list of XML files in the folder."""
         if not self.check_remote_cache():
             return []
@@ -215,9 +215,9 @@ class Remote:
 
         return xml
 
-    def available_plugins(self) -> dict[str, str]:
+    def available_plugins(self) -> Dict[str, str]:
         """Populates the list of available plugins, in all XML files."""
-        plugins: dict[str, str] = {}
+        plugins: Dict[str, str] = {}
         for xml_file in self.xml_in_folder():
             self._parse_xml(xml_file, plugins)
         return plugins
@@ -226,7 +226,7 @@ class Remote:
         """For a given plugin, it returns the latest version found in all remotes."""
         return self.available_plugins().get(plugin_name)
 
-    def _parse_xml(self, xml_file: Path, plugins: dict[str, str]):
+    def _parse_xml(self, xml_file: Path, plugins: Dict[str, str]):
         """Parse the given XML file."""
 
         tree = parse(xml_file.absolute())
@@ -252,7 +252,7 @@ class Remote:
                 else:
                     plugins[xml_plugin_name] = plugin.attrib["version"]
 
-            data: dict = {}
+            data: Dict = {}
             for element in plugin:
                 if element.tag in Plugin._fields:
                     data[element.tag] = element.text
@@ -446,7 +446,7 @@ class Remote:
         return zip_file
 
     @staticmethod
-    def check_qgis_dev_version(qgis_version: Optional[str]) -> Optional[list[str]]:
+    def check_qgis_dev_version(qgis_version: Optional[str]) -> Optional[List[str]]:
         """Check if the QGIS current version is odd number."""
         if not qgis_version:
             return None

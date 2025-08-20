@@ -5,7 +5,7 @@ import stat
 import sys
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 
 from qgis_plugin_manager.definitions import Level, Plugin
 from qgis_plugin_manager.remote import Remote
@@ -26,10 +26,10 @@ class LocalDirectory:
         """Constructor"""
         self.folder = folder
         # Dictionary : folder : plugin name
-        self._plugins: dict[str, str] = {}
-        self._invalid: list[str] = []
+        self._plugins: Dict[str, str] = {}
+        self._invalid: List[str] = []
 
-        self.qgis_version: Optional[list[int]] = None
+        self.qgis_version: Optional[List[int]] = None
         self.qgis_version_str: Optional[str] = None
         if qgis_version:
             try:
@@ -73,7 +73,7 @@ class LocalDirectory:
         print(f"{source_file.absolute()} has been written.")
         return True
 
-    def plugin_list(self) -> dict[str, str]:
+    def plugin_list(self) -> Dict[str, str]:
         return self._plugins
 
     def list_plugins(self):

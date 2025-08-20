@@ -1,4 +1,5 @@
 from typing import (
+    List,
     NamedTuple,
     Optional,
 )
@@ -11,7 +12,7 @@ class Plugin(NamedTuple):
     name: Optional[str] = None
     description: str = ""
     version: str = ""
-    search: list[str] = []  # field(default_factory=list)
+    search: List[str] = []  # noqa RUF012
     qgis_minimum_version: Optional[str] = None
     qgis_maximum_version: Optional[str] = None
     homepage: Optional[str] = None

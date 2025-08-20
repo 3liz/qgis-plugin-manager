@@ -8,6 +8,7 @@ import pytest
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
 
+
 @pytest.fixture
 def remote_sources(fixtures: Path):
     sources_file = fixtures.joinpath("remote_sources.list")
@@ -28,8 +29,8 @@ def teardown_downloaded_plugins(plugins: Path):
 
 @pytest.mark.skipif(os.getenv("CI") != "true", reason="Only run on CI")
 def test_install_network(
-    plugins: Path, 
-    remote_sources: Path, 
+    plugins: Path,
+    remote_sources: Path,
     teardown_downloaded_plugins: None,
 ):
     plugin_name = "QuickOSM"
