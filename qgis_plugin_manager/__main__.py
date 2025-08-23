@@ -218,16 +218,16 @@ def upgrade_plugins(args: Namespace):
                 force=args.force,
             )
         except PluginNotFoundError:
-            echo.alert(f"{plugin_object.name}: Removed")
+            echo.alert(f"\t\u26a0\ufe0f {plugin_object.name}: Not found")
         except PluginManagerError as err:
             failures += 1
-            echo.critical(f"\t\u26d4 {plugin_object.name}:\tError: {err}")
+            echo.critical(f"\t\u274c {plugin_object.name}:\tError: {err}")
         else:
             if install_version:
                 echo.success(f"\t\u2705 {plugin_object.name:<25} {install_version:<12}\tInstalled")
                 installed += 1
             else:
-                echo.alert(f"\t\u274e {plugin_object.name:<25} {plugin_object.version:<12}\tUnchanged")
+                echo.success(f"\t\u274e {plugin_object.name:<25} {plugin_object.version:<12}\tUnchanged")
 
     if failures > 0:
         echo.alert(f"Command terminated with {failures} errors")
