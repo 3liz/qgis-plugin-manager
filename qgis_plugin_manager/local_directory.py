@@ -5,7 +5,7 @@ import stat
 import sys
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from qgis_plugin_manager import echo
 from qgis_plugin_manager.definitions import Plugin
@@ -15,7 +15,6 @@ from qgis_plugin_manager.utils import (
     get_default_remote_repository,
     parse_version,
     pretty_table,
-    restart_qgis_server,
     similar_names,
     sources_file,
     to_bool,
@@ -98,7 +97,7 @@ class LocalDirectory:
         # Weird issue, there are duplicates
         self._invalid = list(dict.fromkeys(self._invalid))
 
-    def plugin_metadata(self, plugin_folder: str, key: str) -> Union[str, None]:
+    def plugin_metadata(self, plugin_folder: str, key: str) -> Optional[str]:
         """For a given plugin installed, get a metadata item."""
         if plugin_folder not in self._plugins.keys():
             return None
@@ -123,9 +122,6 @@ class LocalDirectory:
 
     def plugin_info(self, plugin: str) -> Optional[Plugin]:
         """For a given plugin, retrieve all metadata."""
-        if self._plugins is None:
-            self.plugin_list()
-
         if plugin in self._plugins.keys():
             # It's plugin folder
             plugin_folder = plugin
@@ -137,8 +133,8 @@ class LocalDirectory:
             plugin_folder = list(self._plugins.keys())[list(self._plugins.values()).index(plugin)][0]
 
         data = Plugin(
-            name=self.plugin_metadata(plugin_folder, "name"),
-            version=self.plugin_metadata(plugin_folder, "version"),
+            name=self.plugin_metadata(plugin_folder, "name") or plugin,
+            version=self.plugin_metadata(plugin_folder, "version") or "0.0.0",
             experimental=self.plugin_metadata(plugin_folder, "experimental"),
             qgis_minimum_version=self.plugin_metadata(plugin_folder, "qgisMinimumVersion"),
             qgis_maximum_version=self.plugin_metadata(plugin_folder, "qgisMaximumVersion"),
@@ -150,11 +146,11 @@ class LocalDirectory:
         )
         return data
 
-    def plugin_installed_version(self, plugin_name: str) -> Union[str, None]:
+    def plugin_installed_version(self, plugin_name: str) -> Optional[str]:
         """If a plugin is installed or not."""
         for plugin_folder in self.plugin_list():
             info = self.plugin_info(plugin_folder)
-            if info.name == plugin_name:
+            if info and info.name == plugin_name:
                 return info.version
 
         return None
@@ -166,6 +162,9 @@ class LocalDirectory:
 
         for plugin_folder in self.plugin_list():
             info = self.plugin_info(plugin_folder)
+            if not info:
+                echo.alert(f"Cannot get plugin info for {plugin_folder}")
+                continue
 
             # We fill all names available
             all_names.add(info.name)
@@ -179,7 +178,6 @@ class LocalDirectory:
 
                 if not Path(self.folder.joinpath(plugin_folder)).exists():
                     echo.success(f"Plugin {plugin_name} removed")
-                    restart_qgis_server()
                     return True
                 else:
                     echo.alert(

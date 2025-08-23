@@ -22,7 +22,7 @@ def info(s: str):
 
 def debug(s: str, *args, **kwargs):
     if verbose:
-        print(s.format(*args, **kwargs), file=sys.stderr)
+        print(f"\033[34m{s.format(*args, **kwargs)}\033[0m", file=sys.stderr)
 
 
 def format_success(s: str) -> str:

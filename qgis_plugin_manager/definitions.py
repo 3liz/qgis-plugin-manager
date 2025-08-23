@@ -8,10 +8,10 @@ from typing import (
 class Plugin(NamedTuple):
     """Definition of a plugin in the XML file."""
 
+    name: str
+    version: str
     file_name: Optional[str] = None
-    name: Optional[str] = None
     description: str = ""
-    version: str = ""
     search: List[str] = []  # noqa RUF012
     qgis_minimum_version: Optional[str] = None
     qgis_maximum_version: Optional[str] = None

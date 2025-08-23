@@ -4,6 +4,7 @@
 
 ### Fixed
 
+* Improve output of 'update' command
 * Use templated remote definition in init as default
     - Allow forcing QGIS version
 

@@ -10,7 +10,11 @@ from typing import (
 from qgis_plugin_manager import echo
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import PluginNotFoundError, Remote
-from qgis_plugin_manager.utils import PluginManagerError, qgis_server_version
+from qgis_plugin_manager.utils import (
+    PluginManagerError,
+    install_prolog,
+    qgis_server_version,
+)
 
 cli = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -83,12 +87,14 @@ def get_plugin_path() -> Path:
 # Commands
 #
 
+
 # Version
 @command("version", help="Show version informations and exit")
 def show_version(args):
     from importlib.metadata import version
 
     from . import __about__
+
     echo.echo(
         f"{__about__.__title__}\n"
         f"{__about__.__summary__}\n"
@@ -191,8 +197,14 @@ def upgrade_plugins(args: Namespace):
         with open(plugin_ignore_file, encoding="utf8") as f:
             ignored_plugins = [plugin.rstrip() for plugin in f.readlines()]
 
+    installed = 0
+    failures = 0
+
     for folder in folders:
         plugin_object = plugins.plugin_info(folder)
+        if not plugin_object:
+            echo.debug(f"No plugin found for {folder}")
+            continue
 
         if plugin_object.name in ignored_plugins:
             echo.alert(f"{plugin_object.name}: Ignored")
@@ -200,13 +212,27 @@ def upgrade_plugins(args: Namespace):
 
         # Need to check version
         try:
-            remote.install(
+            install_version = remote.install(
                 plugin_name=plugin_object.name,
                 current_version=plugin_object.version,
                 force=args.force,
             )
         except PluginNotFoundError:
-            echo.alert(f"{plugin_object.name}: Removed, not updating")
+            echo.alert(f"{plugin_object.name}: Removed")
+        except PluginManagerError as err:
+            failures += 1
+            echo.critical(f"\t\u26d4 {plugin_object.name}:\tError: {err}")
+        else:
+            if install_version:
+                echo.success(f"\t\u2705 {plugin_object.name:<25} {install_version:<12}\tInstalled")
+                installed += 1
+            else:
+                echo.alert(f"\t\u274e {plugin_object.name:<25} {plugin_object.version:<12}\tUnchanged")
+
+    if failures > 0:
+        echo.alert(f"Command terminated with {failures} errors")
+    if installed > 0:
+        install_prolog()
 
 
 # Search
@@ -252,7 +278,7 @@ def install_plugin(args: Namespace):
 
     current_version = plugins.plugin_installed_version(plugin_name)
     try:
-        remote.install(
+        install_version = remote.install(
             plugin_name=plugin_name,
             version=plugin_version,
             current_version=current_version,
@@ -262,11 +288,19 @@ def install_plugin(args: Namespace):
         similars = remote.check_similar_names(plugin_name)
         name = next(similars, None)
         if name:
-            echo.info("\nPlugins with similar name:")
-            echo.info("\t", name)
+            echo.info(f"\n{plugin_name} not found. Plugins with similar name:")
+            echo.info(f"\t{name}")
             for name in similars:
                 echo.info(name)
         cli.exit(1)
+    except PluginManagerError as err:
+        echo.critical(f"ERROR: {plugin_name}: {err}")
+    else:
+        if install_version:
+            echo.success(f"\tOk {plugin_name} {install_version}")
+            install_prolog()
+        else:
+            echo.alert(f"\tSkipped unchanged {plugin_name}")
 
 
 def main() -> None:
@@ -281,8 +315,8 @@ def main() -> None:
         try:
             args.func(args)
         except PluginManagerError as e:
-            echo.critical(e)
+            echo.critical(f"{e}")
 
 
 if __name__ == "__main__":
-    exit(main())
+    main()

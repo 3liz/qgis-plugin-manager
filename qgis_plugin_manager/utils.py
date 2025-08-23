@@ -49,15 +49,29 @@ def pretty_table(iterable: list, header: list) -> str:
 
 def restart_qgis_server():
     """Restart QGIS Server tip."""
-    echo.info(
-        f"{echo.format_alert('Tip')} : Do not forget to restart QGIS Server to reload plugins 😎",
-    )
-
     restart_file = os.getenv("QGIS_PLUGIN_MANAGER_RESTART_FILE")
-    if not restart_file:
+    if restart_file:
+        Path(restart_file).touch()
+    else:
+        echo.info(f"{echo.format_alert('Tip')} : Do not forget to restart QGIS Server to reload plugins 😎")
         return
 
-    Path(restart_file).touch()
+
+def install_prolog():
+    # Get current users
+    sudo_user = os.environ.get("SUDO_USER")
+    user = current_user()
+    # Installation done !
+    if sudo_user:
+        echo.info(f"\nPlugin(s) Installed with super user '{user}'")
+    else:
+        echo.info(f"\nPlugin(s) Installed with user '{user}'")
+
+    echo.info(
+        "Note: check file permissions and owner according to the user running QGIS Server.",
+    )
+
+    restart_qgis_server()
 
 
 def similar_names(expected: str, available: List[str]) -> Iterator[str]:

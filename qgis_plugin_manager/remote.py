@@ -16,8 +16,6 @@ from qgis_plugin_manager import echo
 from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.utils import (
     PluginManagerError,
-    current_user,
-    restart_qgis_server,
     similar_names,
     sources_file,
     to_bool,
@@ -305,10 +303,10 @@ class Remote:
         self,
         plugin_name: str,
         version: str = "latest",
-        current_version: str = "",
+        current_version: Optional[str] = None,
         force: bool = False,
         remove_zip: bool = True,
-    ):
+    ) -> Optional[str]:
         """Install the plugin with a specific version.
 
         Default version is latest.
@@ -328,12 +326,7 @@ class Remote:
 
         url = plugin.download_url
         file_name = plugin.file_name
-        actual = plugin.version
-
-        if current_version == actual:
-            if not force:
-                echo.alert(f"\tSame version detected on the remote, skipping {plugin_name}")
-                # Plugin is installed and correct version, it's exit code 0
+        remote_version = plugin.version
 
         # Check consistency
         if not file_name:
@@ -343,15 +336,16 @@ class Remote:
             raise PluginManagerError(f"Incomplete plugin data: url: {plugin})")
 
         if version != "latest":
-            url = url.replace(actual, version)
-            file_name = file_name.replace(actual, version)
+            echo.debug(f"Installing oldest version {version}")
+            url = url.replace(remote_version, version)
+            file_name = file_name.replace(remote_version, version)
+            remote_version = version
 
-        # Get current users
-        sudo_user = os.environ.get("SUDO_USER")
-        user = current_user()
+        if current_version == remote_version and not force:
+            return None
 
-        print(f"Installation {plugin_name} {version}")
-        zip_file = self._download_zip(url, version, plugin_name, file_name, user)
+        echo.debug(f"Downloading {plugin_name} {version}")
+        zip_file = self._download_zip(url, plugin_name, file_name)
 
         # Removing existing plugin folder if needed
         existing = self.folder.joinpath(plugin_name)
@@ -361,13 +355,14 @@ class Remote:
             except OSError as e:
                 # https://github.com/3liz/qgis-plugin-manager/issues/53
                 zip_file.unlink()
-                raise PluginManagerError(echo.format_critical(f"{e}"))
+                raise PluginManagerError(f"{e}")
 
         if not zip_file.exists():
             raise PluginManagerError(
-                echo.format_critical(f"The zip file does not exist : {zip_file.absolute()}"),
+                f"The zip file does not exist : {zip_file.absolute()}",
             )
         # Extracting the zip in the folder
+        echo.debug(f"Extracting {zip_file.name}")
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
             zip_ref.extractall(self.folder)
 
@@ -375,24 +370,13 @@ class Remote:
             # Removing the zip file
             zip_file.unlink()
 
-        echo.success(f"\tOk {zip_file.name}")
-
-        # Installation done !
-        if sudo_user:
-            print(f"Installed with super user '{user}' instead of '{sudo_user}'")
-        else:
-            print(f"Installed with user '{user}'")
-        print("Please check file permissions and owner according to the user running QGIS Server.")
-
-        restart_qgis_server()
+        return remote_version
 
     def _download_zip(
         self,
         url: str,
-        version: str,
         plugin_name: str,
         file_name: str,
-        user: str,
     ) -> Path:
         """Download the ZIP"""
         if url.startswith("file:"):
@@ -402,13 +386,11 @@ class Remote:
                 "User-Agent": self.user_agent(),
             }
             request = urllib.request.Request(url, headers=headers)
-            result = False
             try:
                 f = urllib.request.urlopen(request)
-                result = True
             except urllib.error.HTTPError as e:
                 if e.code == 401:
-                    print("Require authentication")
+                    echo.debug("Authentication required")
                     for _, login, password in self.all_credentials():
                         # Hack to try all logins until we find the one working…
                         token = base64.b64encode(f"{login}:{password}".encode())
@@ -417,13 +399,15 @@ class Remote:
                         request = urllib.request.Request(url, headers=headers)
                         try:
                             f = urllib.request.urlopen(request)
-                            result = True
                             break
                         except urllib.error.HTTPError:
                             continue
-
-            if not result:
-                raise PluginManagerError(echo.format_alert(f"Plugin {plugin_name} {version} not found."))
+                    else:
+                        raise PluginManagerError("Failed to download plugin")
+                elif e.code == "404":
+                    raise PluginManagerError("Plugin not found.")
+                else:
+                    raise PluginManagerError(f"Error downloading plugin: {e}")
 
             # Saving the zip from the URL
             zip_file = self.folder.joinpath(file_name)
@@ -434,8 +418,8 @@ class Remote:
                     output.write(f.read())
             except PermissionError:
                 file_path = self.folder.absolute()
-                echo.critical(f"\tCurrent user {user} can not write in {file_path}")
-                raise RuntimeError("Check file permissions for the folder.")
+                echo.critical(f"Cannot write to \t{file_path}")
+                raise
 
         return zip_file
 
