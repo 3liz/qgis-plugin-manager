@@ -27,7 +27,7 @@ class LocalDirectory:
         self.folder = folder
         # Dictionary : folder : plugin name
         self._plugins: Dict[str, str] = {}
-        self._invalid: List[str] = []
+        self._plugins_metadata: Dict[str, configparser.SectionProxy] = {}
 
         self.qgis_version: Optional[List[int]] = None
         self.qgis_version_str: Optional[str] = None
@@ -86,74 +86,55 @@ class LocalDirectory:
             if folder.name.startswith("."):
                 continue
 
-            have_python = list(folder.glob("*.py"))
-            have_metadata = list(folder.glob("metadata.txt"))
+            have_python = folder.joinpath("__init__.py").exists()
+            have_metadata = folder.joinpath("metadata.txt").exists()
             if have_python and have_metadata:
-                name = self.plugin_metadata(folder.name, "name")
-                self._plugins[folder.name] = name
-            else:
-                self._invalid.append(folder.name)
+                try:
+                    metadata = self._get_plugin_metadata(folder.name)
+                    self._plugins[folder.name] = metadata["name"]
+                    self._plugins_metadata[folder.name] = metadata
+                except KeyError:
+                    echo.alert(f"WARNING: invalid metadata found in {folder}")
 
-        # Weird issue, there are duplicates
-        self._invalid = list(dict.fromkeys(self._invalid))
-
-    def plugin_metadata(self, plugin_folder: str, key: str) -> Optional[str]:
+    def _get_plugin_metadata(self, plugin_folder: str) -> configparser.SectionProxy:
         """For a given plugin installed, get a metadata item."""
-        if plugin_folder not in self._plugins.keys():
-            return None
-
         config_parser = configparser.ConfigParser()
-
         with self.folder.joinpath(f"{plugin_folder}", "metadata.txt").open(encoding="utf8") as f:
             config_parser.read_file(f)
+            return config_parser["general"]
 
-        try:
-            return config_parser.get("general", key)
-        except configparser.NoOptionError:
-            return ""
-
-    @property
-    def invalid(self) -> list:
-        """List of invalid plugins.
-
-        Maybe not a valid folder ? No metadata.txt ?
-        """
-        return self._invalid
+    def get_plugin_folder_from_name(self, plugin_name: str) -> Optional[str]:
+        for folder, name in self._plugins.items():
+            if plugin_name == name:
+                return folder
+        return None
 
     def plugin_info(self, plugin: str) -> Optional[Plugin]:
         """For a given plugin, retrieve all metadata."""
-        if plugin in self._plugins.keys():
+        if plugin in self._plugins:
             # It's plugin folder
-            plugin_folder = plugin
-        elif plugin not in self._plugins.values():
-            # Not found, either as a plugin folder or plugin name
-            return None
+            plugin_folder: Optional[str] = plugin
         else:
-            # It's a plugin name
-            plugin_folder = list(self._plugins.keys())[list(self._plugins.values()).index(plugin)][0]
+            plugin_folder = self.get_plugin_folder_from_name(plugin)
 
-        data = Plugin(
-            name=self.plugin_metadata(plugin_folder, "name") or plugin,
-            version=self.plugin_metadata(plugin_folder, "version") or "0.0.0",
-            experimental=self.plugin_metadata(plugin_folder, "experimental"),
-            qgis_minimum_version=self.plugin_metadata(plugin_folder, "qgisMinimumVersion"),
-            qgis_maximum_version=self.plugin_metadata(plugin_folder, "qgisMaximumVersion"),
-            author_name=self.plugin_metadata(plugin_folder, "author"),
-            server=self.plugin_metadata(plugin_folder, "server") in ("True", "true", "1", "yes", True),
-            has_processing=self.plugin_metadata(plugin_folder, "hasProcessingProvider")
-            in ("True", "true", "1", "yes", True),
-            has_wps=self.plugin_metadata(plugin_folder, "wps") in ("True", "true", "1", "yes", True),
+        # Type narrowing
+        if not plugin_folder:
+            # No plugin
+            return None
+
+        md = self._plugins_metadata[plugin_folder]
+        return Plugin(
+            name=md["name"],
+            version=md.get("version") or "0.0.0",
+            experimental=md.getboolean("experimental", False),
+            qgis_minimum_version=md.get("qgisMinimumVersion"),
+            qgis_maximum_version=md.get("qgisMaximumVersion"),
+            author_name=md.get("author"),
+            server=md.getboolean("server", False),
+            has_processing=md.getboolean("hasProcessingProvider", False),
+            has_wps=md.getboolean("wps", False),
+            install_folder=plugin_folder,
         )
-        return data
-
-    def plugin_installed_version(self, plugin_name: str) -> Optional[str]:
-        """If a plugin is installed or not."""
-        for plugin_folder in self.plugin_list():
-            info = self.plugin_info(plugin_folder)
-            if info and info.name == plugin_name:
-                return info.version
-
-        return None
 
     def remove(self, plugin_name: str) -> bool:
         """Remove a plugin by its human name."""
@@ -224,10 +205,11 @@ class LocalDirectory:
             info = self.plugin_info(folder)
 
             # Name
-            plugin_data.append(info.name)
-
-            # Version
-            plugin_data.append(info.version)
+            plugin_data = [
+                folder,
+                info.name,
+                info.version,
+            ]
 
             # Flags column
             flags = []
@@ -235,11 +217,11 @@ class LocalDirectory:
                 flags.append("Server")
             if info.has_wps:
                 flags.append("WPS")
-            if info.experimental in ("True", "true", "1", "yes", True):
+            if info.experimental:
                 flags.append("Experimental")
-            if info.has_processing in ("True", "true", "1", "yes", True):
+            if info.has_processing:
                 flags.append("Processing")
-            if info.deprecated in ("True", "true", "1", "yes", True):
+            if info.deprecated:
                 flags.append("Deprecated")
             plugin_data.append(",".join(flags))
 
@@ -319,6 +301,3 @@ class LocalDirectory:
             echo.alert(
                 f"Different rights have been detected : {','.join(list_of_owners)}Please check user-rights.",
             )
-
-        if len(self._invalid) >= 1:
-            echo.echo(pretty_table(self._invalid, ["Invalid"]))

@@ -50,11 +50,12 @@ def test_install_network(
     assert plugin_path.exists()
 
     local.list_plugins()
-    assert version == local.plugin_metadata(plugin_name, "version")
+    assert version == local.plugin_info(plugin_name).version
 
     remote.install(plugin_name)
+    local.list_plugins()
     assert plugin_path.exists()
-    assert version != local.plugin_metadata(plugin_name, "version")
+    assert version != local.plugin_info(plugin_name).version
 
 
 @pytest.fixture
@@ -96,12 +97,12 @@ def test_install_local(protocols: Path, teardown_local: None):
 
     remote.list_plugins = plugins
     local = LocalDirectory(folder)
-    assert local.plugin_installed_version("Minimal") is None
+    assert local.plugin_info("Minimal") is None
 
     remote.install("Minimal", remove_zip=False)
 
     local.list_plugins()
-    assert local.plugin_installed_version("Minimal") == "1.0"
+    assert local.plugin_info("Minimal").version == "1.0"
     assert "minimal_plugin" in list(local.plugin_list().keys())
 
     # Test to remove the plugin
@@ -109,4 +110,4 @@ def test_install_local(protocols: Path, teardown_local: None):
     assert local.remove("Minimal")
 
     local = LocalDirectory(folder)
-    assert local.plugin_installed_version("Minimal") is None
+    assert local.plugin_info("Minimal") is None

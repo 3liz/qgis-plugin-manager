@@ -23,7 +23,7 @@ class Plugin(NamedTuple):
     uploaded_by: Optional[str] = None
     create_date: Optional[str] = None
     update_date: Optional[str] = None
-    experimental: Optional[str] = None
+    experimental: bool = False
     deprecated: Optional[str] = None
     tracker: Optional[str] = None
     repository: Optional[str] = None
@@ -31,3 +31,4 @@ class Plugin(NamedTuple):
     server: bool = False
     has_processing: bool = False
     has_wps: bool = False
+    install_folder: Optional[str] = None

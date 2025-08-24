@@ -179,6 +179,11 @@ def update_index(args: Namespace):
     action="store_true",
     help="Force reinstall all plugins",
 )
+@argument(
+    "--fix-permissions",
+    action="store_true",
+    help="Set files permissions to 0644",
+)
 def upgrade_plugins(args: Namespace):
     """Upgrade all plugins for which a
     newer version is available
@@ -214,8 +219,10 @@ def upgrade_plugins(args: Namespace):
         try:
             install_version = remote.install(
                 plugin_name=plugin_object.name,
+                plugin_folder=plugin_object.install_folder,
                 current_version=plugin_object.version,
                 force=args.force,
+                fix_permissions=args.fix_permissions,
             )
         except PluginNotFoundError:
             echo.alert(f"\t\u26a0\ufe0f {plugin_object.name}: Not found")
@@ -257,6 +264,11 @@ def search_plugin(args: Namespace):
     action="store_true",
     help="Force installation",
 )
+@argument(
+    "--fix-permissions",
+    action="store_true",
+    help="Set files permissions to 0644",
+)
 def install_plugin(args: Namespace):
     """The version may be specified by appending the suffix '==version'.
     'plugin_name' might require quotes if there is space in its name.
@@ -276,14 +288,25 @@ def install_plugin(args: Namespace):
     else:
         plugin_version = "latest"
 
-    current_version = plugins.plugin_installed_version(plugin_name)
+    plugin_info = plugins.plugin_info(plugin_name)
     try:
-        install_version = remote.install(
-            plugin_name=plugin_name,
-            version=plugin_version,
-            current_version=current_version,
-            force=args.force,
-        )
+        if plugin_info:
+            install_version = remote.install(
+                plugin_name=plugin_name,
+                version=plugin_version,
+                current_version=plugin_info.version,
+                plugin_folder=plugin_info.install_folder,
+                force=args.force,
+                fix_permissions=args.fix_permissions,
+            )
+        else:
+            install_version = remote.install(
+                plugin_name=plugin_name,
+                version=plugin_version,
+                force=args.force,
+                fix_permissions=args.fix_permissions,
+            )
+
     except PluginNotFoundError:
         similars = remote.check_similar_names(plugin_name)
         name = next(similars, None)
@@ -299,9 +322,11 @@ def install_plugin(args: Namespace):
         if install_version:
             echo.success(f"\tOk {plugin_name} {install_version}")
             install_prolog()
+        elif plugin_info:
+            # NOTE: plugin_info should not be None at this point
+            echo.alert(f"\tSkipped unchanged {plugin_name} {plugin_info.version}")
         else:
-            echo.alert(f"\tSkipped unchanged {plugin_name}")
-
+            raise PluginManagerError("Should not happen")
 
 def main() -> None:
     """Main function for the CLI menu."""

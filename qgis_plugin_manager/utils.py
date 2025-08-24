@@ -146,7 +146,6 @@ def qgis_server_version() -> str:
     try:
         from qgis.core import Qgis
 
-        # 3.34.6
         return Qgis.QGIS_VERSION.split("-")[0]
     except ImportError:
         echo.alert("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
@@ -162,7 +161,8 @@ def sources_file(current_folder: Path) -> Path:
     """
     env_path = os.getenv("QGIS_PLUGIN_MANAGER_SOURCES_FILE")
     if env_path:
-        return Path(env_path)
+        source_file = Path(env_path)
+    else:
+        source_file = current_folder.joinpath("sources.list")
 
-    source_file = current_folder.joinpath("sources.list")
     return source_file

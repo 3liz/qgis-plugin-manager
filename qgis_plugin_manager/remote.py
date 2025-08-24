@@ -306,6 +306,8 @@ class Remote:
         current_version: Optional[str] = None,
         force: bool = False,
         remove_zip: bool = True,
+        fix_permissions: bool = False,
+        plugin_folder: Optional[str] = None,
     ) -> Optional[str]:
         """Install the plugin with a specific version.
 
@@ -348,14 +350,16 @@ class Remote:
         zip_file = self._download_zip(url, plugin_name, file_name)
 
         # Removing existing plugin folder if needed
-        existing = self.folder.joinpath(plugin_name)
-        if existing.exists():
-            try:
-                shutil.rmtree(existing)
-            except OSError as e:
-                # https://github.com/3liz/qgis-plugin-manager/issues/53
-                zip_file.unlink()
-                raise PluginManagerError(f"{e}")
+        if plugin_folder:
+            existing = self.folder.joinpath(plugin_folder)
+            if existing.exists():
+                echo.debug(f"{plugin_name}: Removing existing installation: {existing}")
+                try:
+                    shutil.rmtree(existing)
+                except OSError as e:
+                    # https://github.com/3liz/qgis-plugin-manager/issues/53
+                    zip_file.unlink()
+                    raise PluginManagerError(f"{e}")
 
         if not zip_file.exists():
             raise PluginManagerError(
@@ -369,6 +373,15 @@ class Remote:
         if remove_zip:
             # Removing the zip file
             zip_file.unlink()
+
+        # Set permissions to 0644 for files, 0755 for directories
+        if fix_permissions:
+            echo.debug("Fixing files permissions to 0644")
+            for p in self.folder.glob("**"):
+                if p.is_dir():
+                    p.chmod(0o755)
+                else:
+                    p.chmod(0o644)
 
         return remote_version
 
@@ -413,7 +426,6 @@ class Remote:
             zip_file = self.folder.joinpath(file_name)
 
             try:
-                # Binary mode does not support encoding parameter
                 with open(zip_file, "wb") as output:
                     output.write(f.read())
             except PermissionError:
