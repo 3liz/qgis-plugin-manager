@@ -4,7 +4,6 @@
 
 ### Added
 
-* Handle incompatible SemVer version schemes
 * Handle multiple versions of the same plugin 
 * The 'cache' method now output all available versions for the same plugin
 * Support multiple arguments for 'install' command
@@ -12,17 +11,20 @@
 * Add '--pre' option for allowing  prerelease, development or experimental version
   for 'install' and 'upgrade' command
 
+### Changed
+
+* New Behavior of the 'list' command:
+    - Multiple output formats: 'list', 'freeze', 'columns'.
+    - Added '--pre' and '--outdated' options
+* Move packaging configuration to pyproject.toml 
+
 ### Fixed
 
+* Handle incompatible SemVer version schemes
 * Fix installation of experimental plugins
 * Improve output of 'update' command
 * Use templated remote definition in init as default
     - Allow forcing QGIS version
-
-### Added
-
-* Move packaging configuration to pyproject.toml 
-
 
 ## 1.6.5 - 2025-06-13
 

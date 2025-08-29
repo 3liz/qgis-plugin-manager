@@ -33,7 +33,6 @@ def test_install_network(
     remote_sources: Path,
     teardown_downloaded_plugins: None,
 ):
-
     plugin_name = "QuickOSM"
     plugin_path = plugins.joinpath(plugin_name)
 
@@ -49,8 +48,7 @@ def test_install_network(
     versions = remote.available_plugins().get(plugin_name)
     assert versions is not None
 
-    print("\n::teardown_local::", plugin_name, "versions:",
-        ",".join(str(p.version) for p in versions))
+    print("\n::teardown_local::", plugin_name, "versions:", ",".join(str(p.version) for p in versions))
 
     assert len(versions) >= 2
 

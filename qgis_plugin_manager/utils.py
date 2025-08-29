@@ -20,36 +20,6 @@ def get_default_remote_repository() -> str:
     return os.getenv("QGIS_PLUGIN_MANAGER_REMOTE_REPOSITORY", DEFAULT_REMOTE_REPOSITORY)
 
 
-def pretty_table(iterable: list, header: list) -> str:
-    """Copy/paste from http://stackoverflow.com/a/40426743/2395485"""
-    max_len = [len(x) for x in header]
-    for row in iterable:
-        row = [row] if type(row) not in (list, tuple) else row
-        for index, col in enumerate(row):
-            if max_len[index] < len(str(col)):
-                max_len[index] = len(str(col))
-    output = "-" * (sum(max_len) + 1) + "\n"
-    output += (
-        "|"
-        + "".join(
-            [a_header + " " * (a_line - len(a_header)) + "|" for a_header, a_line in zip(header, max_len)],
-        )
-        + "\n"
-    )
-    output += "-" * (sum(max_len) + 1) + "\n"
-    for row in iterable:
-        row = [row] if type(row) not in (list, tuple) else row
-        output += (
-            "|"
-            + "".join(
-                [str(c) + " " * (a_line - len(str(c))) + "|" for c, a_line in zip(row, max_len)],
-            )
-            + "\n"
-        )
-    output += "-" * (sum(max_len) + 1) + "\n"
-    return output
-
-
 def restart_qgis_server():
     """Restart QGIS Server tip."""
     restart_file = os.getenv("QGIS_PLUGIN_MANAGER_RESTART_FILE")
@@ -187,7 +157,7 @@ def get_semver_version(version_str: str) -> Version:
     parts = parts.split(".", maxsplit=3)  # type: ignore [assignment]
 
     ver = tuple(takewhile(lambda part: part.isdecimal(), parts[:3]))
-    rest = ".".join(parts[len(ver):]) + pre  # type: ignore [operator]
+    rest = ".".join(parts[len(ver) :]) + pre  # type: ignore [operator]
     if rest and not rest.startswith("-"):
         rest = f"+{rest}"  # Take it as build tag
 

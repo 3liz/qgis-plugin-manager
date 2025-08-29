@@ -120,37 +120,208 @@ def show_version(args):
     )
 
 
-# List
-@command("list", help="List all plugins in the directory")
-def list_plugins(args: Namespace):
-    qgis = qgis_server_version()
-    if qgis:
-        echo.info(f"QGIS version : {qgis}")
-    plugins = LocalDirectory(get_plugin_path(), qgis_version=qgis)
-    plugins.print_table()
-
-
 # Init
 @command(
     "init",
     help="Create the `sources.list` with plugins.qgis.org as remote",
 )
 @argument("--qgis-version", help="Set the qgis version")
+@argument("--update", action="store_true", help="Update index file")
 def init_sources(args: Namespace):
     """If qgis-version is set to 'auto', then detect the current QGIS version"""
     # Local needed only, with QGIS version
     qgis_version = args.qgis_version
     if qgis_version == "auto":
         qgis_version = qgis_server_version()
-    plugins = LocalDirectory(get_plugin_path(), qgis_version=qgis_version)
-    plugins.init()
+
+    plugin_path = get_plugin_path()
+    plugins = LocalDirectory(plugin_path, qgis_version=qgis_version)
+    if plugins.init() and args.update:
+        remote = Remote(plugin_path, qgis_version or qgis_server_version())
+        if not remote.update():
+            cli.exit(1)
 
 
-# Remote
-@command("remote", help="List all remote servers")
-def list_remote_servers(args: Namespace):
-    remote = Remote(get_plugin_path(), qgis_server_version())
-    remote.print_list()
+# List
+@command("list", help="List all plugins in the directory")
+@argument("-o", "--outdated", action="store_true", help="List outdated plugins")
+@argument(
+    "--format",
+    choices=("columns", "freeze", "list"),
+    default="columns",
+    help="Select the output format",
+)
+@argument(
+    "--pre",
+    action="store_true",
+    env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
+    help="""
+        Include pre-release, development and experimental versions.
+        Useful in conjonction with the 'outdated' option."
+    """,
+)
+def list_plugins(args: Namespace):
+    qgis = qgis_server_version()
+    if qgis:
+        echo.info(f"QGIS version : {qgis}")
+
+    plugins = LocalDirectory(get_plugin_path(), qgis_version=qgis)
+
+    def infos():
+        for folder, name in sorted(
+            plugins.plugin_list().items(),
+            key=lambda p: p[1],
+        ):
+            info = plugins.plugin_info(folder)
+            if info:
+                yield info
+
+    if args.format == "freeze":
+        if args.outdated:
+            echo.critical("Youn cannot use the 'freeze' format with the 'outdated' option")
+            exit(1)
+        for info in infos():
+            echo.echo(f"{info.name}=={info.version}")
+    else:
+        if args.outdated:
+            remote = Remote(plugins.folder, qgis_version=plugins.qgis_version_str)
+
+            def outdated():
+                for info in infos():
+                    latest = remote.latest(info.name, include_prerelease=args.pre)
+                    if latest:
+                        if latest.version <= info.version:
+                            continue
+                        latest_ver = str(latest.version)
+                    else:
+                        latest_ver = "Removed"
+                    yield (info, latest_ver)
+
+            outdated_list = tuple(outdated())
+            if not outdated_list:
+                echo.alert("No outdated plugins")
+            else:
+                if args.format == "list":
+                    for info, _ in outdated_list:
+                        echo.echo(info.name)
+                else:
+                    echo.echo(f"{'Name':<30} {'Version':<20} {'Latest':<20} {'Folder'}")
+                    echo.echo(f"{'-' * 30} {'-' * 20} {'-' * 20} {'------'}")
+                    for info, latest in outdated_list:
+                        folder = info.install_folder if info.install_folder != info.name else ""
+                        echo.echo(f"{info.name:<30} {info.version!s:<20} {latest:<20} {folder}")
+        else:
+            if args.format == "list":
+                for info in infos():
+                    echo.echo(info.name)
+            else:
+                echo.echo(f"{'Name':<30} {'Version':<20} {'Folder'}")
+                echo.echo(f"{'-' * 30} {'-' * 20} {'------'}")
+                for info in infos():
+                    folder = info.install_folder if info.install_folder != info.name else ""
+                    echo.echo(f"{info.name:<30} {info.version!s:<20} {folder}")
+
+
+# Install
+@command("install", help="Install a plugin")
+@argument("plugin_name", nargs="+", help="The plugin(s) to install")
+@argument(
+    "-f",
+    "--force",
+    action="store_true",
+    help="Force (re)installation",
+)
+@argument(
+    "-U",
+    "--upgrade",
+    action="store_true",
+    help="Upgrade plugin to latest version",
+)
+@argument(
+    "--fix-permissions",
+    action="store_true",
+    help="Set files permissions to 0644",
+)
+@argument(
+    "--pre",
+    action="store_true",
+    env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
+    help=(
+        "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
+    ),
+)
+@argument("--deprecated", action="store_true", help="Include deprecated versions")
+def install_plugin(args: Namespace):
+    """The version may be specified by appending the suffix '==version'.
+    'plugin_name' might require quotes if there is space in its name.
+    """
+    plugin_path = get_plugin_path()
+
+    qgis = qgis_server_version()
+    if qgis:
+        echo.info(f"QGIS version : {qgis}")
+    remote = Remote(plugin_path, qgis_version=qgis)
+    plugins = LocalDirectory(plugin_path, qgis_version=qgis)
+
+    installed = 0
+
+    for arg in args.plugin_name:
+        parameter = arg.split("==")
+        plugin_name = parameter[0]
+
+        plugin_info = plugins.plugin_info(plugin_name)
+
+        if len(parameter) >= 2:
+            plugin_version = parameter[1]
+            if not plugin_version:
+                echo.critical("Missing version")
+                exit(1)
+        else:
+            plugin_version = None
+
+        if plugin_info and not args.force:
+            # Plugin already installed
+            if plugin_version is None and args.upgrade:
+                # Asked for upgrade
+                latest = remote.latest(plugin_name, args.pre, args.deprecated)
+                if latest and latest.version == plugin_info.version:
+                    echo.alert(f"\t{plugin_name} is already at latest version")
+                    continue
+            elif plugin_version is None and plugin_info.version == plugin_version:
+                echo.alert(f"\t{plugin_name}=={plugin_version} already installed")
+                continue
+            elif plugin_version is None:
+                echo.alert(f"\t{plugin_name} already installed")
+                continue
+
+        try:
+            install_version = remote.install(
+                plugin_name=plugin_name,
+                version=plugin_version,
+                plugin_folder=plugin_info.install_folder if plugin_info else None,
+                include_prerelease=args.pre,
+                include_deprecated=args.deprecated,
+                fix_permissions=args.fix_permissions,
+            )
+
+        except PluginNotFoundError:
+            similars = remote.check_similar_names(plugin_name)
+            name = next(similars, None)
+            if name:
+                echo.info(f"\n{plugin_name} not found. Plugins with similar name:")
+                echo.info(f"\t{name}")
+                for name in similars:
+                    echo.info(name)
+            cli.exit(1)
+        except PluginManagerError as err:
+            echo.critical(f"ERROR: {plugin_name}: {err}")
+            cli.exit(1)
+        else:
+            echo.success(f"\tOk {plugin_name} {install_version}")
+            installed += 1
+
+    if installed > 0:
+        install_prolog()
 
 
 # Remove
@@ -160,30 +331,6 @@ def remove_plugin(args: Namespace):
     # Local needed only, without QGIS version
     plugins = LocalDirectory(get_plugin_path())
     if not plugins.remove(args.plugin_name):
-        cli.exit(1)
-
-
-# Cache
-@command("cache", help="Look for plugin versions in the cache")
-@argument("plugin_name", help="The plugin to look for")
-def look_for_plugin(args: Namespace):
-    remote = Remote(get_plugin_path(), qgis_server_version())
-    plugins = remote.available_plugins()
-
-    versions = plugins.get(args.plugin_name)
-    if versions:
-        for plugin in versions:
-            echo.echo(f"{args.plugin_name}=={plugin.version}")
-    else:
-        echo.alert("No versions found for '{args.plugin_name}'")
-        cli.exit(1)
-
-
-# Update
-@command("update", help="Update all index files")
-def update_index(args: Namespace):
-    remote = Remote(get_plugin_path(), qgis_server_version())
-    if not remote.update():
         cli.exit(1)
 
 
@@ -277,39 +424,24 @@ def upgrade_plugins(args: Namespace):
         install_prolog()
 
 
-# Search
-@command("search", help="Search for plugins")
-@argument("plugin_name", help="Search in tags and plugin names")
-def search_plugin(args: Namespace):
+# Remote
+@command("remote", help="List all remote servers")
+def list_remote_servers(args: Namespace):
     remote = Remote(get_plugin_path(), qgis_server_version())
-    found = False
-    for result in remote.search(args.plugin_name):
-        echo.echo(result)
-        found = True
-    if not found:
-        echo.info("No plugins found")
+    remote.print_list()
 
 
-# Install
-@command("install", help="Install a plugin")
-@argument("plugin_name", nargs="+", help="The plugin(s) to install")
-@argument(
-    "-f",
-    "--force",
-    action="store_true",
-    help="Force (re)installation",
-)
-@argument(
-    "-U",
-    "--upgrade",
-    action="store_true",
-    help="Upgrade plugin to latest version",
-)
-@argument(
-    "--fix-permissions",
-    action="store_true",
-    help="Set files permissions to 0644",
-)
+# Update
+@command("update", help="Update all index files")
+def update_index(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    if not remote.update():
+        cli.exit(1)
+
+
+# Cache
+@command("versions", help="Look for available plugin versions in the cache")
+@argument("plugin_name", help="The plugin to look for")
 @argument(
     "--pre",
     action="store_true",
@@ -319,78 +451,57 @@ def search_plugin(args: Namespace):
     ),
 )
 @argument("--deprecated", action="store_true", help="Include deprecated versions")
-def install_plugin(args: Namespace):
-    """The version may be specified by appending the suffix '==version'.
-    'plugin_name' might require quotes if there is space in its name.
-    """
-    plugin_path = get_plugin_path()
+def look_for_plugin(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    plugins = remote.available_plugins()
 
-    qgis = qgis_server_version()
-    if qgis:
-        echo.info(f"QGIS version : {qgis}")
-    remote = Remote(plugin_path, qgis_version=qgis)
-    plugins = LocalDirectory(plugin_path, qgis_version=qgis)
-
-    installed = 0
-
-    for arg in args.plugin_name:
-
-        parameter = arg.split("==")
-        plugin_name = parameter[0]
-
-        plugin_info = plugins.plugin_info(plugin_name)
-
-        if len(parameter) >= 2:
-            plugin_version = parameter[1]
-            if not plugin_version:
-                echo.critical("Missing version")
-                exit(1)
-        else:
-            plugin_version = None
-
-        if plugin_info and not args.force:
-            # Plugin already installed
-            if plugin_version is None and args.upgrade:
-                # Asked for upgrade
-                latest = remote.latest(plugin_name, args.pre, args.deprecated)
-                if latest and latest.version == plugin_info.version:
-                    echo.alert(f"\t{plugin_name} is already at latest version")
-                    continue
-            elif plugin_version is None and plugin_info.version == plugin_version:
-                echo.alert(f"\t{plugin_name}=={plugin_version} already installed")
+    versions = plugins.get(args.plugin_name)
+    if versions:
+        for plugin in versions:
+            if plugin.is_pre() and not args.pre:
                 continue
-            elif plugin_version is None:
-                echo.alert(f"\t{plugin_name} already installed")
+            if plugin.deprecated and not args.deprecated:
                 continue
+            echo.echo(f"{args.plugin_name}=={plugin.version}")
+    else:
+        echo.alert("No versions found for '{args.plugin_name}'")
+        cli.exit(1)
 
-        try:
-            install_version = remote.install(
-                plugin_name=plugin_name,
-                version=plugin_version,
-                plugin_folder=plugin_info.install_folder if plugin_info else None,
-                include_prerelease=args.pre,
-                include_deprecated=args.deprecated,
-                fix_permissions=args.fix_permissions,
-            )
 
-        except PluginNotFoundError:
-            similars = remote.check_similar_names(plugin_name)
-            name = next(similars, None)
-            if name:
-                echo.info(f"\n{plugin_name} not found. Plugins with similar name:")
-                echo.info(f"\t{name}")
-                for name in similars:
-                    echo.info(name)
-            cli.exit(1)
-        except PluginManagerError as err:
-            echo.critical(f"ERROR: {plugin_name}: {err}")
-            cli.exit(1)
-        else:
-            echo.success(f"\tOk {plugin_name} {install_version}")
-            installed += 1
+# Search
+@command("search", help="Search for plugins")
+@argument("plugin_name", help="Search in tags and plugin names")
+@argument("--server", action="store_true", help="Consider only server plugins")
+@argument("--trusted", action="store_true", help="Consider only trusted plugins")
+@argument(
+    "--pre",
+    action="store_true",
+    env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
+    help=(
+        "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
+    ),
+)
+@argument("--deprecated", action="store_true", help="Include deprecated versions")
+def search_plugin(args: Namespace):
+    remote = Remote(get_plugin_path(), qgis_server_version())
+    found = False
 
-    if installed > 0:
-        install_prolog()
+    def pred(p):
+        if args.trusted and not p.trusted:
+            return False
+        if args.server and not p.server:
+            return False
+        if not args.pre and p.is_pre():
+            return False
+        if not args.deprecated and p.deprecated:
+            return False
+        return True
+
+    for result in remote.search(args.plugin_name, predicat=pred):
+        echo.echo(result)
+        found = True
+    if not found:
+        echo.info("No plugins found")
 
 
 def main() -> None:

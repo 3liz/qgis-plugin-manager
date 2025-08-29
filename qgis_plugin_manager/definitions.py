@@ -17,6 +17,9 @@ class Element(Protocol):
     def __iter__(self): ...
 
 
+TRUE_VALUES = ("true", "yes", "1")
+
+
 class Plugin(NamedTuple):
     """Definition of a plugin in the XML file."""
 
@@ -43,7 +46,11 @@ class Plugin(NamedTuple):
     server: bool = False
     has_processing: bool = False
     has_wps: bool = False
+    trusted: bool = False
     install_folder: Optional[str] = None
+
+    def is_pre(self) -> bool:
+        return self.version.prerelease is not None or self.experimental
 
     @staticmethod
     def from_xml_element(elem: Element) -> "Plugin":
@@ -54,11 +61,15 @@ class Plugin(NamedTuple):
 
         experimental = data.get("experimental")
         if experimental:
-            data["experimental"] = experimental.lower() in ("yes", "true", 1)
+            data["experimental"] = experimental.lower() in TRUE_VALUES
 
         deprecated = data.get("deprecated")
         if deprecated:
-            data["deprecated"] = deprecated.lower() in ("yes", "true", 1)
+            data["deprecated"] = deprecated.lower() in TRUE_VALUES
+
+        trusted = data.get("trusted")
+        if trusted:
+            data["trusted"] = trusted.lower() in TRUE_VALUES
 
         data["name"] = elem.attrib["name"]
         data["version"] = get_semver_version(elem.attrib["version"])

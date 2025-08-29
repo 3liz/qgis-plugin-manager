@@ -8,7 +8,14 @@ import urllib.request
 import zipfile
 
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import (
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+)
 from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 from xml.etree.ElementTree import parse
 
@@ -150,7 +157,7 @@ class Remote:
     ) -> Optional[Plugin]:
         plugin = None
         for plugin in self.available_plugins().get(name, ()):
-            if (plugin.version.prerelease or plugin.experimental) and not include_prerelease:
+            if plugin.is_pre() and not include_prerelease:
                 continue
             elif plugin.deprecated and not include_deprecated:
                 continue
@@ -274,7 +281,12 @@ class Remote:
             else:
                 plugins[name] = (plugin,)
 
-    def search(self, search_string: str, strict: bool = True) -> Iterator[str]:
+    def search(
+        self,
+        search_string: str,
+        strict: bool = True,
+        predicat: Optional[Callable[[Plugin], bool]] = None,
+    ) -> Iterator[str]:
         """Search in plugin names and tags."""
         # strict is used in tests to not check if the remote is ready
         if strict and not self.check_remote_cache():
@@ -287,6 +299,8 @@ class Remote:
             found = plugin_name in results
             if not found:
                 for plugin in versions:
+                    if predicat is not None and not predicat(plugin):
+                        continue
                     if next(similar_names(search_string, plugin.search), None):
                         found = True
                         results.add(plugin_name)
