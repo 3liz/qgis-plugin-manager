@@ -18,9 +18,9 @@ from qgis_plugin_manager import echo
 from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.utils import (
     PluginManagerError,
+    getenv_bool,
     similar_names,
     sources_file,
-    to_bool,
 )
 
 PluginDict = Dict[str, Tuple[Plugin, ...]]
@@ -56,7 +56,7 @@ class Remote:
 
     def check_remote_cache(self) -> bool:
         """Return if the remote is ready to be parsed."""
-        if to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE")):
+        if getenv_bool("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE"):
             return True
 
         source_list = sources_file(self.folder)
@@ -250,18 +250,27 @@ class Remote:
             name = plugin.name
             versions = plugins.get(name)
             if versions:
-                if plugin.version > versions[0].version:
-                    plugins[name] = (plugin, *versions)
-                elif plugin.version < versions[-1].version:
+                # Store as decreasing version order (latest first)
+                if plugin.version < versions[-1].version:
                     plugins[name] = (*versions, plugin)
+                elif plugin.version > versions[0].version:
+                    plugins[name] = (plugin, *versions)
                 else:  # Need to sort
-                    plugins[name] = tuple(
-                        sorted(
-                            (*versions, plugin),
-                            key=lambda p: p.version,
-                            reverse=True,
-                        ),
-                    )
+                    for i, p in enumerate(versions):
+                        if plugin.version > p.version:
+                            plugins[name] = (*versions[:i], plugin, *versions[i:])
+                            break
+                        elif plugin.version == p.version:
+                            # SEMVER does not take build into account
+                            # but here build are meaningfull because QGIS
+                            # plugin version does not stick to SEMVER scheme
+                            #
+                            # Use lexicographic comparison
+                            if (plugin.version.build or "") > (p.version.build or ""):
+                                plugins[name] = (*versions[:i], plugin, *versions[i:])
+                                break
+                    else:
+                        plugins[name] = (*versions, plugin)
             else:
                 plugins[name] = (plugin,)
 

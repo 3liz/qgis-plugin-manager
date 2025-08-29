@@ -1,6 +1,7 @@
 import os
 
 from difflib import SequenceMatcher
+from itertools import takewhile
 from pathlib import Path
 from typing import Iterable, Iterator, List, Optional, Union
 
@@ -84,16 +85,6 @@ def similar_names(expected: str, available: Iterable[str]) -> Iterator[str]:
             yield item
 
 
-def to_bool(val: Optional[Union[str, int, float, bool]]) -> bool:
-    """Convert a value to boolean"""
-    if isinstance(val, str):
-        # For string, compare lower value to True string
-        return val.lower() in ("yes", "true", "t", "1")
-    else:
-        # For value like False, 0, 0.0, None, empty list or dict returns False
-        return bool(val)
-
-
 def parse_version(version_str: Optional[str]) -> Optional[List[int]]:
     if version_str is None or version_str == "":
         return None
@@ -171,9 +162,73 @@ def sources_file(current_folder: Path) -> Path:
 
 
 def get_semver_version(version_str: str) -> Version:
-    """Ensure that we get a semver compatible version"""
-    ver = version_str.split(".")
-    if len(ver) < 3:
-        version_str = f"{ver[0]}.{ver[1]}.0"
+    """Ensure that we get a SemvVer compatible version
 
-    return Version.parse(version_str)
+    Otherwise convert to a compatible SemVer version scheme.
+    See https://semver.org/
+    """
+    for prefix in ("ver.", "ver", "v.", "v"):
+        version_str = version_str.removeprefix(prefix)
+
+    # Check if this is semver
+    try:
+        return Version.parse(version_str)
+    except Exception:
+        pass
+
+    source_str = version_str
+
+    # Convert to compatible SEMVER version
+
+    # Split at hyphen
+    parts, *pre = version_str.split("-", maxsplit=1)
+    pre = f"-{pre[0]}" if pre else ""  # type: ignore [assignment]
+
+    parts = parts.split(".", maxsplit=3)  # type: ignore [assignment]
+
+    ver = tuple(takewhile(lambda part: part.isdecimal(), parts[:3]))
+    rest = ".".join(parts[len(ver):]) + pre  # type: ignore [operator]
+    if rest and not rest.startswith("-"):
+        rest = f"+{rest}"  # Take it as build tag
+
+    try_again = 2
+
+    while try_again:
+        try_again -= 1
+
+        n = len(ver)
+        if n == 3:
+            version_str = f"{ver[0]}.{ver[1]}.{ver[2]}{rest}"
+        elif n == 2:
+            version_str = f"{ver[0]}.{ver[1]}.0{rest}"
+        elif n == 1:
+            version_str = f"{ver[0]}.0.0{rest}"
+        elif n == 0:
+            version_str = f"0.0.0{rest}"
+
+        try:
+            version = Version.parse(version_str)
+            if rest:
+                echo.debug(
+                    "WARNING: using semver compatible scheme: {} (was {})",
+                    version_str,
+                    source_str,
+                )
+            break
+        except Exception:
+            if not try_again:
+                raise
+
+            def replace(c: str) -> str:
+                return "-" if c == "_" or not c.isalnum() else c
+
+            # Semver error
+            # Replace non hyphen/no alphanumeric characters
+            rest = "".join(replace(c) for c in rest[1:])
+            rest = f"+{rest}"
+
+    return version
+
+
+def getenv_bool(name: str) -> bool:
+    return os.getenv(name, "") in ("t", "true", "y", "yes", "1")

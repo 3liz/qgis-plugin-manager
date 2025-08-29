@@ -14,11 +14,11 @@ from qgis_plugin_manager.utils import (
     PluginManagerError,
     get_default_remote_repository,
     get_semver_version,
+    getenv_bool,
     parse_version,
     pretty_table,
     similar_names,
     sources_file,
-    to_bool,
 )
 
 
@@ -276,11 +276,11 @@ class LocalDirectory:
                 if self.qgis_version and qgis_max:
                     if qgis_max < self.qgis_version:
                         extra_info.append(f"QGIS Maximum {info.qgis_maximum_version}")
-            else:
+
+            elif not getenv_bool("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE"):
                 # "qgis-plugin-manager update" is missing.
                 # We can't determine what to do
-                if not to_bool(os.getenv("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE")):
-                    extra_info.append("Remote unknown")
+                extra_info.append("Remote unknown")
 
             plugin_data.append(echo.format_alert(";".join(extra_info)))
             data.append(plugin_data)

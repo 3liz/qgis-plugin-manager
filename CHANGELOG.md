@@ -4,6 +4,7 @@
 
 ### Added
 
+* Handle incompatible SemVer version schemes
 * Handle multiple versions of the same plugin 
 * The 'cache' method now output all available versions for the same plugin
 * Support multiple arguments for 'install' command

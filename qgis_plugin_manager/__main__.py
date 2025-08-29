@@ -36,6 +36,17 @@ subparsers = cli.add_subparsers(
 )
 
 
+def set_default_from_env(kwargs: dict):
+    env = kwargs.pop("env", None)
+    if env:
+        value = os.getenv(env)
+        if value is not None:
+            if kwargs.get("action") == "store_true":
+                kwargs["default"] = value.lower() in ("yes", "1", "y", "true", "t")
+            else:
+                kwargs["default"] = value
+
+
 def command(name: str, **kwargs) -> Callable:
     """Wrap subcommand function"""
 
@@ -47,6 +58,7 @@ def command(name: str, **kwargs) -> Callable:
             options = ()
         parser = subparsers.add_parser(name, description=func.__doc__, **kwargs)
         for opt in options:
+            set_default_from_env(opt[1])
             parser.add_argument(*opt[0], **opt[1])
         parser.set_defaults(func=func)
 
@@ -191,6 +203,7 @@ def update_index(args: Namespace):
 @argument(
     "--pre",
     action="store_true",
+    env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
     help=(
         "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
     ),
@@ -300,6 +313,7 @@ def search_plugin(args: Namespace):
 @argument(
     "--pre",
     action="store_true",
+    env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
     help=(
         "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
     ),

@@ -5,8 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from semver import Version
-
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
 
@@ -35,6 +33,7 @@ def test_install_network(
     remote_sources: Path,
     teardown_downloaded_plugins: None,
 ):
+
     plugin_name = "QuickOSM"
     plugin_path = plugins.joinpath(plugin_name)
 
@@ -47,17 +46,29 @@ def test_install_network(
     remote = Remote(plugins, qgis_version="3.34")
     remote.update()
 
-    version = Version.parse("1.1.1")
-    remote.install(plugin_name, version)
+    versions = remote.available_plugins().get(plugin_name)
+    assert versions is not None
+
+    print("\n::teardown_local::", plugin_name, "versions:",
+        ",".join(str(p.version) for p in versions))
+
+    assert len(versions) >= 2
+
+    version = versions[1].version
+    remote.install(plugin_name, str(version))
     assert plugin_path.exists()
 
     local.list_plugins()
     assert version == local.plugin_info(plugin_name).version
 
-    remote.install(plugin_name)
+    latest = remote.latest(plugin_name, include_prerelease=True)
+    assert latest.version != version
+    assert latest.version == versions[0].version
+
+    remote.install(plugin_name, include_prerelease=True)
     local.list_plugins()
     assert plugin_path.exists()
-    assert version != local.plugin_info(plugin_name).version
+    assert latest.version == local.plugin_info(plugin_name).version
 
 
 @pytest.fixture

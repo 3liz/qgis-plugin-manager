@@ -2,6 +2,13 @@ from pathlib import Path
 
 import pytest
 
+from qgis_plugin_manager import echo
+
+
+@pytest.fixture(scope="session", autouse=True)
+def verbose() -> None:
+    echo.set_verbose_mode(True)
+
 
 @pytest.fixture(scope="session")
 def rootdir(request: pytest.FixtureRequest) -> Path:
