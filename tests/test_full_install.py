@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from semver import Version
+
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import Remote
 
@@ -45,7 +47,7 @@ def test_install_network(
     remote = Remote(plugins, qgis_version="3.34")
     remote.update()
 
-    version = "1.1.1"
+    version = Version.parse("1.1.1")
     remote.install(plugin_name, version)
     assert plugin_path.exists()
 
@@ -91,18 +93,16 @@ def test_install_local(protocols: Path, teardown_local: None):
     )
 
     remote = Remote(folder)
-    plugins = {}
-    remote._parse_xml(folder.joinpath("plugin.xml"), plugins)
-    assert {"Minimal": "1.0.0"} == plugins
+    remote._parse_xml(folder.joinpath("plugin.xml"), remote._list_plugins)
+    assert "1.0.0" == remote._list_plugins["Minimal"][0].version
 
-    remote.list_plugins = plugins
     local = LocalDirectory(folder)
     assert local.plugin_info("Minimal") is None
 
     remote.install("Minimal", remove_zip=False)
 
     local.list_plugins()
-    assert local.plugin_info("Minimal").version == "1.0"
+    assert local.plugin_info("Minimal").version == "1.0.0"
     assert "minimal_plugin" in list(local.plugin_list().keys())
 
     # Test to remove the plugin

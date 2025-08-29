@@ -19,11 +19,17 @@ def test_plugin_name_with_space_and_tags(fixtures: Path):
     remote = Remote(xml_files.joinpath("dataplotly"))
     plugins = {}
     remote._parse_xml(xml_files.joinpath("dataplotly/dataplotly.xml"), plugins)
-    assert plugins == {"Data Plotly": "0.4"}
-    assert len(remote.list_plugins) == 1
+    assert len(plugins) == 1
 
-    plugin = remote.list_plugins.get("Data Plotly")
-    assert plugin is not None
+    remote._list_plugins = plugins
+
+    versions = remote._list_plugins.get("Data Plotly")
+    assert versions is not None
+    assert len(versions) == 1
+
+    plugin = versions[0]
+
+    assert plugin.version == "0.4.0"
     assert plugin.name == "Data Plotly"
     assert plugin.tags == "vector,python,d3,plots,graphs,datavis,dataplotly,dataviz"
     assert plugin.search == [
@@ -52,14 +58,13 @@ def test_search_with_space_in_name(fixtures: Path):
     remote = Remote(xml_files.joinpath("lizmap"))
     plugins = {}
     remote._parse_xml(xml_files.joinpath("lizmap/lizmap.xml"), plugins)
-    assert len(remote.list_plugins) == 2
-    assert plugins == {
-        "Lizmap": "3.7.4",
-        "Lizmap server": "1.0.0",
-    }
+    assert len(plugins) == 2
+    assert plugins["Lizmap"][0].version == "3.7.4"
+    assert plugins["Lizmap server"][0].version == "1.0.0"
 
-    plugin = remote.list_plugins.get("Lizmap server")
-    assert plugin is not None
+    remote._list_plugins = plugins
+
+    plugin = plugins["Lizmap server"][0]
     assert plugin.name == "Lizmap server"
     assert plugin.search == [
         "lizmap server",

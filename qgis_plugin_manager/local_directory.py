@@ -13,6 +13,7 @@ from qgis_plugin_manager.remote import Remote
 from qgis_plugin_manager.utils import (
     PluginManagerError,
     get_default_remote_repository,
+    get_semver_version,
     parse_version,
     pretty_table,
     similar_names,
@@ -123,9 +124,11 @@ class LocalDirectory:
             return None
 
         md = self._plugins_metadata[plugin_folder]
+
+        # Make sure that version is semver compatible
         return Plugin(
             name=md["name"],
-            version=md.get("version") or "0.0.0",
+            version=get_semver_version(md.get("version") or "0.0.0."),
             experimental=md.getboolean("experimental", False),
             qgis_minimum_version=md.get("qgisMinimumVersion"),
             qgis_maximum_version=md.get("qgisMaximumVersion"),
@@ -262,15 +265,9 @@ class LocalDirectory:
 
             extra_info = []
 
-            if len(current.split(".")) == 1:
-                extra_info.append("Not a semantic version")
-
-            elif latest:
-                if latest.startswith("v"):
-                    latest = latest[1:]
-
-                if latest > current:
-                    extra_info.append(f"Upgrade to {latest}")
+            if latest:
+                if latest.version > current:
+                    extra_info.append(f"Upgrade to {latest.version}")
 
                 if self.qgis_version and qgis_min:
                     if qgis_min > self.qgis_version:
@@ -279,7 +276,6 @@ class LocalDirectory:
                 if self.qgis_version and qgis_max:
                     if qgis_max < self.qgis_version:
                         extra_info.append(f"QGIS Maximum {info.qgis_maximum_version}")
-
             else:
                 # "qgis-plugin-manager update" is missing.
                 # We can't determine what to do

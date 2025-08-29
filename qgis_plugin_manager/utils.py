@@ -2,7 +2,9 @@ import os
 
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Iterator, List, Optional, Union
+from typing import Iterable, Iterator, List, Optional, Union
+
+from semver import Version
 
 from qgis_plugin_manager import echo
 
@@ -74,7 +76,7 @@ def install_prolog():
     restart_qgis_server()
 
 
-def similar_names(expected: str, available: List[str]) -> Iterator[str]:
+def similar_names(expected: str, available: Iterable[str]) -> Iterator[str]:
     """Returns a list of similar names available."""
     for item in available:
         ratio = SequenceMatcher(None, expected.lower(), item.lower()).ratio()
@@ -166,3 +168,12 @@ def sources_file(current_folder: Path) -> Path:
         source_file = current_folder.joinpath("sources.list")
 
     return source_file
+
+
+def get_semver_version(version_str: str) -> Version:
+    """Ensure that we get a semver compatible version"""
+    ver = version_str.split(".")
+    if len(ver) < 3:
+        version_str = f"{ver[0]}.{ver[1]}.0"
+
+    return Version.parse(version_str)

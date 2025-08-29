@@ -31,7 +31,7 @@ def test_read_metadata(local_dir: LocalDirectory):
     # Plugin A
     plugin = local_dir.plugin_info("plugin_a")
     assert "Plugin A" == plugin.name
-    assert "1.0.0" == plugin.version
+    assert "1.0.0" == str(plugin.version)
     assert not plugin.experimental
     assert "3.0" == plugin.qgis_minimum_version
     assert plugin.qgis_maximum_version is None

@@ -5,6 +5,7 @@ from argparse import Namespace
 from pathlib import Path
 from typing import (
     Callable,
+    Optional,
 )
 
 from qgis_plugin_manager import echo
@@ -151,16 +152,19 @@ def remove_plugin(args: Namespace):
 
 
 # Cache
-@command("cache", help="Look for a plugin in the cache")
+@command("cache", help="Look for plugin versions in the cache")
 @argument("plugin_name", help="The plugin to look for")
 def look_for_plugin(args: Namespace):
     remote = Remote(get_plugin_path(), qgis_server_version())
-    latest = remote.latest(args.plugin_name)
-    if latest is None:
-        echo.alert("Plugin not found")
-        cli.exit(1)
+    plugins = remote.available_plugins()
+
+    versions = plugins.get(args.plugin_name)
+    if versions:
+        for plugin in versions:
+            echo.echo(f"{args.plugin_name}=={plugin.version}")
     else:
-        echo.info(f"Plugin {args.plugin_name} : {latest} available")
+        echo.alert("No versions found for '{args.plugin_name}'")
+        cli.exit(1)
 
 
 # Update
@@ -184,6 +188,14 @@ def update_index(args: Namespace):
     action="store_true",
     help="Set files permissions to 0644",
 )
+@argument(
+    "--pre",
+    action="store_true",
+    help=(
+        "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
+    ),
+)
+@argument("--deprecated", action="store_true", help="Include deprecated versions")
 def upgrade_plugins(args: Namespace):
     """Upgrade all plugins for which a
     newer version is available
@@ -206,35 +218,45 @@ def upgrade_plugins(args: Namespace):
     failures = 0
 
     for folder in folders:
-        plugin_object = plugins.plugin_info(folder)
-        if not plugin_object:
+        plugin_info = plugins.plugin_info(folder)
+        if not plugin_info:
             echo.debug(f"No plugin found for {folder}")
             continue
 
-        if plugin_object.name in ignored_plugins:
-            echo.alert(f"{plugin_object.name}: Ignored")
+        if plugin_info.name in ignored_plugins:
+            echo.alert(f"{plugin_info.name:<25}\tIgnored")
             continue
+
+        if not args.force:
+            latest = remote.latest(plugin_info.name, args.pre, args.deprecated)
+            if latest and latest.version == plugin_info.version:
+                echo.success(f"\t\u274e {plugin_info.name:<25} {plugin_info.version!s:<12}\tUnchanged")
+                continue
+            elif latest is None:
+                echo.alert(f"\t\u26a0\ufe0f {plugin_info.name}\tRemoved from repository")
+                continue
+            version: Optional[str] = str(latest.version) if latest else None
+        else:
+            version = None
 
         # Need to check version
         try:
             install_version = remote.install(
-                plugin_name=plugin_object.name,
-                plugin_folder=plugin_object.install_folder,
-                current_version=plugin_object.version,
-                force=args.force,
+                plugin_name=plugin_info.name,
+                version=version,
+                plugin_folder=plugin_info.install_folder,
                 fix_permissions=args.fix_permissions,
+                include_prerelease=args.pre,
+                include_deprecated=args.deprecated,
             )
         except PluginNotFoundError:
-            echo.alert(f"\t\u26a0\ufe0f {plugin_object.name}: Not found")
+            echo.alert(f"\t\u26a0\ufe0f {plugin_info.name:aa<25}\tNot found")
         except PluginManagerError as err:
             failures += 1
-            echo.critical(f"\t\u274c {plugin_object.name}:\tError: {err}")
+            echo.critical(f"\t\u274c {plugin_info.name:<25}\tError: {err}")
         else:
-            if install_version:
-                echo.success(f"\t\u2705 {plugin_object.name:<25} {install_version:<12}\tInstalled")
-                installed += 1
-            else:
-                echo.success(f"\t\u274e {plugin_object.name:<25} {plugin_object.version:<12}\tUnchanged")
+            installed += 1
+            echo.success(f"\t\u2705 {plugin_info.name:<25} {install_version:<12}\tInstalled")
 
     if failures > 0:
         echo.alert(f"Command terminated with {failures} errors")
@@ -257,18 +279,32 @@ def search_plugin(args: Namespace):
 
 # Install
 @command("install", help="Install a plugin")
-@argument("plugin_name", help="The plugin to install")
+@argument("plugin_name", nargs="+", help="The plugin(s) to install")
 @argument(
     "-f",
     "--force",
     action="store_true",
-    help="Force installation",
+    help="Force (re)installation",
+)
+@argument(
+    "-U",
+    "--upgrade",
+    action="store_true",
+    help="Upgrade plugin to latest version",
 )
 @argument(
     "--fix-permissions",
     action="store_true",
     help="Set files permissions to 0644",
 )
+@argument(
+    "--pre",
+    action="store_true",
+    help=(
+        "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
+    ),
+)
+@argument("--deprecated", action="store_true", help="Include deprecated versions")
 def install_plugin(args: Namespace):
     """The version may be specified by appending the suffix '==version'.
     'plugin_name' might require quotes if there is space in its name.
@@ -281,52 +317,67 @@ def install_plugin(args: Namespace):
     remote = Remote(plugin_path, qgis_version=qgis)
     plugins = LocalDirectory(plugin_path, qgis_version=qgis)
 
-    parameter = args.plugin_name.split("==")
-    plugin_name = parameter[0]
-    if len(parameter) >= 2:
-        plugin_version = parameter[1]
-    else:
-        plugin_version = "latest"
+    installed = 0
 
-    plugin_info = plugins.plugin_info(plugin_name)
-    try:
-        if plugin_info:
-            install_version = remote.install(
-                plugin_name=plugin_name,
-                version=plugin_version,
-                current_version=plugin_info.version,
-                plugin_folder=plugin_info.install_folder,
-                force=args.force,
-                fix_permissions=args.fix_permissions,
-            )
+    for arg in args.plugin_name:
+
+        parameter = arg.split("==")
+        plugin_name = parameter[0]
+
+        plugin_info = plugins.plugin_info(plugin_name)
+
+        if len(parameter) >= 2:
+            plugin_version = parameter[1]
+            if not plugin_version:
+                echo.critical("Missing version")
+                exit(1)
         else:
+            plugin_version = None
+
+        if plugin_info and not args.force:
+            # Plugin already installed
+            if plugin_version is None and args.upgrade:
+                # Asked for upgrade
+                latest = remote.latest(plugin_name, args.pre, args.deprecated)
+                if latest and latest.version == plugin_info.version:
+                    echo.alert(f"\t{plugin_name} is already at latest version")
+                    continue
+            elif plugin_version is None and plugin_info.version == plugin_version:
+                echo.alert(f"\t{plugin_name}=={plugin_version} already installed")
+                continue
+            elif plugin_version is None:
+                echo.alert(f"\t{plugin_name} already installed")
+                continue
+
+        try:
             install_version = remote.install(
                 plugin_name=plugin_name,
                 version=plugin_version,
-                force=args.force,
+                plugin_folder=plugin_info.install_folder if plugin_info else None,
+                include_prerelease=args.pre,
+                include_deprecated=args.deprecated,
                 fix_permissions=args.fix_permissions,
             )
 
-    except PluginNotFoundError:
-        similars = remote.check_similar_names(plugin_name)
-        name = next(similars, None)
-        if name:
-            echo.info(f"\n{plugin_name} not found. Plugins with similar name:")
-            echo.info(f"\t{name}")
-            for name in similars:
-                echo.info(name)
-        cli.exit(1)
-    except PluginManagerError as err:
-        echo.critical(f"ERROR: {plugin_name}: {err}")
-    else:
-        if install_version:
+        except PluginNotFoundError:
+            similars = remote.check_similar_names(plugin_name)
+            name = next(similars, None)
+            if name:
+                echo.info(f"\n{plugin_name} not found. Plugins with similar name:")
+                echo.info(f"\t{name}")
+                for name in similars:
+                    echo.info(name)
+            cli.exit(1)
+        except PluginManagerError as err:
+            echo.critical(f"ERROR: {plugin_name}: {err}")
+            cli.exit(1)
+        else:
             echo.success(f"\tOk {plugin_name} {install_version}")
-            install_prolog()
-        elif plugin_info:
-            # NOTE: plugin_info should not be None at this point
-            echo.alert(f"\tSkipped unchanged {plugin_name} {plugin_info.version}")
-        else:
-            raise PluginManagerError("Should not happen")
+            installed += 1
+
+    if installed > 0:
+        install_prolog()
+
 
 def main() -> None:
     """Main function for the CLI menu."""

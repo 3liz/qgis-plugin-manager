@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "qgis-plugin-manager"
 description = "Tool for downloading/managing QGIS plugins from CLI."
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 readme = "README.md"
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -27,7 +26,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS",
 ]
 
-dependencies = []
+dependencies = [
+    "semver==3.0.4",
+]
 dynamic = ["version"]
 
 [project.scripts]

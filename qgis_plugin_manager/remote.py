@@ -12,6 +12,8 @@ from typing import Dict, Iterator, List, Optional, Tuple
 from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 from xml.etree.ElementTree import parse
 
+from semver import Version
+
 from qgis_plugin_manager import echo
 from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.utils import (
@@ -20,6 +22,8 @@ from qgis_plugin_manager.utils import (
     sources_file,
     to_bool,
 )
+
+PluginDict = Dict[str, Tuple[Plugin, ...]]
 
 
 class PluginNotFoundError(PluginManagerError):
@@ -31,9 +35,10 @@ class Remote:
         """Constructor."""
         self.folder = folder
         self.list: List[str] = []
-        self.list_plugins: Dict[str, Plugin] = {}
         self.setting_error = False
         self.qgis_version = qgis_version
+
+        self._list_plugins: PluginDict = {}
 
         self.list_remote()
 
@@ -137,8 +142,27 @@ class Remote:
         else:
             echo.alert("No remote configured")
 
+    def latest(
+        self,
+        name: str,
+        include_prerelease: bool = False,
+        include_deprecated: bool = False,
+    ) -> Optional[Plugin]:
+        plugin = None
+        for plugin in self.available_plugins().get(name, ()):
+            if (plugin.version.prerelease or plugin.experimental) and not include_prerelease:
+                continue
+            elif plugin.deprecated and not include_deprecated:
+                continue
+            else:
+                break
+        return plugin
+
     def update(self) -> bool:
         """For each remote, it updates the XML file."""
+
+        # Clear plugin list
+        self._list_plugins = {}
 
         if not self.list:
             echo.critical("\tNo remote found.")
@@ -193,13 +217,10 @@ class Remote:
 
     def xml_in_folder(self) -> List[Path]:
         """Returns the list of XML files in the folder."""
-        if not self.check_remote_cache():
-            return []
-
         cache = self.cache_directory()
         if not cache.exists():
             cache.mkdir()
-            echo.info("The 'update' has not been done before.")
+            echo.info("No cache directory: please run the 'update' command")
             return []
 
         xml = []
@@ -211,75 +232,38 @@ class Remote:
 
         return xml
 
-    def available_plugins(self) -> Dict[str, str]:
+    def available_plugins(self) -> PluginDict:
         """Populates the list of available plugins, in all XML files."""
-        plugins: Dict[str, str] = {}
-        for xml_file in self.xml_in_folder():
-            self._parse_xml(xml_file, plugins)
-        return plugins
+        if not self._list_plugins:
+            for xml_file in self.xml_in_folder():
+                self._parse_xml(xml_file, self._list_plugins)
+        return self._list_plugins
 
-    def latest(self, plugin_name: str) -> Optional[str]:
-        """For a given plugin, it returns the latest version found in all remotes."""
-        return self.available_plugins().get(plugin_name)
-
-    def _parse_xml(self, xml_file: Path, plugins: Dict[str, str]):
+    def _parse_xml(self, xml_file: Path, plugins: PluginDict):
         """Parse the given XML file."""
 
         tree = parse(xml_file.absolute())
         root = tree.getroot()
-        for plugin in root:
-            experimental = False
-            for element in plugin:
-                if element.tag == "experimental":
-                    experimental = element.text == "True"
+        for elem in root:
+            plugin = Plugin.from_xml_element(elem)
 
-            xml_plugin_name = plugin.attrib["name"]
-            if xml_plugin_name in plugins.keys():
-                previous_parsed_version = plugins[xml_plugin_name].split(".")
-                new_parsed_version = plugin.attrib["version"].split(".")
-                if previous_parsed_version < new_parsed_version and not experimental:
-                    plugins[xml_plugin_name] = plugin.attrib["version"]
-                else:
-                    continue
+            name = plugin.name
+            versions = plugins.get(name)
+            if versions:
+                if plugin.version > versions[0].version:
+                    plugins[name] = (plugin, *versions)
+                elif plugin.version < versions[-1].version:
+                    plugins[name] = (*versions, plugin)
+                else:  # Need to sort
+                    plugins[name] = tuple(
+                        sorted(
+                            (*versions, plugin),
+                            key=lambda p: p.version,
+                            reverse=True,
+                        ),
+                    )
             else:
-                if not experimental:
-                    # Not sure about this one, fixme
-                    plugins[xml_plugin_name] = plugin.attrib["version"]
-                else:
-                    plugins[xml_plugin_name] = plugin.attrib["version"]
-
-            data: Dict = {}
-            for element in plugin:
-                if element.tag in Plugin._fields:
-                    data[element.tag] = element.text
-
-            # Add the real name of the plugin
-            data["name"] = plugin.attrib["name"]
-
-            # Add the version of the plugin
-            data["version"] = plugin.attrib["version"]
-
-            # Not present in XML, but property available in metadata.txt
-            data["qgis_maximum_version"] = ""
-
-            # Add more search fields
-            tags = []
-            data_tags = data.get("tags")
-            if data_tags:
-                tags = data_tags.split(",")
-
-            search_text = [
-                xml_plugin_name.lower(),
-                xml_plugin_name.lower().replace(" ", ""),
-            ]
-            search_text.extend(tags)
-            search_text.extend(plugin.attrib["name"].lower().split(" "))
-
-            # Remove duplicates
-            data["search"] = list(dict.fromkeys(search_text))
-
-            plugin_obj = Plugin(**data)
-            self.list_plugins[xml_plugin_name] = plugin_obj
+                plugins[name] = (plugin,)
 
     def search(self, search_string: str, strict: bool = True) -> Iterator[str]:
         """Search in plugin names and tags."""
@@ -290,45 +274,64 @@ class Remote:
         self.available_plugins()
 
         results = set()
-        for plugin_name, plugin in self.list_plugins.items():
-            if plugin_name not in results:
-                if next(similar_names(search_string, plugin.search), None):
-                    results.add(plugin_name)
+        for plugin_name, versions in self._list_plugins.items():
+            found = plugin_name in results
+            if not found:
+                for plugin in versions:
+                    if next(similar_names(search_string, plugin.search), None):
+                        found = True
+                        results.add(plugin_name)
+                        break
+                if found:
                     yield plugin_name
 
     def check_similar_names(self, name: str) -> Iterator[str]:
-        yield from similar_names(name, list(self.list_plugins.keys()))
+        yield from similar_names(name, self._list_plugins.keys())
 
     def install(
         self,
         plugin_name: str,
-        version: str = "latest",
-        current_version: Optional[str] = None,
-        force: bool = False,
+        version: Optional[str] = None,
+        include_prerelease: bool = False,
+        include_deprecated: bool = False,
         remove_zip: bool = True,
         fix_permissions: bool = False,
         plugin_folder: Optional[str] = None,
-    ) -> Optional[str]:
+    ) -> str:
         """Install the plugin with a specific version.
 
         Default version is latest.
         """
+        self.available_plugins()
+
         if not self.check_remote_cache():
             raise PluginManagerError("No remote data")
 
-        xml_version = self.latest(plugin_name)
-        if xml_version is None:
-            echo.alert(f"Plugin {plugin_name} {version} not found.")
-            if not self.list_plugins:
-                raise PluginManagerError("No available plugins")
+        if not self._list_plugins:
+            raise PluginManagerError("No available plugins")
 
+        plugin = None
+
+        # Check for requested version otherwise get the latest
+        if version:
+            # Find version
+            versions = self._list_plugins.get(plugin_name)
+            if versions:
+                requested_ver = Version.parse(version)
+                plugin = next((p for p in versions if p.version == requested_ver), None)
+        else:
+            plugin = self.latest(
+                plugin_name,
+                include_prerelease,
+                include_deprecated,
+            )
+
+        if not plugin:
+            echo.alert(f"No matching plugin found for {plugin_name}.")
             raise PluginNotFoundError()
-
-        plugin = self.list_plugins[plugin_name]
 
         url = plugin.download_url
         file_name = plugin.file_name
-        remote_version = plugin.version
 
         # Check consistency
         if not file_name:
@@ -337,16 +340,7 @@ class Remote:
         if not url:
             raise PluginManagerError(f"Incomplete plugin data: url: {plugin})")
 
-        if version != "latest":
-            echo.debug(f"Installing oldest version {version}")
-            url = url.replace(remote_version, version)
-            file_name = file_name.replace(remote_version, version)
-            remote_version = version
-
-        if current_version == remote_version and not force:
-            return None
-
-        echo.debug(f"Downloading {plugin_name} {version}")
+        echo.debug("Downloading {} from {}", file_name, url)
         zip_file = self._download_zip(url, plugin_name, file_name)
 
         # Removing existing plugin folder if needed
@@ -383,7 +377,7 @@ class Remote:
                 else:
                     p.chmod(0o644)
 
-        return remote_version
+        return str(plugin.version)
 
     def _download_zip(
         self,
