@@ -11,7 +11,7 @@ Not tested on Windows.
 
 ## Installation
 
-Python 3.8 **minimum**, you can make a Python venv if needed.
+Python 3.9 **minimum**, you can make a Python venv if needed.
 ```bash
 python3 --version
 ```
@@ -51,16 +51,17 @@ export QGIS_PLUGINPATH=/path/where/you/have/plugins
 
 ```bash
 $ qgis-plugin-manager --help
-usage: qgis-plugin-manager [-h] [-v] {init,list,remote,remove,update,upgrade,cache,search,install} ...
+usage: qgis-plugin-manager [-h] [-v] {version,init,list,remote,remove,update,upgrade,cache,search,install} ...
 
 options:
   -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
+  -v, --verbose         Activate verbose (debug) mode (default: False)
 
 commands:
   qgis-plugin-manager command
 
-  {init,list,remote,remove,update,upgrade,cache,search,install}
+  {version,init,list,remote,remove,update,upgrade,cache,search,install}
+    version             Show version informations and exit
     init                Create the `sources.list` with plugins.qgis.org as remote
     list                List all plugins in the directory
     remote              List all remote server
@@ -265,9 +266,10 @@ Note that you must manually remove this file.
 
 ## Run tests
 
+NOTE: Use a virtual env (python3 -m venv)
+
 ```bash
-export PYTHONPATH=/home/etienne/dev/app/qgis-master/share/qgis/python/:/usr/lib/python3/dist-packages/
-cd test
-python3 -m unittest
-flake8
+pip install -e .
+cd tests
+pytest -v
 ```
