@@ -15,6 +15,7 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Union,
 )
 from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 from xml.etree.ElementTree import parse
@@ -25,6 +26,7 @@ from qgis_plugin_manager import echo
 from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.utils import (
     PluginManagerError,
+    get_semver_version,
     getenv_bool,
     similar_names,
     sources_file,
@@ -154,15 +156,24 @@ class Remote:
         name: str,
         include_prerelease: bool = False,
         include_deprecated: bool = False,
+        *,
+        qgis_version: Optional[Union[str, Version]] = None,
     ) -> Optional[Plugin]:
+        if qgis_version and isinstance(qgis_version, str):
+            qgis_version = get_semver_version(qgis_version)
+
         plugin = None
         for plugin in self.available_plugins().get(name, ()):
             if plugin.is_pre() and not include_prerelease:
                 continue
             elif plugin.deprecated and not include_deprecated:
                 continue
+            elif qgis_version is not None and not plugin.check_qgis_version(qgis_version):
+                continue
             else:
                 break
+        else:
+            plugin = None
         return plugin
 
     def update(self) -> bool:

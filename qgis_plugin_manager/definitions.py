@@ -4,6 +4,7 @@ from typing import (
     NamedTuple,
     Optional,
     Protocol,
+    Union,
 )
 
 from semver import Version
@@ -29,8 +30,8 @@ class Plugin(NamedTuple):
     download_url: Optional[str] = None
     description: str = ""
     search: List[str] = []  # noqa RUF012
-    qgis_minimum_version: Optional[str] = None
-    qgis_maximum_version: Optional[str] = None
+    qgis_minimum_version: Optional[Version] = None
+    qgis_maximum_version: Optional[Version] = None
     homepage: Optional[str] = None
     pre_release: Optional[str] = None
     icon: Optional[str] = None
@@ -51,6 +52,14 @@ class Plugin(NamedTuple):
 
     def is_pre(self) -> bool:
         return self.version.prerelease is not None or self.experimental
+
+    def check_qgis_version(self, version: Union[str, Version]) -> bool:
+        if self.qgis_minimum_version is not None and self.qgis_minimum_version > version:
+            return False
+        elif self.qgis_maximum_version is not None and self.qgis_maximum_version < version:
+            return False
+        else:
+            return True
 
     @staticmethod
     def from_xml_element(elem: Element) -> "Plugin":
@@ -74,8 +83,11 @@ class Plugin(NamedTuple):
         data["name"] = elem.attrib["name"]
         data["version"] = get_semver_version(elem.attrib["version"])
 
-        # Not present in XML, but property available in metadata.txt
-        data["qgis_maximum_version"] = ""
+        def maybe_version(ver: Optional[str]) -> Optional[Version]:
+            return get_semver_version(ver) if ver else None
+
+        data["qgis_minimum_version"] = maybe_version(data.get("qgis_minimum_version"))
+        data["qgis_maximum_version"] = maybe_version(data.get("qgis_maximum_version"))
 
         # Add more search fields
         tags = []

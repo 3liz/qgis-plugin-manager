@@ -8,12 +8,18 @@ from typing import (
     Optional,
 )
 
+from semver import Version
+
 from qgis_plugin_manager import echo
+from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import PluginNotFoundError, Remote
 from qgis_plugin_manager.utils import (
     PluginManagerError,
-    install_prolog,
+    get_semver_version,
+    install_epilog,
+    print_json,
+    print_table,
     qgis_server_version,
 )
 
@@ -116,7 +122,7 @@ def show_version(args):
         f"Maintainer: {__about__.__maintainer__}\n"
         f"Copyright: {__about__.__copyright__}\n"
         f"Released under {__about__.__license__}\n"
-        f"Url: {__about__.__uri__}"
+        f"Url: {__about__.__uri__}\n"
     )
 
 
@@ -126,7 +132,7 @@ def show_version(args):
     help="Create the `sources.list` with plugins.qgis.org as remote",
 )
 @argument("--qgis-version", help="Set the qgis version")
-@argument("--update", action="store_true", help="Update index file")
+@argument("-u", "--update", action="store_true", help="Update index file")
 def init_sources(args: Namespace):
     """If qgis-version is set to 'auto', then detect the current QGIS version"""
     # Local needed only, with QGIS version
@@ -135,8 +141,8 @@ def init_sources(args: Namespace):
         qgis_version = qgis_server_version()
 
     plugin_path = get_plugin_path()
-    plugins = LocalDirectory(plugin_path, qgis_version=qgis_version)
-    if plugins.init() and args.update:
+    plugins = LocalDirectory(plugin_path)
+    if plugins.init(qgis_version) and args.update:
         remote = Remote(plugin_path, qgis_version or qgis_server_version())
         if not remote.update():
             cli.exit(1)
@@ -146,8 +152,16 @@ def init_sources(args: Namespace):
 @command("list", help="List all plugins in the directory")
 @argument("-o", "--outdated", action="store_true", help="List outdated plugins")
 @argument(
+    "--outdated-target",
+    metavar="VERSION",
+    help="""
+        With the 'outdated' option, display the last version compatible with
+        the QGIS version VERSION.
+    """,
+)
+@argument(
     "--format",
-    choices=("columns", "freeze", "list"),
+    choices=("columns", "freeze", "list", "json"),
     default="columns",
     help="Select the output format",
 )
@@ -162,10 +176,13 @@ def init_sources(args: Namespace):
 )
 def list_plugins(args: Namespace):
     qgis = qgis_server_version()
-    if qgis:
-        echo.info(f"QGIS version : {qgis}")
+    echo.info(f"QGIS version:  {qgis or 'Unknown'}")
 
-    plugins = LocalDirectory(get_plugin_path(), qgis_version=qgis)
+    if not (args.outdated_target is None or args.outdated):
+        echo.critical("'outdated-target' option is only usable with the '--outdated' option")
+        exit(1)
+
+    plugins = LocalDirectory(get_plugin_path())
 
     def infos():
         for folder, name in sorted(
@@ -183,12 +200,23 @@ def list_plugins(args: Namespace):
         for info in infos():
             echo.echo(f"{info.name}=={info.version}")
     else:
+
+        def install_folder(p: Plugin) -> str:
+            if p.install_folder:
+                return p.install_folder if p.install_folder != p.name else ""
+            else:
+                return ""
+
         if args.outdated:
-            remote = Remote(plugins.folder, qgis_version=plugins.qgis_version_str)
+            remote = Remote(plugins.folder, qgis_version=qgis)
 
             def outdated():
                 for info in infos():
-                    latest = remote.latest(info.name, include_prerelease=args.pre)
+                    latest = remote.latest(
+                        info.name,
+                        include_prerelease=args.pre,
+                        qgis_version=args.outdated_target,
+                    )
                     if latest:
                         if latest.version <= info.version:
                             continue
@@ -204,22 +232,48 @@ def list_plugins(args: Namespace):
                 if args.format == "list":
                     for info, _ in outdated_list:
                         echo.echo(info.name)
+                elif args.format == "json":
+                    print_json(
+                        outdated_list,
+                        (
+                            ("name", lambda n: n[0].name),
+                            ("version", lambda n: str(n[0].version)),
+                            ("latest", lambda n: n[1]),
+                            ("folder", lambda n: n[0].install_folder),
+                        ),
+                    )
                 else:
-                    echo.echo(f"{'Name':<30} {'Version':<20} {'Latest':<20} {'Folder'}")
-                    echo.echo(f"{'-' * 30} {'-' * 20} {'-' * 20} {'------'}")
-                    for info, latest in outdated_list:
-                        folder = info.install_folder if info.install_folder != info.name else ""
-                        echo.echo(f"{info.name:<30} {info.version!s:<20} {latest:<20} {folder}")
+                    print_table(
+                        outdated_list,
+                        (
+                            ("Name", lambda n: n[0].name),
+                            ("Version", lambda n: str(n[0].version)),
+                            ("Latest", lambda n: n[1]),
+                            ("Folder", lambda n: install_folder(n[0])),
+                        ),
+                    )
         else:
             if args.format == "list":
                 for info in infos():
                     echo.echo(info.name)
+            elif args.format == "json":
+                print_json(
+                    infos(),
+                    (
+                        ("name", lambda p: p.name),
+                        ("version", lambda p: str(p.version)),
+                        ("folder", lambda p: p.install_folder),
+                    ),
+                )
             else:
-                echo.echo(f"{'Name':<30} {'Version':<20} {'Folder'}")
-                echo.echo(f"{'-' * 30} {'-' * 20} {'------'}")
-                for info in infos():
-                    folder = info.install_folder if info.install_folder != info.name else ""
-                    echo.echo(f"{info.name:<30} {info.version!s:<20} {folder}")
+                print_table(
+                    tuple(infos()),
+                    (
+                        ("Name", lambda p: p.name),
+                        ("Version", lambda p: str(p.version)),
+                        ("Folder", install_folder),
+                    ),
+                )
 
 
 # Install
@@ -258,10 +312,10 @@ def install_plugin(args: Namespace):
     plugin_path = get_plugin_path()
 
     qgis = qgis_server_version()
-    if qgis:
-        echo.info(f"QGIS version : {qgis}")
+    echo.info("QGIS version:  {qgis or 'Unknown'}")
+
     remote = Remote(plugin_path, qgis_version=qgis)
-    plugins = LocalDirectory(plugin_path, qgis_version=qgis)
+    plugins = LocalDirectory(plugin_path)
 
     installed = 0
 
@@ -321,7 +375,7 @@ def install_plugin(args: Namespace):
             installed += 1
 
     if installed > 0:
-        install_prolog()
+        install_epilog()
 
 
 # Remove
@@ -364,7 +418,7 @@ def upgrade_plugins(args: Namespace):
 
     qgis = qgis_server_version()
     remote = Remote(plugin_path, qgis_version=qgis)
-    plugins = LocalDirectory(plugin_path, qgis_version=qgis)
+    plugins = LocalDirectory(plugin_path)
     folders = plugins.plugin_list()
 
     # Check for ignored plugins
@@ -421,11 +475,10 @@ def upgrade_plugins(args: Namespace):
     if failures > 0:
         echo.alert(f"Command terminated with {failures} errors")
     if installed > 0:
-        install_prolog()
+        install_epilog()
 
 
-# Remote
-@command("remote", help="List all remote servers")
+@command("remotes", help="List all remote sources")
 def list_remote_servers(args: Namespace):
     remote = Remote(get_plugin_path(), qgis_server_version())
     remote.print_list()
@@ -439,19 +492,34 @@ def update_index(args: Namespace):
         cli.exit(1)
 
 
-# Cache
-@command("versions", help="Look for available plugin versions in the cache")
+# Cache (Deprecated)
+@command("cache", help="Look for available plugin is the cache - Deprecated")
+@argument("plugin_name", help="The plugin to look for")
+def plugin_versions_deprecated(args: Namespace):
+    """This command is deprecated, please use the 'versions' command instead."""
+    echo.alert("Warning: this command is deprecated in favor of the 'versions' command")
+    args.pre = False
+    args.deprecated = False
+    plugin_versions_impl(args)
+
+
+# Versions
+@command("versions", help="Look for available plugin versions")
 @argument("plugin_name", help="The plugin to look for")
 @argument(
     "--pre",
     action="store_true",
     env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
     help=(
-        "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
+        "Include pre-release, development and experimental versions. By default,\ndisplay only stable version"
     ),
 )
 @argument("--deprecated", action="store_true", help="Include deprecated versions")
-def look_for_plugin(args: Namespace):
+def plugin_versions(args: Namespace):
+    plugin_versions_impl(args)
+
+
+def plugin_versions_impl(args: Namespace):
     remote = Remote(get_plugin_path(), qgis_server_version())
     plugins = remote.available_plugins()
 
@@ -464,7 +532,7 @@ def look_for_plugin(args: Namespace):
                 continue
             echo.echo(f"{args.plugin_name}=={plugin.version}")
     else:
-        echo.alert("No versions found for '{args.plugin_name}'")
+        echo.alert(f"No versions found for '{args.plugin_name}'")
         cli.exit(1)
 
 
@@ -477,9 +545,10 @@ def look_for_plugin(args: Namespace):
     "--pre",
     action="store_true",
     env="QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
-    help=(
-        "Include pre-release, development and experimental versions. By default,\ninstall only stable version"
-    ),
+    help="""
+        Include pre-release, development and experimental versions.
+        By default, search only stable versions.
+    """,
 )
 @argument("--deprecated", action="store_true", help="Include deprecated versions")
 def search_plugin(args: Namespace):
@@ -502,6 +571,67 @@ def search_plugin(args: Namespace):
         found = True
     if not found:
         echo.info("No plugins found")
+
+
+# Check
+@command("check", help="Check compatibility of installed plugins with QGIS version")
+@argument("-v", "--version", help="QGIS version to check against")
+@argument(
+    "--format",
+    choices=("columns", "json"),
+    default="columns",
+    help="Select the output format",
+)
+def check_qgis_compat(args: Namespace):
+    """If version is not specified then check against the current QGIS
+    installation
+    """
+
+    def get_version() -> Version:
+        ver = args.version if args.version else qgis_server_version()
+        if not ver:
+            exit(1)
+        try:
+            return get_semver_version(ver)
+        except Exception as e:
+            echo.critical(f"{e}")
+            exit(1)
+
+    version = get_version()
+
+    plugins = LocalDirectory(get_plugin_path())
+
+    def infos():
+        for folder, name in sorted(
+            plugins.plugin_list().items(),
+            key=lambda p: p[1],
+        ):
+            info = plugins.plugin_info(folder)
+            if info:
+                yield info
+
+    if args.format == "json":
+        print_json(
+            infos(),
+            (
+                ("name", lambda p: p.name),
+                ("version", lambda p: str(p.version)),
+                ("qgisVersion", lambda _: str(version)),
+                ("canUse", lambda p: p.check_qgis_version(version)),
+            ),
+        )
+    else:
+        print_table(
+            tuple(infos()),
+            (
+                ("Name", lambda p: p.name),
+                ("Version", lambda p: str(p.version)),
+                (
+                    f"QGIS {version}",
+                    lambda p: "Yes" if p.check_qgis_version(version) else "No",
+                ),
+            ),
+        )
 
 
 def main() -> None:

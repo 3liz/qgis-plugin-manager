@@ -4,27 +4,31 @@
 
 ### Added
 
-* Handle multiple versions of the same plugin 
-* The 'cache' method now output all available versions for the same plugin
-* Support multiple arguments for 'install' command
-* Add '--upgrade' option for 'install' command 
-* Add '--pre' option for allowing  prerelease, development or experimental version
-  for 'install' and 'upgrade' command
+* Added 'check' command for checking QGIS compatibility of installed plugins 
+* Added 'versions' command that output all available versions 
+  for the same plugin
+* Added options '--fix-permissions', '--upgrade'  for the 'install' command
+* Changed the 'list' command output: the command now support multiple output
+  formats: 'list', 'freeze', 'columns', 'json'.
+* Added '--pre' option for including prerelease, development or experimental version
+  in 'install', 'search' and 'list' commands
 
 ### Changed
 
-* New Behavior of the 'list' command:
-    - Multiple output formats: 'list', 'freeze', 'columns'.
-    - Added '--pre' and '--outdated' options
+* The 'cache' command is now deprecated.
 * Move packaging configuration to pyproject.toml 
 
 ### Fixed
 
-* Handle incompatible SemVer version schemes
+* Handle plugin versions as SemVer version schemes
 * Fix installation of experimental plugins
 * Improve output of 'update' command
-* Use templated remote definition in init as default
-    - Allow forcing QGIS version
+* Use templated remote definition in 'init' as default
+* Allow forcing QGIS version in the 'init' command
+
+### Removed
+
+* Dropped support for Python 3.8
 
 ## 1.6.5 - 2025-06-13
 

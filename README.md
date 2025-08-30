@@ -92,19 +92,27 @@ List all plugins installed :
 
 ```bash
 $ qgis-plugin-manager list
-QGIS server version 3.34.2
-List all plugins in /home/etienne/dev/qgis/server_plugin
 
-------------------------------------------------------------------------------------------------------------------------------------
-|  Name            |  Version  | Flags           |  QGIS min  |  QGIS max  |  Author         | Folder owner     | Action ⚠         |
-------------------------------------------------------------------------------------------------------------------------------------
-|Lizmap            |master     |                 |3.4         |3.99        |3Liz             | root : 0o755     | Unkown version   |
-|wfsOutputExtension|1.5.3      |Server           |3.0         |            |3Liz             | etienne : 0o755  |                  |
-|QuickOSM          |1.14.0     |Processing       |3.4         |3.99        |Etienne Trimaille| etienne : 0o755  | Upgrade to 1.16.0|
-|cadastre          |1.6.2      |Server,Processing|3.0         |3.99        |3liz             | www-data : 0o755 |                  |
-|atlasprint        |3.2.2      |Server           |3.10        |            |3Liz             | www-data : 0o755 |                  |
-------------------------------------------------------------------------------------------------------------------
+Name                           Version              Folder
+------------------------------ -------------------- ------
+Lizmap server                  2.13.1               lizmap_server
+atlasprint                     3.4.3                
+cadastre                       2.1.1                
+wfsOutputExtension             1.8.3 
 ```
+
+List outdated plugins including prerelease/experimental versions
+
+
+```bash
+$ qgis-plugin-manager list --outdated --pre
+
+Name                           Version              Latest               Folder
+------------------------------ -------------------- -------------------- ------
+Lizmap server                  2.13.1               2.13.2-alpha         lizmap_server
+cadastre                       2.1.1                2.1.2-alpha            
+```
+
 
 #### Install needed plugins only, mainly on QGIS server
 
@@ -156,13 +164,22 @@ $ ls .cache_qgis_plugin_manager/
 https-plugins-qgis-org-plugins-plugins-xml-qgis-3-34.xml
 ```
 
-### Cache
+### Versions
 
-Check if a plugin is available :
+Check available versions of a plugin :
 
 ```bash
-$ qgis-plugin-manager cache atlasprint
-Plugin atlasprint : v3.2.2 available
+$ qgis-plugin-manager versions cadastre
+
+cadastre==2.1.1
+```
+
+Check all versions available including prerelease/experimental
+```bash
+$ qgis-plugin-manager versions cadastre --pre
+
+cadastre==2.1.2-alpha
+cadastre==2.1.1
 ```
 
 ### Search

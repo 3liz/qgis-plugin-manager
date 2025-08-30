@@ -3,7 +3,9 @@ import shutil
 import sys
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
+
+from semver import Version
 
 from qgis_plugin_manager import echo
 from qgis_plugin_manager.definitions import Plugin
@@ -17,41 +19,30 @@ from qgis_plugin_manager.utils import (
 
 
 class LocalDirectory:
-    def __init__(self, folder: Path, qgis_version: Optional[str] = None):
+    def __init__(self, folder: Path):
         """Constructor"""
         self.folder = folder
         # Dictionary : folder : plugin name
         self._plugins: Dict[str, str] = {}
         self._plugins_metadata: Dict[str, configparser.SectionProxy] = {}
-
-        self.qgis_version: Optional[List[int]] = None
-        self.qgis_version_str: Optional[str] = None
-        if qgis_version:
-            try:
-                version = [int(i) for i in qgis_version.split(".")]
-            except ValueError:
-                raise PluginManagerError(f"{version} is not a valid QGIS version") from None
-            if len(version) == 2:
-                version.append(0)
-                self.qgis_version_str = f"{version[0]}.{version[1]}"
-            elif len(version) == 3:
-                self.qgis_version_str = f"{version[0]}.{version[1]}.{version[2]}"
-            else:
-                raise PluginManagerError(f"{version} is not a valid QGIS version")
-
-            self.qgis_version = version
-
         self.list_plugins()
 
-    def init(self) -> bool:
+    def init(self, qgis_version: Optional[str]) -> bool:
         """Init this qgis-plugin-manager by creating the default sources.list."""
         source_file = sources_file(self.folder)
         if source_file.exists():
             echo.alert(f"{source_file.absolute()} is already existing. Quit")
             return False
 
+        if qgis_version:
+            try:
+                version: Optional[str] = str(get_semver_version(qgis_version))
+            except Exception:
+                raise PluginManagerError(f"{qgis_version} is not a valid QGIS version") from None
+        else:
+            version = "[VERSION]"
+
         repository = get_default_remote_repository()
-        version = self.qgis_version_str or "[VERSION]"
 
         print(f"Init {repository}", file=sys.stderr)
 
@@ -119,17 +110,22 @@ class LocalDirectory:
 
         md = self._plugins_metadata[plugin_folder]
 
+        def maybe_version(ver: Optional[str]) -> Optional[Version]:
+            return get_semver_version(ver) if ver else None
+
         # Make sure that version is semver compatible
+        qgis_minimum_version = maybe_version(md.get("qgisMinimumVersion"))
+        qgis_maximum_version = maybe_version(md.get("qgisMaximumVersion"))
+
         return Plugin(
             name=md["name"],
             version=get_semver_version(md.get("version") or "0.0.0."),
             experimental=md.getboolean("experimental", False),
-            qgis_minimum_version=md.get("qgisMinimumVersion"),
-            qgis_maximum_version=md.get("qgisMaximumVersion"),
+            qgis_minimum_version=qgis_minimum_version,
+            qgis_maximum_version=qgis_maximum_version,
             author_name=md.get("author"),
             server=md.getboolean("server", False),
             has_processing=md.getboolean("hasProcessingProvider", False),
-            has_wps=md.getboolean("wps", False),
             install_folder=plugin_folder,
         )
 

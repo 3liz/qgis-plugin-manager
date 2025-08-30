@@ -3,7 +3,16 @@ import os
 from difflib import SequenceMatcher
 from itertools import takewhile
 from pathlib import Path
-from typing import Iterable, Iterator, List, Optional, Union
+from typing import (
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from semver import Version
 
@@ -30,7 +39,7 @@ def restart_qgis_server():
         return
 
 
-def install_prolog():
+def install_epilog():
     # Get current users
     sudo_user = os.environ.get("SUDO_USER")
     user = current_user()
@@ -53,16 +62,6 @@ def similar_names(expected: str, available: Iterable[str]) -> Iterator[str]:
         ratio = SequenceMatcher(None, expected.lower(), item.lower()).ratio()
         if ratio > 0.8:
             yield item
-
-
-def parse_version(version_str: Optional[str]) -> Optional[List[int]]:
-    if version_str is None or version_str == "":
-        return None
-
-    version = [int(i) for i in version_str.split(".")]
-    if len(version) == 2:
-        version.append(0)
-    return version
 
 
 def current_user() -> str:
@@ -100,7 +99,7 @@ def current_user() -> str:
     return "Unknown"
 
 
-def qgis_server_version() -> str:
+def qgis_server_version() -> Optional[str]:
     """Try to guess the QGIS Server version.
 
     On linux distro, qgis python packages are installed at standard location
@@ -114,7 +113,7 @@ def qgis_server_version() -> str:
         echo.alert("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
         echo.info(f"Current user : {current_user()}")
         echo.info(f"PYTHONPATH={os.getenv('PYTHONPATH')}")
-        return ""
+        return None
 
 
 def sources_file(current_folder: Path) -> Path:
@@ -134,13 +133,24 @@ def sources_file(current_folder: Path) -> Path:
 def get_semver_version(version_str: str) -> Version:
     """Ensure that we get a SemvVer compatible version
 
-    Otherwise convert to a compatible SemVer version scheme.
+    QGIS does not enforce plugin version to be SemVer
+    compatible.
+
+    This represents a best effort to convert version strings
+    to compatible SemVer version scheme.
+
     See https://semver.org/
+
+    Examples:
+        2.4.0.1    -> 2.4.0+1
+        23.2a      -> 23.0.0+2a
+        release    -> 0.0.0+release
+        0.6-beta.3 -> 0.6.0-beta.3
     """
     for prefix in ("ver.", "ver", "v.", "v"):
         version_str = version_str.removeprefix(prefix)
 
-    # Check if this is semver
+    # Check if this is SemVer compatible
     try:
         return Version.parse(version_str)
     except Exception:
@@ -148,18 +158,21 @@ def get_semver_version(version_str: str) -> Version:
 
     source_str = version_str
 
-    # Convert to compatible SEMVER version
-
-    # Split at hyphen
+    # Split at hyphen, it may be a prerelease definition
     parts, *pre = version_str.split("-", maxsplit=1)
     pre = f"-{pre[0]}" if pre else ""  # type: ignore [assignment]
 
+    # Split parts of the version string
     parts = parts.split(".", maxsplit=3)  # type: ignore [assignment]
 
+    # Collect at most the three first parts that represent a number up to a
+    # non-decimal parts.
     ver = tuple(takewhile(lambda part: part.isdecimal(), parts[:3]))
+    # Coalesce remaining parts as a build tag if it does not starts
+    # with a dash (like a prerelease tag do)
     rest = ".".join(parts[len(ver) :]) + pre  # type: ignore [operator]
     if rest and not rest.startswith("-"):
-        rest = f"+{rest}"  # Take it as build tag
+        rest = f"+{rest}"
 
     try_again = 2
 
@@ -190,7 +203,7 @@ def get_semver_version(version_str: str) -> Version:
                 raise
 
             def replace(c: str) -> str:
-                return "-" if c == "_" or not c.isalnum() else c
+                return "-" if c == "_" or not c.isalnum() or not c.isascii() else c
 
             # Semver error
             # Replace non hyphen/no alphanumeric characters
@@ -202,3 +215,27 @@ def get_semver_version(version_str: str) -> Version:
 
 def getenv_bool(name: str) -> bool:
     return os.getenv(name, "") in ("t", "true", "y", "yes", "1")
+
+
+T = TypeVar("T")
+
+
+def print_table(seq: Sequence[T], columns: Sequence[Tuple[str, Callable[[T], str]]]):
+    def colw(col: str, key: Callable[[T], str]) -> int:
+        return max(max(len(key(n)) for n in seq), len(col))
+
+    cols = tuple((col, colw(col, key), key) for col, key in columns)
+    echo.echo(" ".join("{:<{}}".format(col, w) for col, w, _ in cols))
+    echo.echo(" ".join(f"{'':-<{w}}" for _, w, _ in cols))
+    for n in seq:
+        echo.echo(" ".join("{:<{}}".format(key(n), w) for _, w, key in cols))
+
+
+def print_json(seq: Iterable[T], columns: Sequence[Tuple[str, Callable[[T], str]]]):
+    import json
+
+    def records():
+        for n in seq:
+            yield {col: key(n) for col, key in columns}
+
+    echo.echo(json.dumps(tuple(records()), indent=4))
