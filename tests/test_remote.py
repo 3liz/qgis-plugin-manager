@@ -47,9 +47,9 @@ def test_plugin_name_with_space_and_tags(fixtures: Path):
     ]
 
     # Test the search
-    assert list(remote.search("foo")) == []
-    assert list(remote.search("dataviz", strict=False)) == ["Data Plotly"]
-    assert list(remote.search("dataplotly", strict=False)) == ["Data Plotly"]
+    assert next(remote.search("foo"), None) is None
+    assert next(remote.search("dataviz", strict=False))[0] == "Data Plotly"
+    assert next(remote.search("dataplotly", strict=False))[0] == "Data Plotly"
 
 
 def test_search_with_space_in_name(fixtures: Path):
@@ -76,7 +76,9 @@ def test_search_with_space_in_name(fixtures: Path):
     ]
 
     # Test the search
-    assert list(remote.search("lizmap", strict=False)) == ["Lizmap", "Lizmap server"]
+    results = remote.search("lizmap",  strict=False)
+    assert next(results)[0] == "Lizmap"
+    assert next(results)[0] == "Lizmap server"
 
 
 def test_qgis_dev_version():
