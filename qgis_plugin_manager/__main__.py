@@ -5,7 +5,9 @@ from argparse import Namespace
 from pathlib import Path
 from typing import (
     Callable,
+    Iterator,
     Optional,
+    Sequence,
 )
 
 from semver import Version
@@ -221,9 +223,11 @@ def list_plugins(args: Namespace):
                         if latest.version <= info.version:
                             continue
                         latest_ver = str(latest.version)
+                        latest_src = latest.source or ""
                     else:
                         latest_ver = "Removed"
-                    yield (info, latest_ver)
+                        latest_src = ""
+                    yield (info, latest_ver, latest_src)
 
             outdated_list = tuple(outdated())
             if not outdated_list:
@@ -240,6 +244,7 @@ def list_plugins(args: Namespace):
                             ("version", lambda n: str(n[0].version)),
                             ("latest", lambda n: n[1]),
                             ("folder", lambda n: n[0].install_folder),
+                            ("source", lambda n: n[2])
                         ),
                     )
                 else:
@@ -250,6 +255,7 @@ def list_plugins(args: Namespace):
                             ("Version", lambda n: str(n[0].version)),
                             ("Latest", lambda n: n[1]),
                             ("Folder", lambda n: install_folder(n[0])),
+                            ("Source", lambda n: n[2]),
                         ),
                     )
         else:
@@ -514,6 +520,12 @@ def plugin_versions_deprecated(args: Namespace):
         "Include pre-release, development and experimental versions. By default,\ndisplay only stable version"
     ),
 )
+@argument(
+    "--format",
+    choices=("columns", "list", "json"),
+    default="columns",
+    help="Select the output format",
+)
 @argument("--deprecated", action="store_true", help="Include deprecated versions")
 def plugin_versions(args: Namespace):
     plugin_versions_impl(args)
@@ -525,12 +537,70 @@ def plugin_versions_impl(args: Namespace):
 
     versions = plugins.get(args.plugin_name)
     if versions:
-        for plugin in versions:
-            if plugin.is_pre() and not args.pre:
-                continue
-            if plugin.deprecated and not args.deprecated:
-                continue
-            echo.echo(f"{args.plugin_name}=={plugin.version}")
+        def results() -> Iterator[Plugin]:
+            for plugin in versions:
+                if plugin.is_pre() and not args.pre:
+                    continue
+                if plugin.deprecated and not args.deprecated:
+                    continue
+                yield plugin
+
+        if args.format == "list":
+            for plugin in results():
+                echo.echo(f"{plugin.name}=={plugin.version}")
+        elif args.format == "json":
+            print_json(
+                results(),
+                (
+                    ("name", lambda p: p.name),
+                    ("version", lambda p: str(p.version)),
+                    ("source", lambda p: p.source),
+                    ("createDate", lambda p: p.create_date),
+                    ("updateDate", lambda p: p.update_date),
+                    ("author", lambda p: p.author_name),
+                    ("qgisMinimumVersion", lambda p: str(p.qgis_minimum_version)),
+                    ("qgisMaximumVersion", lambda p: str(p.qgis_maximum_version)),
+                    ("deprecated", lambda p: p.deprecated),
+                    ("experimental", lambda p: p.experimental),
+                    ("server", lambda p: p.server),
+                    ("tags", lambda p: p.tags),
+                    ("trusted", lambda p: p.trusted),
+                ),
+            )
+        else:
+            from datetime import datetime
+
+            def display_status(p: Plugin) -> str:
+                st: Sequence[str] = ()
+                if p.server:
+                    st = (*st, "S")
+                if p.deprecated:
+                    st = (*st, "D")
+                if p.experimental:
+                    st = (*st, "X")
+                if p.trusted:
+                    st = (*st, "T")
+                return "".join(st)
+
+            def format_date(datestr: Optional[str]) -> str:
+                if datestr:
+                    dt = datetime.fromisoformat(datestr)
+                    return f"{dt:%b %d %Y %H:%M}"
+                else:
+                    return ""
+
+            echo.success(f"{args.plugin_name}\n")
+            print_table(
+                tuple(results()),
+                (
+                    ("Version", lambda p: str(p.version)),
+                    ("QGIS min", lambda p: str(p.qgis_minimum_version or "")),
+                    ("Status", display_status),
+                    ("Source", lambda p: p.source or ""),
+                ),
+            )
+
+            echo.info("\nStatus: S = Server, X = Experimental, D = Deprecated, T = Trusted")
     else:
         echo.alert(f"No versions found for '{args.plugin_name}'")
         cli.exit(1)
@@ -551,9 +621,9 @@ def plugin_versions_impl(args: Namespace):
     """,
 )
 @argument("--deprecated", action="store_true", help="Include deprecated versions")
+@argument("--latest", action="store_true", help="Consider only latest versions")
 def search_plugin(args: Namespace):
     remote = Remote(get_plugin_path(), qgis_server_version())
-    found = False
 
     def pred(p):
         if args.trusted and not p.trusted:
@@ -566,11 +636,18 @@ def search_plugin(args: Namespace):
             return False
         return True
 
-    for result in remote.search(args.plugin_name, predicat=pred):
-        echo.echo(result)
-        found = True
+    found = 0
+    for name, version in remote.search(
+        args.plugin_name,
+        predicat=pred,
+        latest=args.latest
+    ):
+        echo.echo(f"{name}=={version}")
+        found += 1
     if not found:
         echo.info("No plugins found")
+    else:
+        echo.info(f"\nFound {found} plugins")
 
 
 # Check

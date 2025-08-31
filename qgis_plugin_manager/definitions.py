@@ -49,6 +49,7 @@ class Plugin(NamedTuple):
     has_wps: bool = False
     trusted: bool = False
     install_folder: Optional[str] = None
+    source: Optional[str] = None
 
     def is_pre(self) -> bool:
         return self.version.prerelease is not None or self.experimental
@@ -62,8 +63,8 @@ class Plugin(NamedTuple):
             return True
 
     @staticmethod
-    def from_xml_element(elem: Element) -> "Plugin":
-        data: Dict = {}
+    def from_xml_element(elem: Element, source: Optional[str] = None) -> "Plugin":
+        data: Dict = {"source": source}
         for element in elem:
             if element.tag in Plugin._fields:
                 data[element.tag] = element.text

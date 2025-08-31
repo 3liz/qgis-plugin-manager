@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 from itertools import takewhile
 from pathlib import Path
 from typing import (
+    Any,
     Callable,
     Iterable,
     Iterator,
@@ -231,7 +232,7 @@ def print_table(seq: Sequence[T], columns: Sequence[Tuple[str, Callable[[T], str
         echo.echo(" ".join("{:<{}}".format(key(n), w) for _, w, key in cols))
 
 
-def print_json(seq: Iterable[T], columns: Sequence[Tuple[str, Callable[[T], str]]]):
+def print_json(seq: Iterable[T], columns: Sequence[Tuple[str, Callable[[T], Any]]]):
     import json
 
     def records():

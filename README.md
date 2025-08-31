@@ -5,7 +5,10 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/qgis-plugin-manager)](https://pypi.org/project/qgis-plugin-manager/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/qgis-plugin-manager)](https://pypi.org/project/qgis-plugin-manager/)
 
-Mainly designed for QGIS Server plugins, but it works also for desktop.
+A cli tool for handling installed QGIS plugins. 
+
+Mainly designed for managing QGIS Server plugins, it also works for QGIS  desktop
+plugins.
 
 Not tested on Windows.
 
@@ -66,13 +69,14 @@ commands:
     version             Show version informations and exit
     init                Create the `sources.list` with plugins.qgis.org as remote
     list                List all plugins in the directory
-    remote              List all remote server
-    remove              Remove a plugin by its name
-    update              Update all index files
-    upgrade             Upgrade all plugins installed
-    cache               Look for a plugin in the cache
-    search              Search for plugins
     install             Install a plugin
+    remove              Remove a plugin by its name
+    upgrade             Upgrade all plugins installed
+    remotes             List all remote server
+    update              Update all index files
+    versions            Look for available plugin versions
+    search              Search for plugins
+    check               Check compatibility of installed plugins with QGIS version
 ```
 
 ### Init
@@ -134,7 +138,8 @@ $ cat sources.list
 https://plugins.qgis.org/plugins/plugins.xml?qgis=[VERSION]
 ```
 
-`[VERSION]` is a token in the `sources.list` file to be replaced by the QGIS version, for instance `3.34`.
+`[VERSION]` is a token in the `sources.list` file that is  to be replaced by the current QGIS version available on your system (ex: 3.40)
+
 If QGIS is upgraded, the XML file will be updated as well.
 
 You don't have to set the TOKEN for all URL : 
@@ -166,20 +171,19 @@ https-plugins-qgis-org-plugins-plugins-xml-qgis-3-34.xml
 
 ### Versions
 
-Check available versions of a plugin :
+Check available versions of a plugin including prerelease/experimental versions:
 
-```bash
-$ qgis-plugin-manager versions cadastre
-
-cadastre==2.1.1
-```
-
-Check all versions available including prerelease/experimental
 ```bash
 $ qgis-plugin-manager versions cadastre --pre
 
-cadastre==2.1.2-alpha
-cadastre==2.1.1
+cadastre
+
+Version QGIS min Status Source
+------- -------- ------ ------------------------------------------------------
+2.2.0   3.28.0   ST     https://plugins.qgis.org/plugins/plugins.xml?qgis=3.40
+1.6.2   3.0.0    SXT    https://plugins.qgis.org/plugins/plugins.xml?qgis=3.40
+
+Status: S = Server, X = Experimental, D = Deprecated, T = Trusted
 ```
 
 ### Search

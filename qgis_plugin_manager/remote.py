@@ -233,37 +233,29 @@ class Remote:
 
         return flag
 
-    def xml_in_folder(self) -> List[Path]:
-        """Returns the list of XML files in the folder."""
+    def plugin_collection_files(self) -> Iterator[Tuple[str, Path]]:
+        """Returns the list of plugins XML file in the cache folder."""
         cache = self.cache_directory()
-        if not cache.exists():
-            cache.mkdir()
-            echo.info("No cache directory: please run the 'update' command")
-            return []
-
-        xml = []
-        for xml_file in cache.iterdir():
-            if not xml_file.name.endswith(".xml"):
-                continue
-
-            xml.append(xml_file)
-
-        return xml
+        for source in self.list:
+            coll = self.server_cache_filename(cache, source)
+            if not coll.exists():
+                raise PluginManagerError("File cache missing: please run the 'update' command")
+            yield source, coll
 
     def available_plugins(self) -> PluginDict:
         """Populates the list of available plugins, in all XML files."""
         if not self._list_plugins:
-            for xml_file in self.xml_in_folder():
-                self._parse_xml(xml_file, self._list_plugins)
+            for source, xml_file in self.plugin_collection_files():
+                self._parse_xml(xml_file, self._list_plugins, source)
         return self._list_plugins
 
-    def _parse_xml(self, xml_file: Path, plugins: PluginDict):
+    def _parse_xml(self, xml_file: Path, plugins: PluginDict, source: Optional[str] = None):
         """Parse the given XML file."""
 
         tree = parse(xml_file.absolute())
         root = tree.getroot()
         for elem in root:
-            plugin = Plugin.from_xml_element(elem)
+            plugin = Plugin.from_xml_element(elem, source)
 
             name = plugin.name
             versions = plugins.get(name)
@@ -297,7 +289,8 @@ class Remote:
         search_string: str,
         strict: bool = True,
         predicat: Optional[Callable[[Plugin], bool]] = None,
-    ) -> Iterator[str]:
+        latest: bool = False,
+    ) -> Iterator[Tuple[str, Version]]:
         """Search in plugin names and tags."""
         # strict is used in tests to not check if the remote is ready
         if strict and not self.check_remote_cache():
@@ -307,17 +300,16 @@ class Remote:
 
         results = set()
         for plugin_name, versions in self._list_plugins.items():
-            found = plugin_name in results
-            if not found:
+            if plugin_name not in results:
                 for plugin in versions:
                     if predicat is not None and not predicat(plugin):
                         continue
                     if next(similar_names(search_string, plugin.search), None):
-                        found = True
                         results.add(plugin_name)
+                        yield plugin.name, plugin.version
                         break
-                if found:
-                    yield plugin_name
+                    if latest:  # Don't look at previous versions
+                        break
 
     def check_similar_names(self, name: str) -> Iterator[str]:
         yield from similar_names(name, self._list_plugins.keys())
@@ -481,17 +473,8 @@ class Remote:
     @staticmethod
     def server_cache_filename(cache_folder: Path, server: str) -> Path:
         """Return the path for XML file."""
-        server, login, _ = Remote.credentials(server)
-        filename = ""
-        for x in server:
-            if x.isalnum():
-                filename += x
-            else:
-                filename += "-"
-
+        filename = "".join(x if x.isalnum() else "-" for x in server)
         filename = re.sub(r"\-+", "-", filename)
-        if login:
-            filename += "-protected"
         return cache_folder.joinpath(f"{filename}.xml")
 
     @classmethod
