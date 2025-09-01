@@ -97,12 +97,12 @@ List all plugins installed :
 ```bash
 $ qgis-plugin-manager list
 
-Name                           Version              Folder
------------------------------- -------------------- ------
-Lizmap server                  2.13.1               lizmap_server
-atlasprint                     3.4.3                
-cadastre                       2.1.1                
-wfsOutputExtension             1.8.3 
+Name               Version Folder
+------------------ ------- -------------
+Lizmap server      2.13.1  lizmap_server
+atlasprint         3.4.3                
+cadastre           2.1.1                
+wfsOutputExtension 1.8.3 
 ```
 
 List outdated plugins including prerelease/experimental versions
@@ -111,10 +111,10 @@ List outdated plugins including prerelease/experimental versions
 ```bash
 $ qgis-plugin-manager list --outdated --pre
 
-Name                           Version              Latest               Folder
------------------------------- -------------------- -------------------- ------
-Lizmap server                  2.13.1               2.13.2-alpha         lizmap_server
-cadastre                       2.1.1                2.1.2-alpha            
+Name          Version Latest       Folder
+------------- ------- ------------ -------------
+Lizmap server 2.13.1  2.13.2-alpha lizmap_server
+cadastre      2.1.1   2.1.2-alpha            
 ```
 
 

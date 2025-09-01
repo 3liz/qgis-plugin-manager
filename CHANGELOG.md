@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## 1.7.0 - 2025-09-01
+
 ### Added
 
 * Added 'check' command for checking QGIS compatibility of installed plugins 
