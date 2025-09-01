@@ -142,6 +142,7 @@ def show_version(args):
                     "QGIS_PLUGIN_MANAGER_SOURCES_FILE",
                     "QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE",
                     "QGIS_PLUGIN_MANAGER_QGIS_VERSION",
+                    "QGIS_PLUGIN_MANAGER_DEFAULT_SOURCE_URL",
                     "QGSRV_SERVER_PLUGINPATH",
                 )
             ),
@@ -166,8 +167,7 @@ def init_sources(args: Namespace):
         qgis_version = qgis_server_version()
 
     plugin_path = get_plugin_path()
-    plugins = LocalDirectory(plugin_path)
-    if plugins.init(qgis_version) and args.update:
+    if Remote.create_sources_file(plugin_path, qgis_version) and args.update:
         remote = Remote(plugin_path, qgis_version or qgis_server_version())
         if not remote.update():
             cli.exit(1)

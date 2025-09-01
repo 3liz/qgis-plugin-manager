@@ -42,6 +42,9 @@ class SourcesNotFoundError(PluginManagerError):
     pass
 
 
+DEFAULT_SOURCE_URL = "https://plugins.qgis.org/plugins/plugins.xml?qgis={version}"
+
+
 class Remote:
     def __init__(self, folder: Path, qgis_version: Optional[str] = None):
         """Constructor."""
@@ -52,6 +55,39 @@ class Remote:
         self._list_plugins: PluginDict = {}
 
         self.list_remote()
+
+    @staticmethod
+    def create_sources_file(folder: Path, qgis_version: Optional[str]) -> bool:
+        """Init this qgis-plugin-manager by creating the default sources.list."""
+        source_file = sources_file(folder)
+        if source_file.exists():
+            echo.alert(f"{source_file.absolute()} is already existing. Quit")
+            return False
+
+        if qgis_version:
+            try:
+                ver = get_semver_version(qgis_version)
+                version = f"{ver.major}.{ver.minor}"
+            except ValueError:
+                raise PluginManagerError(f"{qgis_version} is not a valid QGIS version") from None
+        else:
+            version = "[VERSION]"
+
+        server = os.getenv(
+            "QGIS_PLUGIN_MANAGER_DEFAULT_SOURCE_URL",
+            DEFAULT_SOURCE_URL,
+        ).format(version=version)
+
+        try:
+            with open(source_file, "w", encoding="utf8") as f:
+                print(server, file=f)
+        except PermissionError:
+            # https://github.com/3liz/qgis-plugin-manager/issues/53
+            echo.critical("The directory is not writable.")
+            return False
+
+        echo.info(f"{source_file.absolute()} has been written.")
+        return True
 
     def user_agent(self) -> str:
         """User agent."""

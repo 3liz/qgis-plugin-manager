@@ -29,18 +29,15 @@ def cli_plugindir(rootdir: Path) -> Path:
 @pytest.fixture(scope="module")
 def cli_setup_cache(rootdir: Path, cli_plugindir: Path):
     workdir = cli_plugindir
-    cachedir = workdir.joinpath(".cache")
     os.environ["QGIS_PLUGINPATH"] = str(workdir)
-    os.environ["QGIS_PLUGIN_MANAGER_CACHE_DIR"] = str(cachedir)
     workdir.mkdir(exist_ok=True)
 
     plugin_path = get_plugin_path()
     assert plugin_path == workdir
 
     # Cleanup plugin folders
-    localdir = LocalDirectory(plugin_path)
-
     if getenv_bool("CI_CLI_TESTS_REMOVE_PLUGINS"):
+        localdir = LocalDirectory(plugin_path)
         for folder in localdir.plugin_list():
             path = cli_plugindir.joinpath(folder)
             if path.exists():
@@ -48,15 +45,15 @@ def cli_setup_cache(rootdir: Path, cli_plugindir: Path):
                 shutil.rmtree(path)
 
     if not workdir.joinpath("sources.list").exists():
-        localdir.init(None)
-    if not cachedir.exists():
-        remote = Remote(plugin_path, qgis_server_version() or "3.40")
+        Remote.create_sources_file(workdir, None)
+
+    remote = Remote(plugin_path, qgis_server_version() or "3.40")
+    if not remote.cache_directory().exists():
         remote.update()
 
     yield
 
     del os.environ["QGIS_PLUGINPATH"]
-    del os.environ["QGIS_PLUGIN_MANAGER_CACHE_DIR"]
 
 
 @pytest.fixture

@@ -12,22 +12,15 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
-    Union,
 )
 
 from semver import Version
 
 from qgis_plugin_manager import echo
 
-DEFAULT_REMOTE_REPOSITORY = "https://plugins.qgis.org"
-
 
 class PluginManagerError(Exception):
     pass
-
-
-def get_default_remote_repository() -> str:
-    return os.getenv("QGIS_PLUGIN_MANAGER_REMOTE_REPOSITORY", DEFAULT_REMOTE_REPOSITORY)
 
 
 def restart_qgis_server():
@@ -41,15 +34,8 @@ def restart_qgis_server():
 
 
 def install_epilog():
-    # Get current users
-    sudo_user = os.environ.get("SUDO_USER")
-    user = current_user()
     # Installation done !
-    if sudo_user:
-        echo.info(f"\nPlugin(s) Installed with super user '{user}'")
-    else:
-        echo.info(f"\nPlugin(s) Installed with user '{user}'")
-
+    echo.info("\nInstallation done...")
     echo.info(
         "Note: check file permissions and owner according to the user running QGIS Server.",
     )
@@ -59,45 +45,11 @@ def install_epilog():
 
 def similar_names(expected: str, available: Iterable[str]) -> Iterator[str]:
     """Returns a list of similar names available."""
+    matcher = SequenceMatcher(None, expected.lower())
     for item in available:
-        ratio = SequenceMatcher(None, expected.lower(), item.lower()).ratio()
-        if ratio > 0.8:
+        matcher.set_seq2(item.lower())
+        if matcher.ratio() > 0.8:
             yield item
-
-
-def current_user() -> str:
-    """Return the current user if possible."""
-    import getpass
-
-    user: Optional[Union[str, int]] = None
-
-    try:
-        user = getpass.getuser()
-        if user:
-            return user
-    except KeyError:
-        pass
-
-    try:
-        user = os.getlogin()
-        if user:
-            return user
-    except OSError:
-        pass
-
-    user = os.getegid()
-    if user:
-        return str(user)
-
-    user = os.environ.get("USER")
-    if user:
-        return user
-
-    user = os.environ.get("UID")
-    if user:
-        return user
-
-    return "Unknown"
 
 
 def qgis_server_version() -> Optional[str]:
@@ -155,7 +107,7 @@ def get_semver_version(version_str: str) -> Version:
     # Check if this is SemVer compatible
     try:
         return Version.parse(version_str)
-    except Exception:
+    except ValueError:
         pass
 
     source_str = version_str
@@ -200,7 +152,7 @@ def get_semver_version(version_str: str) -> Version:
                     source_str,
                 )
             break
-        except Exception:
+        except ValueError:
             if not try_again:
                 raise
 

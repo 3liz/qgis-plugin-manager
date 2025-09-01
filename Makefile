@@ -18,7 +18,7 @@ install:
 install-dev:
 	pip install -U --upgrade-strategy=eager -r requirements-dev.txt
 
-test:
+test: lint typing
 	$(MAKE) -C tests
 
 lint:
