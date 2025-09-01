@@ -114,8 +114,6 @@ def qgis_server_version() -> Optional[str]:
             qgis_version = Qgis.QGIS_VERSION.split("-")[0]
         except ImportError:
             echo.alert("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
-            echo.info(f"Current user : {current_user()}")
-            echo.info(f"PYTHONPATH={os.getenv('PYTHONPATH')}")
 
     return qgis_version
 

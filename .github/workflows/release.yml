@@ -42,7 +42,8 @@ jobs:
       working-directory: tests
       run: |
         export PYTHONPATH="${{ github.workspace }}"
-        pytest -sv
+        export QGIS_PLUGIN_MANAGER_QGIS_VERSION=3.40
+        pytest -v
 
   ruff:
     name: "❄ Ruff"
