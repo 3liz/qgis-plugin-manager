@@ -59,7 +59,6 @@ def cli_setup_cache(rootdir: Path, cli_plugindir: Path):
     del os.environ["QGIS_PLUGIN_MANAGER_CACHE_DIR"]
 
 
-
 @pytest.fixture
 def cli_output(cli_setup_cache: None) -> StringIO:
     buf = StringIO()

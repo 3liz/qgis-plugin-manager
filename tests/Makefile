@@ -4,4 +4,4 @@ test:
 	pytest -v
 
 clean:
-	rm -rf $$(pwd)/.artifacts
+	rm -rf $$(pwd)/.cli_artifacts

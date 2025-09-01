@@ -42,7 +42,7 @@ jobs:
       working-directory: tests
       run: |
         export PYTHONPATH="${{ github.workspace }}"
-        pytest -v
+        pytest -sv
 
   ruff:
     name: "❄ Ruff"

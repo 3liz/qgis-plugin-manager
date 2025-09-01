@@ -204,7 +204,7 @@ def list_plugins(args: Namespace):
 
     if not (args.outdated_target is None or args.outdated):
         echo.critical("'outdated-target' option is only usable with the '--outdated' option")
-        exit(1)
+        cli.exit(1)
 
     plugins = LocalDirectory(get_plugin_path())
 
@@ -274,10 +274,10 @@ def list_plugins(args: Namespace):
                     ("Source", lambda n: n[2]),
                 ),
             )
-            
+
         if not outdated_list:
             echo.alert("No outdated plugins")
-        
+
     else:
         if args.format == "list":
             for info in infos():
@@ -356,7 +356,7 @@ def install_plugin(args: Namespace):
             plugin_version = parameter[1]
             if not plugin_version:
                 echo.critical("Missing version")
-                exit(1)
+                cli.exit(1)
         else:
             plugin_version = None
 
@@ -384,7 +384,6 @@ def install_plugin(args: Namespace):
                 include_deprecated=args.deprecated,
                 fix_permissions=args.fix_permissions,
             )
-
         except PluginNotFoundError:
             similars = remote.check_similar_names(plugin_name)
             name = next(similars, None)
@@ -515,11 +514,7 @@ def list_remote_servers(args: Namespace):
 @command("update", help="Update all index files")
 def update_index(args: Namespace):
     remote = Remote(get_plugin_path(), qgis_server_version())
-    try:
-        remote.update()
-    except SourcesNotFoundError:
-        echo.alert("No remote source found, maybe your forgot to run 'init'")
-        cli.exit(1)
+    remote.update()
 
 
 # Cache (Deprecated)
@@ -688,12 +683,12 @@ def check_qgis_compat(args: Namespace):
     def get_version() -> Version:
         ver = args.version if args.version else qgis_server_version()
         if not ver:
-            exit(1)
+            cli.exit(1)
         try:
             return get_semver_version(ver)
         except Exception as e:
             echo.critical(f"{e}")
-            exit(1)
+            cli.exit(1)
 
     version = get_version()
 
@@ -743,8 +738,12 @@ def main() -> None:
         echo.set_verbose_mode(args.verbose)
         try:
             args.func(args)
+        except SourcesNotFoundError:
+            echo.alert("No remote sources found, maybe your forgot to run 'init'")
+            cli.exit(1)
         except PluginManagerError as e:
             echo.critical(f"{e}")
+            cli.exit(1)
 
 
 if __name__ == "__main__":

@@ -47,7 +47,6 @@ class Remote:
         """Constructor."""
         self.folder = folder
         self.list: List[str] = []
-        self.setting_error = False
         self.qgis_version = qgis_version
 
         self._list_plugins: PluginDict = {}
@@ -65,31 +64,6 @@ class Remote:
 
         qgis_version = qgis_version.replace(".", "")
         return f"Mozilla/5.0 QGIS/{self.qgis_version}/{platform.system()}"
-
-    def check_remote_cache(self) -> bool:
-        """Return if the remote is ready to be parsed."""
-        source_list = sources_file(self.folder)
-        if not source_list.exists():
-            if not self.setting_error:
-                echo.critical(f"The {source_list.absolute()} file does not exist")
-                echo.info("Use the 'init' command to create the file")
-                self.setting_error = True
-                return False
-
-        cache = self.cache_directory()
-        for server in self.list:
-            filename = self.server_cache_filename(cache, server)
-
-            if not filename.exists():
-                if not self.setting_error:
-                    echo.critical(
-                        "The 'update' command has not been done before. "
-                        f"The repository {server} has not been fetched before."
-                    )
-                    self.setting_error = True
-                    return False
-
-        return True
 
     def remote_list(self) -> list:
         return self.list
@@ -140,7 +114,7 @@ class Remote:
         if env_path:
             return Path(env_path)
 
-        return Path(self.folder / ".cache_qgis_plugin_manager")
+        return self.folder.joinpath(".cache_qgis_plugin_manager")
 
     def print_list(self):
         """Print in the console the list of remotes."""
@@ -229,6 +203,8 @@ class Remote:
     def available_plugins(self) -> PluginDict:
         """Populates the list of available plugins, in all XML files."""
         if not self._list_plugins:
+            if not self.list:
+                raise SourcesNotFoundError()
             for source, xml_file in self.plugin_collection_files():
                 self._parse_xml(xml_file, self._list_plugins, source)
         return self._list_plugins
@@ -271,15 +247,10 @@ class Remote:
     def search(
         self,
         search_string: str,
-        strict: bool = True,
         predicat: Optional[Callable[[Plugin], bool]] = None,
         latest: bool = False,
     ) -> Iterator[Tuple[str, Version]]:
         """Search in plugin names and tags."""
-        # strict is used in tests to not check if the remote is ready
-        if strict and not self.check_remote_cache():
-            return
-
         self.available_plugins()
 
         results = set()
@@ -313,12 +284,6 @@ class Remote:
         Default version is latest.
         """
         self.available_plugins()
-
-        if not self.check_remote_cache():
-            raise PluginManagerError("No remote data")
-
-        if not self._list_plugins:
-            raise PluginManagerError("No available plugins")
 
         plugin = None
 

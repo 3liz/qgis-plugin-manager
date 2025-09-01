@@ -48,8 +48,8 @@ def test_plugin_name_with_space_and_tags(fixtures: Path):
 
     # Test the search
     assert next(remote.search("foo"), None) is None
-    assert next(remote.search("dataviz", strict=False))[0] == "Data Plotly"
-    assert next(remote.search("dataplotly", strict=False))[0] == "Data Plotly"
+    assert next(remote.search("dataviz"))[0] == "Data Plotly"
+    assert next(remote.search("dataplotly"))[0] == "Data Plotly"
 
 
 def test_search_with_space_in_name(fixtures: Path):
@@ -76,7 +76,7 @@ def test_search_with_space_in_name(fixtures: Path):
     ]
 
     # Test the search
-    results = remote.search("lizmap", strict=False)
+    results = remote.search("lizmap")
     assert next(results)[0] == "Lizmap"
     assert next(results)[0] == "Lizmap server"
 
