@@ -244,7 +244,7 @@ def list_plugins(args: Namespace):
                             ("version", lambda n: str(n[0].version)),
                             ("latest", lambda n: n[1]),
                             ("folder", lambda n: n[0].install_folder),
-                            ("source", lambda n: n[2])
+                            ("source", lambda n: n[2]),
                         ),
                     )
                 else:
@@ -537,6 +537,7 @@ def plugin_versions_impl(args: Namespace):
 
     versions = plugins.get(args.plugin_name)
     if versions:
+
         def results() -> Iterator[Plugin]:
             for plugin in versions:
                 if plugin.is_pre() and not args.pre:
@@ -637,11 +638,7 @@ def search_plugin(args: Namespace):
         return True
 
     found = 0
-    for name, version in remote.search(
-        args.plugin_name,
-        predicat=pred,
-        latest=args.latest
-    ):
+    for name, version in remote.search(args.plugin_name, predicat=pred, latest=args.latest):
         echo.echo(f"{name}=={version}")
         found += 1
     if not found:

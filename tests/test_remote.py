@@ -76,7 +76,7 @@ def test_search_with_space_in_name(fixtures: Path):
     ]
 
     # Test the search
-    results = remote.search("lizmap",  strict=False)
+    results = remote.search("lizmap", strict=False)
     assert next(results)[0] == "Lizmap"
     assert next(results)[0] == "Lizmap server"
 

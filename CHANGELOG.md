@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+
+* Handle empty sequence in 'print_table'
 
 ## 1.7.0 - 2025-09-01
 

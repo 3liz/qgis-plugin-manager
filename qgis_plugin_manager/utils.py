@@ -223,7 +223,7 @@ T = TypeVar("T")
 
 def print_table(seq: Sequence[T], columns: Sequence[Tuple[str, Callable[[T], str]]]):
     def colw(col: str, key: Callable[[T], str]) -> int:
-        return max(max(len(key(n)) for n in seq), len(col))
+        return max(max((len(key(n)) for n in seq), default=0), len(col))
 
     cols = tuple((col, colw(col, key), key) for col, key in columns)
     echo.echo(" ".join("{:<{}}".format(col, w) for col, w, _ in cols))
