@@ -36,7 +36,8 @@ class LocalDirectory:
 
         if qgis_version:
             try:
-                version: Optional[str] = str(get_semver_version(qgis_version))
+                ver = get_semver_version(qgis_version)
+                version = f"{ver.major}.{ver.minor}"
             except Exception:
                 raise PluginManagerError(f"{qgis_version} is not a valid QGIS version") from None
         else:
