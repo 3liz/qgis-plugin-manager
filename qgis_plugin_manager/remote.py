@@ -27,7 +27,6 @@ from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.utils import (
     PluginManagerError,
     get_semver_version,
-    getenv_bool,
     similar_names,
     sources_file,
 )
@@ -36,6 +35,10 @@ PluginDict = Dict[str, Tuple[Plugin, ...]]
 
 
 class PluginNotFoundError(PluginManagerError):
+    pass
+
+
+class SourcesNotFoundError(PluginManagerError):
     pass
 
 
@@ -65,9 +68,6 @@ class Remote:
 
     def check_remote_cache(self) -> bool:
         """Return if the remote is ready to be parsed."""
-        if getenv_bool("QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE"):
-            return True
-
         source_list = sources_file(self.folder)
         if not source_list.exists():
             if not self.setting_error:
@@ -176,28 +176,21 @@ class Remote:
             plugin = None
         return plugin
 
-    def update(self) -> bool:
+    def update(self):
         """For each remote, it updates the XML file."""
 
         # Clear plugin list
         self._list_plugins = {}
 
         if not self.list:
-            echo.critical("\tNo remote found.")
-            return False
+            raise SourcesNotFoundError()
 
         cache = self.cache_directory()
         if cache.exists():
-            try:
-                shutil.rmtree(cache)
-            except OSError as e:
-                # https://github.com/3liz/qgis-plugin-manager/issues/53
-                echo.critical(f"{e}")
-                return False
+            shutil.rmtree(cache)
 
         cache.mkdir()
 
-        flag = False
         for server in self.list:
             echo.info(f"Downloading {self.public_remote_name(server)}…")
             url, login, password = self.credentials(server)
@@ -219,19 +212,10 @@ class Remote:
 
             filename = self.server_cache_filename(cache, server)
 
-            # Binary mode does not support encoding parameter
-            try:
-                with open(filename, "wb") as output:
-                    output.write(f.read())
-            except PermissionError:
-                # https://github.com/3liz/qgis-plugin-manager/issues/53
-                echo.critical("The directory is not writable.")
-                return False
+            with open(filename, "wb") as output:
+                output.write(f.read())
 
             echo.success("\tOk")
-            flag = True
-
-        return flag
 
     def plugin_collection_files(self) -> Iterator[Tuple[str, Path]]:
         """Returns the list of plugins XML file in the cache folder."""

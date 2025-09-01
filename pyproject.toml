@@ -66,6 +66,7 @@ target-version = "py38"
 exclude = [
     ".venv",
     ".local",
+    "tests/.*",
 ]
 
 [tool.ruff.format]

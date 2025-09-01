@@ -30,7 +30,6 @@ QGIS-Plugin-Manager will take care of following variables :
 
 * `QGIS_PLUGIN_MANAGER_SOURCES_FILE` for storing a path to the `sources.list` otherwise, the current folder will be used.
 * `QGIS_PLUGIN_MANAGER_CACHE_DIR` for storing all XML files downloaded otherwise, the current folder will be used `.cache_qgis_plugin_manager`
-* `QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE`, boolean when we do not need a `sources.list` file, for instance to list plugins only
 * `QGIS_PLUGIN_MANAGER_RESTART_FILE`, path where the file must be created if QGIS server needs to be restarted.
 * `QGIS_PLUGIN_MANAGER_INCLUDE_PRERELEASE`, boolean for including prerelease, development 
 or experimental versions of plugins.

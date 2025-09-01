@@ -19,7 +19,7 @@ install-dev:
 	pip install -U --upgrade-strategy=eager -r requirements-dev.txt
 
 test:
-	cd $(TESTDIR) && pytest -v
+	$(MAKE) -C tests
 
 lint:
 	@ruff check --output-format=concise $(PYTHON_PKG) $(TESTDIR)

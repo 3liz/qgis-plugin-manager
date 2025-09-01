@@ -106,15 +106,18 @@ def qgis_server_version() -> Optional[str]:
     On linux distro, qgis python packages are installed at standard location
     in /usr/lib/python3/dist-packages
     """
-    try:
-        from qgis.core import Qgis
+    qgis_version = os.getenv("QGIS_PLUGIN_MANAGER_QGIS_VERSION")
+    if qgis_version is None:
+        try:
+            from qgis.core import Qgis
 
-        return Qgis.QGIS_VERSION.split("-")[0]
-    except ImportError:
-        echo.alert("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
-        echo.info(f"Current user : {current_user()}")
-        echo.info(f"PYTHONPATH={os.getenv('PYTHONPATH')}")
-        return None
+            qgis_version = Qgis.QGIS_VERSION.split("-")[0]
+        except ImportError:
+            echo.alert("Cannot check version with PyQGIS, check your QGIS installation or your PYTHONPATH")
+            echo.info(f"Current user : {current_user()}")
+            echo.info(f"PYTHONPATH={os.getenv('PYTHONPATH')}")
+
+    return qgis_version
 
 
 def sources_file(current_folder: Path) -> Path:
@@ -215,7 +218,7 @@ def get_semver_version(version_str: str) -> Version:
 
 
 def getenv_bool(name: str) -> bool:
-    return os.getenv(name, "") in ("t", "true", "y", "yes", "1")
+    return os.getenv(name, "").lower() in ("t", "true", "y", "yes", "1")
 
 
 T = TypeVar("T")

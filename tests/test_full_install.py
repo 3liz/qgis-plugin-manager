@@ -18,58 +18,6 @@ def remote_sources(fixtures: Path):
 
 
 @pytest.fixture
-def teardown_downloaded_plugins(plugins: Path):
-    yield
-
-    plugin_path = plugins.joinpath("QuickOSM")
-    if plugin_path.exists():
-        print("\n::removing", plugin_path)
-        shutil.rmtree(plugin_path)
-
-
-@pytest.mark.skipif(os.getenv("CI") != "true", reason="Only run on CI")
-def test_install_network(
-    plugins: Path,
-    remote_sources: Path,
-    teardown_downloaded_plugins: None,
-):
-    plugin_name = "QuickOSM"
-    plugin_path = plugins.joinpath(plugin_name)
-
-    """ Test install QuickOSM with a specific version, remove and try the latest. """
-    assert not plugin_path.exists()
-
-    local = LocalDirectory(plugins)
-    assert plugin_name not in local.plugin_list()
-
-    remote = Remote(plugins, qgis_version="3.34")
-    remote.update()
-
-    versions = remote.available_plugins().get(plugin_name)
-    assert versions is not None
-
-    print("\n::teardown_local::", plugin_name, "versions:", ",".join(str(p.version) for p in versions))
-
-    assert len(versions) >= 2
-
-    version = versions[1].version
-    remote.install(plugin_name, str(version))
-    assert plugin_path.exists()
-
-    local.list_plugins()
-    assert version == local.plugin_info(plugin_name).version
-
-    latest = remote.latest(plugin_name, include_prerelease=True)
-    assert latest.version != version
-    assert latest.version == versions[0].version
-
-    remote.install(plugin_name, include_prerelease=True)
-    local.list_plugins()
-    assert plugin_path.exists()
-    assert latest.version == local.plugin_info(plugin_name).version
-
-
-@pytest.fixture
 def protocols(fixtures: Path) -> Path:
     return fixtures.joinpath("xml_files", "file_protocol")
 

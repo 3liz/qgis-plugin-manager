@@ -2,11 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+* Allow overriding/faking QGIS installation with the 
+  `QGIS_PLUGIN_MANAGER_QGIS_VERSION` environment variable.
+
+### Changed
+
+* Removed the needs for `QGIS_PLUGIN_MANAGER_SKIP_SOURCES_FILE`
+* Deprecate the `freeze` format in `list` command
+* List's `list` format output the installed plugin version or the
+  latest plugin version with the `--outdated` option.
+
 ## 1.7.1 - 2025-09-01
 
 ### Fixed
 
-* Handle empty sequence in 'print_table'
+* Handle empty sequence in `print_table`
 
 ## 1.7.0 - 2025-09-01
 
