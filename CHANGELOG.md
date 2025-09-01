@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.7.1 - 2025-09-01
+
 ### Fixed
 
 * Handle empty sequence in 'print_table'
