@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.7.2
+
 ### Added
 
 * Allow overriding/faking QGIS installation with the 
@@ -13,6 +15,10 @@
 * Deprecate the `freeze` format in `list` command
 * List's `list` format output the installed plugin version or the
   latest plugin version with the `--outdated` option.
+
+### Fixed
+
+* Fix request for specific plugin version.
 
 ## 1.7.1 - 2025-09-01
 
