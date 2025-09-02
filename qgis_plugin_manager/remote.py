@@ -306,7 +306,7 @@ class Remote:
         search_string: str,
         predicat: Optional[Callable[[Plugin], bool]] = None,
         latest: bool = False,
-    ) -> Iterator[Tuple[str, Version]]:
+    ) -> Iterator[Plugin]:
         """Search in plugin names and tags."""
         self.available_plugins()
 
@@ -318,7 +318,7 @@ class Remote:
                         continue
                     if next(similar_names(search_string, plugin.search), None):
                         results.add(plugin_name)
-                        yield plugin.name, plugin.version
+                        yield plugin
                         break
                     if latest:  # Don't look at previous versions
                         break

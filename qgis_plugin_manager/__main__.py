@@ -187,8 +187,8 @@ def init_sources(args: Namespace):
 )
 @argument(
     "--format",
-    choices=("columns", "freeze", "list", "json"),
-    default="columns",
+    choices=("table", "columns", "freeze", "list", "json"),
+    default="table",
     help="Select the output format",
 )
 @argument(
@@ -240,7 +240,7 @@ def list_plugins(args: Namespace):
                 if latest:
                     if latest.version <= info.version:
                         continue
-                    latest_ver = str(latest.version)
+                    latest_ver = latest.version_str
                     latest_src = latest.source or ""
                 else:
                     latest_ver = "Removed"
@@ -258,7 +258,7 @@ def list_plugins(args: Namespace):
                 outdated_list,
                 (
                     ("name", lambda n: n[0].name),
-                    ("version", lambda n: str(n[0].version)),
+                    ("version", lambda n:n[0].version_str),
                     ("latest", lambda n: n[1]),
                     ("folder", lambda n: n[0].install_folder),
                     ("source", lambda n: n[2]),
@@ -269,7 +269,7 @@ def list_plugins(args: Namespace):
                 outdated_list,
                 (
                     ("Name", lambda n: n[0].name),
-                    ("Version", lambda n: str(n[0].version)),
+                    ("Version", lambda n:n[0].version_str),
                     ("Latest", lambda n: n[1]),
                     ("Folder", lambda n: install_folder(n[0])),
                     ("Source", lambda n: n[2]),
@@ -282,13 +282,13 @@ def list_plugins(args: Namespace):
     else:
         if args.format == "list":
             for info in infos():
-                echo.echo(f"{info.name}=={info.version}")
+                echo.echo(f"{info.name}=={info.version_str}")
         elif args.format == "json":
             print_json(
                 infos(),
                 (
                     ("name", lambda p: p.name),
-                    ("version", lambda p: str(p.version)),
+                    ("version", lambda p: p.version_str),
                     ("folder", lambda p: p.install_folder),
                 ),
             )
@@ -297,7 +297,7 @@ def list_plugins(args: Namespace):
                 tuple(infos()),
                 (
                     ("Name", lambda p: p.name),
-                    ("Version", lambda p: str(p.version)),
+                    ("Version", lambda p: p.version_str),
                     ("Folder", install_folder),
                 ),
             )
@@ -474,7 +474,7 @@ def upgrade_plugins(args: Namespace):
         if not args.force:
             latest = remote.latest(plugin_info.name, args.pre, args.deprecated)
             if latest and latest.version == plugin_info.version:
-                echo.success(f"\t\u274e {plugin_info.name:<25} {plugin_info.version!s:<12}\tUnchanged")
+                echo.success(f"\t\u274e {plugin_info.name:<25} {plugin_info.version_str:<12}\tUnchanged")
                 continue
             elif latest is None:
                 echo.alert(f"\t\u26a0\ufe0f {plugin_info.name}\tRemoved from repository")
@@ -547,8 +547,8 @@ def plugin_versions_deprecated(args: Namespace):
 )
 @argument(
     "--format",
-    choices=("columns", "list", "json"),
-    default="columns",
+    choices=("table", "columns", "list", "json"),
+    default="table",
     help="Select the output format",
 )
 @argument("--deprecated", action="store_true", help="Include deprecated versions")
@@ -573,13 +573,13 @@ def plugin_versions_impl(args: Namespace):
 
         if args.format == "list":
             for plugin in results():
-                echo.echo(f"{plugin.name}=={plugin.version}")
+                echo.echo(f"{plugin.name}=={plugin.version_str}")
         elif args.format == "json":
             print_json(
                 results(),
                 (
                     ("name", lambda p: p.name),
-                    ("version", lambda p: str(p.version)),
+                    ("version", lambda p: p.version_str),
                     ("source", lambda p: p.source),
                     ("createDate", lambda p: p.create_date),
                     ("updateDate", lambda p: p.update_date),
@@ -594,8 +594,6 @@ def plugin_versions_impl(args: Namespace):
                 ),
             )
         else:
-            from datetime import datetime
-
             def display_status(p: Plugin) -> str:
                 st: Sequence[str] = ()
                 if p.server:
@@ -608,18 +606,11 @@ def plugin_versions_impl(args: Namespace):
                     st = (*st, "T")
                 return "".join(st)
 
-            def format_date(datestr: Optional[str]) -> str:
-                if datestr:
-                    dt = datetime.fromisoformat(datestr)
-                    return f"{dt:%b %d %Y %H:%M}"
-                else:
-                    return ""
-
             echo.success(f"{args.plugin_name}\n")
             print_table(
                 tuple(results()),
                 (
-                    ("Version", lambda p: str(p.version)),
+                    ("Version", lambda p: p.version_str),
                     ("QGIS min", lambda p: str(p.qgis_minimum_version or "")),
                     ("Status", display_status),
                     ("Source", lambda p: p.source or ""),
@@ -663,9 +654,10 @@ def search_plugin(args: Namespace):
         return True
 
     found = 0
-    for name, version in remote.search(args.plugin_name, predicat=pred, latest=args.latest):
-        echo.echo(f"{name}=={version}")
+    for plugin in remote.search(args.plugin_name, predicat=pred, latest=args.latest):
+        echo.echo(f"{plugin.name}=={plugin.version_str}")
         found += 1
+
     if not found:
         echo.info("No plugins found")
     else:
@@ -677,8 +669,8 @@ def search_plugin(args: Namespace):
 @argument("-v", "--version", help="QGIS version to check against")
 @argument(
     "--format",
-    choices=("columns", "json"),
-    default="columns",
+    choices=("table", "columns", "json"),
+    default="table",
     help="Select the output format",
 )
 def check_qgis_compat(args: Namespace):
@@ -714,7 +706,7 @@ def check_qgis_compat(args: Namespace):
             infos(),
             (
                 ("name", lambda p: p.name),
-                ("version", lambda p: str(p.version)),
+                ("version", lambda p: p.version_str),
                 ("qgisVersion", lambda _: str(version)),
                 ("canUse", lambda p: p.check_qgis_version(version)),
             ),
@@ -724,7 +716,7 @@ def check_qgis_compat(args: Namespace):
             tuple(infos()),
             (
                 ("Name", lambda p: p.name),
-                ("Version", lambda p: str(p.version)),
+                ("Version", lambda p: p.version_str),
                 (
                     f"QGIS {version}",
                     lambda p: "Yes" if p.check_qgis_version(version) else "No",
