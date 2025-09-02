@@ -83,9 +83,12 @@ class LocalDirectory:
         qgis_minimum_version = maybe_version(md.get("qgisMinimumVersion"))
         qgis_maximum_version = maybe_version(md.get("qgisMaximumVersion"))
 
+        version_str = md.get("version") or "0.0.0"
+
         return Plugin(
             name=md["name"],
-            version=get_semver_version(md.get("version") or "0.0.0."),
+            version=get_semver_version(version_str),
+            version_str=version_str,
             experimental=md.getboolean("experimental", False),
             qgis_minimum_version=qgis_minimum_version,
             qgis_maximum_version=qgis_maximum_version,

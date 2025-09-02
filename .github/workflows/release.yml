@@ -5,6 +5,7 @@ on:
     tags: "*"
     branches:
       - master
+      - "1.7-aviary"
   pull_request:
     branches:
       - master

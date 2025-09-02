@@ -348,7 +348,6 @@ def install_plugin(args: Namespace):
     installed = 0
 
     for arg in args.plugin_name:
-
         echo.debug(f"Installing {arg}")
 
         parameter = arg.split("==")
@@ -536,7 +535,7 @@ def plugin_versions_deprecated(args: Namespace):
 
 
 # Versions
-@command("versions", help="Look for available plugin versions")
+@command("versions", help="Look for available plugin latest versions")
 @argument("plugin_name", help="The plugin to look for")
 @argument(
     "--pre",

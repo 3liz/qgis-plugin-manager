@@ -26,6 +26,7 @@ class Plugin(NamedTuple):
 
     name: str
     version: Version
+    version_str: str
     file_name: Optional[str] = None
     download_url: Optional[str] = None
     description: str = ""
@@ -82,7 +83,10 @@ class Plugin(NamedTuple):
             data["trusted"] = trusted.lower() in TRUE_VALUES
 
         data["name"] = elem.attrib["name"]
-        data["version"] = get_semver_version(elem.attrib["version"])
+
+        version_str = elem.attrib["version"]
+        data["version_str"] = version_str
+        data["version"] = get_semver_version(version_str)
 
         def maybe_version(ver: Optional[str]) -> Optional[Version]:
             return get_semver_version(ver) if ver else None

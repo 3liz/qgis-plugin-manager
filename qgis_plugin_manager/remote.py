@@ -238,8 +238,7 @@ class Remote:
             coll = self.server_cache_filename(cache, source)
             if not coll.exists():
                 raise PluginManagerError(
-                    f"File cache missing for source: {source}\n"
-                    "Please run the 'update' command"
+                    f"File cache missing for source: {source}\nPlease run the 'update' command"
                 )
             yield source, coll
 
@@ -255,12 +254,27 @@ class Remote:
     def _parse_xml(self, xml_file: Path, plugins: PluginDict, source: Optional[str] = None):
         """Parse the given XML file."""
 
+        # IMPORTANT
+        # The qgis index usually only show the latest experimental
+        # and stable versions of the a plugin
+        # Then you cannot rely on it for checking intermediate versions
+
         tree = parse(xml_file.absolute())
         root = tree.getroot()
         for elem in root:
             plugin = Plugin.from_xml_element(elem, source)
 
             name = plugin.name
+
+            # Check consistency
+            if not plugin.file_name:
+                echo.critical(f"Incomplete plugin data for'{name}': file_name")
+                continue
+
+            if not plugin.download_url:
+                echo.critical(f"Incomplete plugin data for '{name}': url")
+                continue
+
             versions = plugins.get(name)
             if versions:
                 # Store as decreasing version order (latest first)
@@ -329,16 +343,29 @@ class Remote:
         self.available_plugins()
 
         plugin = None
-        has_versions = False
-
         # Check for requested version otherwise get the latest
         if version:
             # Find version
+            # NOTE that the index file may not contains all versions
+            # available !!!!!
             versions = self._list_plugins.get(plugin_name)
             if versions:
-                has_versions = True
                 requested_ver = Version.parse(version)
                 plugin = next((p for p in versions if p.version == requested_ver), None)
+                # Build a download URL from the latest version
+                # XXX This is a best effort for getting a specific version
+                # This may no works when using versions splitted accross
+                # several repositories
+                latest = versions[0]
+                url = latest.download_url.replace(  # type: ignore [union-attr]
+                    latest.version_str, version
+                )
+                file_name = latest.file_name.replace(  # type: ignore [union-attr]
+                    latest.version_str, version
+                )
+                version_str = version
+            else:
+                raise PluginNotFoundError()
         else:
             plugin = self.latest(
                 plugin_name,
@@ -346,24 +373,16 @@ class Remote:
                 include_deprecated,
             )
 
-        if not plugin:
-            if has_versions:
-                raise PluginVersionNotFoundError(version)
-            else:
+            if not plugin:
                 raise PluginNotFoundError()
 
-        url = plugin.download_url
-        file_name = plugin.file_name
+            version_str = plugin.version_str
 
-        # Check consistency
-        if not file_name:
-            raise PluginManagerError(f"Incomplete plugin data: file_name: {plugin})")
-
-        if not url:
-            raise PluginManagerError(f"Incomplete plugin data: url: {plugin})")
+            url = plugin.download_url
+            file_name = plugin.file_name
 
         echo.debug("Downloading {} from {}", file_name, url)
-        zip_file = self._download_zip(url, plugin_name, file_name)
+        zip_file = self._download_zip(url, plugin_name, file_name, version_str)
 
         # Removing existing plugin folder if needed
         if plugin_folder:
@@ -399,13 +418,14 @@ class Remote:
                 else:
                     p.chmod(0o644)
 
-        return str(plugin.version)
+        return version_str
 
     def _download_zip(
         self,
         url: str,
         plugin_name: str,
         file_name: str,
+        version_str: str,
     ) -> Path:
         """Download the ZIP"""
         if url.startswith("file:"):
@@ -433,8 +453,8 @@ class Remote:
                             continue
                     else:
                         raise PluginManagerError("Failed to download plugin")
-                elif e.code == "404":
-                    raise PluginManagerError("Plugin not found.")
+                elif e.code == 404:
+                    raise PluginVersionNotFoundError(version_str)
                 else:
                     raise PluginManagerError(f"Error downloading plugin: {e}")
 

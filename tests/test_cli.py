@@ -82,11 +82,18 @@ def test_cmd_version(cli_output: StringIO):
 
 
 def test_cmd_install(cli_output: StringIO, cli_plugindir: Path):
-    run_cli(["install", "-U", "-f", "Lizmap server", "wfsOutputExtension", "atlasprint"])
+    run_cli(["install", "-U", "-f", "Lizmap server", "wfsOutputExtension"])
 
     localdir = LocalDirectory(get_plugin_path())
     for folder in localdir.plugin_list():
         assert cli_plugindir.joinpath(folder).exists()
+
+
+def test_cmd_install_plugin_version(cli_output: StringIO):
+    run_cli(["install", "-f", "atlasprint==3.3.2"])
+
+    localdir = LocalDirectory(get_plugin_path())
+    assert "atlasprint" in tuple(localdir.plugin_list().values())
 
 
 def test_cmd_list(cli_output: StringIO):
@@ -109,4 +116,5 @@ def test_cmd_list_outdated(cli_output: StringIO):
     run_cli(["list", "-o", "--format=json"])
 
     plugins = json.loads(cli_output.getvalue())
-    assert len(plugins) == 0
+    # Should be one outdated 'atlasprint'
+    assert len(plugins) == 1
