@@ -17,6 +17,7 @@ from qgis_plugin_manager.definitions import Plugin
 from qgis_plugin_manager.local_directory import LocalDirectory
 from qgis_plugin_manager.remote import (
     PluginNotFoundError,
+    PluginVersionNotFoundError,
     Remote,
     SourcesNotFoundError,
 )
@@ -339,7 +340,7 @@ def install_plugin(args: Namespace):
     plugin_path = get_plugin_path()
 
     qgis = qgis_server_version()
-    echo.info("QGIS version:  {qgis or 'Unknown'}")
+    echo.info(f"QGIS version:  {qgis or 'Unknown'}")
 
     remote = Remote(plugin_path, qgis_version=qgis)
     plugins = LocalDirectory(plugin_path)
@@ -347,6 +348,9 @@ def install_plugin(args: Namespace):
     installed = 0
 
     for arg in args.plugin_name:
+
+        echo.debug(f"Installing {arg}")
+
         parameter = arg.split("==")
         plugin_name = parameter[0]
 
@@ -384,17 +388,18 @@ def install_plugin(args: Namespace):
                 include_deprecated=args.deprecated,
                 fix_permissions=args.fix_permissions,
             )
+        except PluginVersionNotFoundError:
+            echo.alert(f"No matching version found for '{plugin_name}=={plugin_version}'.")
+            cli.exit(1)
         except PluginNotFoundError:
+            echo.alert(f"No matching plugin found for '{plugin_name}'.")
             similars = remote.check_similar_names(plugin_name)
             name = next(similars, None)
             if name:
-                echo.info(f"\n{plugin_name} not found. Plugins with similar name:")
+                echo.info(f"\n'{plugin_name}' not found. Plugins with similar name:")
                 echo.info(f"\t{name}")
                 for name in similars:
                     echo.info(name)
-            cli.exit(1)
-        except PluginManagerError as err:
-            echo.critical(f"ERROR: {plugin_name}: {err}")
             cli.exit(1)
         else:
             echo.success(f"\tOk {plugin_name} {install_version}")
@@ -491,6 +496,7 @@ def upgrade_plugins(args: Namespace):
             )
         except PluginNotFoundError:
             echo.alert(f"\t\u26a0\ufe0f {plugin_info.name:aa<25}\tNot found")
+            failures += 1
         except PluginManagerError as err:
             failures += 1
             echo.critical(f"\t\u274c {plugin_info.name:<25}\tError: {err}")
@@ -500,6 +506,7 @@ def upgrade_plugins(args: Namespace):
 
     if failures > 0:
         echo.alert(f"Command terminated with {failures} errors")
+        cli.exit(1)
     if installed > 0:
         install_epilog()
 

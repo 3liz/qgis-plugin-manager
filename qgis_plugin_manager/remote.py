@@ -38,6 +38,10 @@ class PluginNotFoundError(PluginManagerError):
     pass
 
 
+class PluginVersionNotFoundError(PluginManagerError):
+    pass
+
+
 class SourcesNotFoundError(PluginManagerError):
     pass
 
@@ -129,9 +133,9 @@ class Remote:
                 if "[VERSION]" in raw_line:
                     if not qgis_version:
                         echo.alert(
-                            f"Skipping line '{raw_line}' because it has a "
+                            f"Skipping source '{raw_line}' because it has a "
                             "token [VERSION] but "
-                            "no QGIS version could be detected."
+                            "no QGIS version could be detected.\n"
                         )
                         continue
 
@@ -233,7 +237,10 @@ class Remote:
         for source in self.list:
             coll = self.server_cache_filename(cache, source)
             if not coll.exists():
-                raise PluginManagerError("File cache missing: please run the 'update' command")
+                raise PluginManagerError(
+                    f"File cache missing for source: {source}\n"
+                    "Please run the 'update' command"
+                )
             yield source, coll
 
     def available_plugins(self) -> PluginDict:
@@ -322,12 +329,14 @@ class Remote:
         self.available_plugins()
 
         plugin = None
+        has_versions = False
 
         # Check for requested version otherwise get the latest
         if version:
             # Find version
             versions = self._list_plugins.get(plugin_name)
             if versions:
+                has_versions = True
                 requested_ver = Version.parse(version)
                 plugin = next((p for p in versions if p.version == requested_ver), None)
         else:
@@ -338,8 +347,10 @@ class Remote:
             )
 
         if not plugin:
-            echo.alert(f"No matching plugin found for {plugin_name}.")
-            raise PluginNotFoundError()
+            if has_versions:
+                raise PluginVersionNotFoundError(version)
+            else:
+                raise PluginNotFoundError()
 
         url = plugin.download_url
         file_name = plugin.file_name
