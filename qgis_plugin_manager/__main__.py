@@ -654,7 +654,10 @@ def search_plugin(args: Namespace):
         return True
 
     found = 0
-    for plugin in remote.search(args.plugin_name, predicat=pred, latest=args.latest):
+    for plugin in sorted(
+        remote.search(args.plugin_name, predicat=pred, latest=args.latest),
+        key=lambda p: p.name,
+    ):
         echo.echo(f"{plugin.name}=={plugin.version_str}")
         found += 1
 

@@ -310,18 +310,15 @@ class Remote:
         """Search in plugin names and tags."""
         self.available_plugins()
 
-        results = set()
         for plugin_name, versions in self._list_plugins.items():
-            if plugin_name not in results:
-                for plugin in versions:
-                    if predicat is not None and not predicat(plugin):
-                        continue
-                    if next(similar_names(search_string, plugin.search), None):
-                        results.add(plugin_name)
-                        yield plugin
-                        break
-                    if latest:  # Don't look at previous versions
-                        break
+            for plugin in versions:
+                if predicat is not None and not predicat(plugin):
+                    continue
+                if next(similar_names(search_string, plugin.search), None):
+                    yield plugin
+                    break
+                if latest:  # Don't look at previous versions
+                    break
 
     def check_similar_names(self, name: str) -> Iterator[str]:
         yield from similar_names(name, self._list_plugins.keys())
