@@ -105,7 +105,7 @@ jobs:
         python3 -m build --no-isolation --sdist
 
     - name: Create release on GitHub
-      uses: ncipollo/release-action@v1.18.0
+      uses: ncipollo/release-action@v1.20.0
       with:
         body: ${{ steps.changelog.outputs.markdown }}
         token: ${{ secrets.BOT_HUB_TOKEN }}
