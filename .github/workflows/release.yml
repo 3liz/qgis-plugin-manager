@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         python: [
             "3.9",
@@ -27,22 +28,22 @@ jobs:
 
     steps:
     - name: Get source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python }}
+        cache: "pip"
+        cache-dependency-path: "requirements/tests.txt"
 
-    - name: Upgrade PIP
+    - name: Install Python requirements
       run: |
-        pip install --upgrade pip pytest
-        pip install -e .
+        pip install -r requirements/tests.txt
 
     - name: Run tests
       working-directory: tests
       run: |
-        export PYTHONPATH="${{ github.workspace }}"
         export QGIS_PLUGIN_MANAGER_QGIS_VERSION=3.40
         pytest -v
 
@@ -50,23 +51,21 @@ jobs:
     name: "❄ Linter"
     runs-on: ubuntu-latest
     steps:
+    - name: Get source code
+      uses: actions/checkout@v5
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+        cache: "pip"
+        cache-dependency-path: "requirements/lint.txt"
 
-      - name: Upgrade PIP
-        run: pip install --upgrade pip
+    - name: Install Python requirements
+      run: pip install -r requirements/lint.txt
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Python requirements
-        run: pip install -r requirements-dev.txt
-
-      - name: Run Ruff
-        run: make lint
+    - name: Run Linter
+      run: make lint
 
   release:
     name: "🚀 Release"
@@ -80,15 +79,17 @@ jobs:
       run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
     - name: Get source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
       with:
-        python-version: "3.10"
+        python-version: "3.12"
+        cache: "pip"
+        cache-dependency-path: "requirements/packaging.txt"
 
-    - name: Upgrade PIP
-      run: pip install --upgrade pip build setuptools
+    - name: Install Python requirements
+      run: pip install -r requirements/packaging.txt
 
     - name: Setup
       run: |
@@ -105,7 +106,7 @@ jobs:
         python3 -m build --no-isolation --sdist
 
     - name: Create release on GitHub
-      uses: ncipollo/release-action@v1.18.0
+      uses: ncipollo/release-action@v1.20.0
       with:
         body: ${{ steps.changelog.outputs.markdown }}
         token: ${{ secrets.BOT_HUB_TOKEN }}

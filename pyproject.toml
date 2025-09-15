@@ -34,12 +34,31 @@ dynamic = ["version"]
 [project.scripts]
 qgis-plugin-manager = "qgis_plugin_manager.__main__:main"
 
+
 [[project.authors]]
 name = "Étienne Trimaille"
 
 [[project.maintainers]]
 name = "David Marteau"
 email = "dmarteau@3liz.com"
+
+[dependency-groups]
+dev = [
+    {include-group = "tests"},
+    {include-group = "lint"},
+]
+tests = [
+    "pytest",
+]
+lint = [
+    "ruff",
+    "mypy",
+]
+packaging = [
+    "setuptools",
+    "build",
+]
+
 
 [tool.setuptools.packages.find]
 exclude = [ "tests/*" ]
@@ -62,7 +81,7 @@ documentation = "https://github.com/3liz/qgis-plugin-manager/blob/master/README.
 
 [tool.ruff]
 line-length = 110
-target-version = "py38"
+target-version = "py39"
 exclude = [
     ".venv",
     ".local",

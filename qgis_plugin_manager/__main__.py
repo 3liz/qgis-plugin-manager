@@ -369,13 +369,13 @@ def install_plugin(args: Namespace):
                 # Asked for upgrade
                 latest = remote.latest(plugin_name, args.pre, args.deprecated)
                 if latest and latest.version == plugin_info.version:
-                    echo.alert(f"\t{plugin_name} is already at latest version")
+                    echo.alert(f"\t{plugin_name}=={plugin_info.version} is already at latest version")
                     continue
             elif plugin_version is None and plugin_info.version == plugin_version:
                 echo.alert(f"\t{plugin_name}=={plugin_version} already installed")
                 continue
             elif plugin_version is None:
-                echo.alert(f"\t{plugin_name} already installed")
+                echo.alert(f"\t{plugin_name}=={plugin_info.version} already installed")
                 continue
 
         try:

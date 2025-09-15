@@ -2,39 +2,86 @@
 
 PYTHON=python3
 
-PYTHON_PKG=qgis_plugin_manager
+PYTHON_MODULE=qgis_plugin_manager
 TESTDIR=tests
 
+-include .localconfig.mk
+
+#
+# Configure
+#
+
+ifeq ($(USE_UV), 1)
+UV_RUN ?= uv run
+endif
+
+REQUIREMENTS=\
+	dev \
+	lint \
+	tests \
+	packaging \
+	$(NULL)
+
+.PHONY: update-requirements
+
+update-requirements: $(patsubst %, update-requirements-%, $(REQUIREMENTS))
+
+# Require uv (https://docs.astral.sh/uv/) for extracting
+# infos from project's dependency-groups
+update-requirements-tests:
+	@echo "Updating requirements for 'tests'"; \
+	uv export --no-dev --group tests --format requirements.txt \
+		--no-annotate \
+		--no-editable \
+		--no-hashes \
+		-q -o requirements/tests.txt; \
+
+update-requirements-%:
+	@echo "Updating requirements for '$*'"; \
+	uv export --format requirements.txt \
+		--no-annotate \
+		--no-editable \
+		--no-hashes \
+		--only-group $*\
+		-q -o requirements/$*.txt; \
+
+#
+# Static analysis
+#
+
+LINT_TARGETS=$(PYTHON_MODULE) $(TESTDIR)  $(EXTRA_LINT_TARGETS)
+
+lint:
+	@ $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
+
+lint-preview:
+	@ruff check --preview $(LINT_TARGETS)
+
+lint-fix:
+	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)
+
+format:
+	@ $(UV_RUN) format $(LINT_TARGETS) 
+
+format-diff:
+	@ $(UV_RUN) format --diff $(LINT_TARGETS) 
+
+typecheck:
+	@ $(UV_RUN) mypy $(LINT_TARGETS)
+
+#
+# Tests
+#
+
+test:
+	cd tests && $(UV_RUN) pytest -v
+
+#
+# Packaging
+#
 
 dist: clean
 	$(PYTHON) -m build --no-isolation --sdist
 
 clean:
 	rm -rf *.egg-info ./dist
-
-install: 
-	pip install -U --upgrade-strategy=eager -e .
-
-install-dev:
-	pip install -U --upgrade-strategy=eager -r requirements-dev.txt
-
-test: lint typing
-	$(MAKE) -C tests
-
-lint:
-	@ruff check --output-format=concise $(PYTHON_PKG) $(TESTDIR)
-
-lint-preview:
-	@ruff check --preview $(PYTHON_PKG) $(TESTDIR)
-
-lint-fix:
-	@ruff check --fix --preview $(PYTHON_PKG) $(TESTDIR)
-
-typing:
-	@mypy -p $(PYTHON_PKG)
-
-format-diff:
-	@ruff format --diff $(PYTHON_PKG) $(TESTDIR)
-
-format:
-	@ruff format $(PYTHON_PKG) $(TESTDIR) 
