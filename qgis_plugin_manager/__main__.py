@@ -258,7 +258,7 @@ def list_plugins(args: Namespace):
                 outdated_list,
                 (
                     ("name", lambda n: n[0].name),
-                    ("version", lambda n:n[0].version_str),
+                    ("version", lambda n: n[0].version_str),
                     ("latest", lambda n: n[1]),
                     ("folder", lambda n: n[0].install_folder),
                     ("source", lambda n: n[2]),
@@ -269,7 +269,7 @@ def list_plugins(args: Namespace):
                 outdated_list,
                 (
                     ("Name", lambda n: n[0].name),
-                    ("Version", lambda n:n[0].version_str),
+                    ("Version", lambda n: n[0].version_str),
                     ("Latest", lambda n: n[1]),
                     ("Folder", lambda n: install_folder(n[0])),
                     ("Source", lambda n: n[2]),
