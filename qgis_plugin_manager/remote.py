@@ -351,12 +351,12 @@ class Remote:
                     requested_ver = get_semver_version(version)
                     plugin = next((p for p in versions if p.version == requested_ver), None)
                 except ValueError:
-                    # Not a semver version 
+                    # Not a semver version
                     echo.debug(
                         f"{version} cannot be turned into SemVer compatible version"
                         f"Using the the literal requested version for download"
                     )
-                    pass 
+                    pass
 
                 # Build a download URL from the latest version
                 # XXX This is a best effort for getting a specific version

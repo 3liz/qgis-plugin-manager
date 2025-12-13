@@ -170,7 +170,7 @@ def get_semver_version(version_str: str) -> Version:
     return version
 
 
-# Infaillible method that attempts to convert 
+# Infaillible method that attempts to convert
 # version string as a SemVer compatible string
 def get_semver_version_str(v: str) -> str:
     try:
