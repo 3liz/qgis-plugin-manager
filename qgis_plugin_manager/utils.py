@@ -170,6 +170,15 @@ def get_semver_version(version_str: str) -> Version:
     return version
 
 
+# Infaillible method that attempts to convert 
+# version string as a SemVer compatible string
+def get_semver_version_str(v: str) -> str:
+    try:
+        return str(get_semver_version(v))
+    except ValueError:
+        return v
+
+
 def getenv_bool(name: str) -> bool:
     return os.getenv(name, "").lower() in ("t", "true", "y", "yes", "1")
 

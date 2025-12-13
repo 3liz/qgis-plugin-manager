@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* Dont fail install on non-semver version request [FIX #86]
+
 ## 1.7.2
 
 ### Added
