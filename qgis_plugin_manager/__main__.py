@@ -361,6 +361,7 @@ def install_plugin(args: Namespace):
                 echo.critical("Missing version")
                 cli.exit(1)
         else:
+            # No plugin version specified
             plugin_version = None
 
         if plugin_info and not args.force:
@@ -371,13 +372,12 @@ def install_plugin(args: Namespace):
                 if latest and latest.version == plugin_info.version:
                     echo.alert(f"\t{plugin_name}=={plugin_info.version} is already at latest version")
                     continue
-            elif plugin_info.version == get_semver_version_str(plugin_version):
-                echo.alert(f"\t{plugin_name}=={plugin_version} already installed")
-                continue
             elif plugin_version is None:
                 echo.alert(f"\t{plugin_name}=={plugin_info.version} already installed")
                 continue
-
+            elif plugin_info.version == get_semver_version_str(plugin_version):
+                echo.alert(f"\t{plugin_name}=={plugin_version} already installed")
+                continue
         try:
             install_version = remote.install(
                 plugin_name=plugin_name,

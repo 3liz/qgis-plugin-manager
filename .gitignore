@@ -25,3 +25,4 @@ test/fixtures/xml_files/file_protocol/minimal_plugin/
 .local
 .localconfig.mk
 /tmp
+/temp
