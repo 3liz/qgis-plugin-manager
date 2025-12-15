@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.7.4 - 2025-12-15
+
+### Fixed
+
+* Fix crash when checking for already installed plugin on 'install' command"
+
 ## 1.7.3
 
 ### Fixed
