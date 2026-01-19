@@ -495,7 +495,7 @@ def upgrade_plugins(args: Namespace):
                 include_deprecated=args.deprecated,
             )
         except PluginNotFoundError:
-            echo.alert(f"\t\u26a0\ufe0f {plugin_info.name:aa<25}\tNot found")
+            echo.alert(f"\t\u26a0\ufe0f {plugin_info.name:<25}\tNot found")
             failures += 1
         except PluginManagerError as err:
             failures += 1

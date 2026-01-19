@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fix typo in formatted error string
 * Fix default 'format' for deprecated 'cache' command 
 
 ## 1.7.4 - 2025-12-15
