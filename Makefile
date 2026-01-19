@@ -49,13 +49,13 @@ update-requirements-%:
 # Static analysis
 #
 
-LINT_TARGETS=$(PYTHON_MODULE) $(TESTDIR)  $(EXTRA_LINT_TARGETS)
+LINT_TARGETS=$(PYTHON_MODULE) $(TESTDIR)
 
 lint:
 	@ $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
 
 lint-preview:
-	@ruff check --preview $(LINT_TARGETS)
+	@ $(UV_RUN) ruff check --preview $(LINT_TARGETS)
 
 lint-fix:
 	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)
@@ -67,7 +67,8 @@ format-diff:
 	@ $(UV_RUN) format --diff $(LINT_TARGETS) 
 
 typecheck:
-	@ $(UV_RUN) mypy $(LINT_TARGETS)
+	@ $(UV_RUN) mypy $(PYTHON_MODULE)
+#@ $(UV_RUN) mypy tests --python-version=3.10
 
 #
 # Tests

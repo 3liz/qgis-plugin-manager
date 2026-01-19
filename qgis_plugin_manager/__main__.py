@@ -202,6 +202,7 @@ def init_sources(args: Namespace):
     """,
 )
 def list_plugins(args: Namespace):
+    """List all installed plugins"""
     qgis_version = qgis_server_version()
 
     if not (args.outdated_target is None or args.outdated):
@@ -531,6 +532,7 @@ def plugin_versions_deprecated(args: Namespace):
     echo.alert("Warning: this command is deprecated in favor of the 'versions' command")
     args.pre = False
     args.deprecated = False
+    args.format = "table"
     plugin_versions_impl(args)
 
 

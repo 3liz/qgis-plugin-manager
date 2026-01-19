@@ -17,7 +17,7 @@ def test_plugin_name_with_space_and_tags(fixtures: Path):
     """Test plugin with different name, using tags."""
     xml_files = fixtures.joinpath("xml_files")
     remote = Remote(xml_files.joinpath("dataplotly"))
-    plugins = {}
+    plugins: dict = {}
     remote._parse_xml(xml_files.joinpath("dataplotly/dataplotly.xml"), plugins)
     assert len(plugins) == 1
 
