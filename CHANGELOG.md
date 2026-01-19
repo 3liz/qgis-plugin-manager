@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.7.5 - 2026-01-19
+
+### Fixed
+
 * Fix typo in formatted error string
 * Fix default 'format' for deprecated 'cache' command 
 
