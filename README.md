@@ -73,7 +73,7 @@ commands:
     upgrade             Upgrade all plugins installed
     remotes             List all remote server
     update              Update all index files
-    cache               Look for available plugin is the cache - Deprecated
+    cache               Look for available plugin in the cache - Deprecated
     versions            Look for available plugin latest versions
     search              Search for plugins
     check               Check compatibility of installed plugins with QGIS version
