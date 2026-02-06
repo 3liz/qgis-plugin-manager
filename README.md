@@ -55,7 +55,7 @@ export QGIS_PLUGINPATH=/path/where/you/have/plugins
 
 ```bash
 $ qgis-plugin-manager --help
-usage: qgis-plugin-manager [-h] [-v] {version,init,list,remote,remove,update,upgrade,cache,search,install} ...
+usage: qgis-plugin-manager [-h] [-v] {version,init,list,install,remove,upgrade,remotes,update,cache,versions,search,check} ...
 
 options:
   -h, --help            show this help message and exit
@@ -64,7 +64,7 @@ options:
 commands:
   qgis-plugin-manager command
 
-  {version,init,list,remote,remove,update,upgrade,cache,search,install}
+  {version,init,list,install,remove,upgrade,remotes,update,cache,versions,search,check}
     version             Show version informations and exit
     init                Create the `sources.list` with plugins.qgis.org as remote
     list                List all plugins in the directory
@@ -73,7 +73,8 @@ commands:
     upgrade             Upgrade all plugins installed
     remotes             List all remote server
     update              Update all index files
-    versions            Look for available plugin versions
+    cache               Look for available plugin is the cache - Deprecated
+    versions            Look for available plugin latest versions
     search              Search for plugins
     check               Check compatibility of installed plugins with QGIS version
 ```
@@ -88,6 +89,19 @@ https://plugins.qgis.org/plugins/plugins.xml?qgis=3.34
 ```
 
 You can have one or many servers, one on each line.
+
+#### Options
+
+- `--qgis-version VERSION`: Specify the QGIS version to use in the sources.list file. Use `auto` to automatically detect the current QGIS version.
+  ```bash
+  $ qgis-plugin-manager init --qgis-version 3.40
+  $ qgis-plugin-manager init --qgis-version auto
+  ```
+
+- `-u, --update`: Update the index file after initialization.
+  ```bash
+  $ qgis-plugin-manager init --update
+  ```
 
 ### List
 
@@ -104,8 +118,7 @@ cadastre           2.1.1
 wfsOutputExtension 1.8.3 
 ```
 
-List outdated plugins including prerelease/experimental versions
-
+List outdated plugins including prerelease/experimental versions:
 
 ```bash
 $ qgis-plugin-manager list --outdated --pre
@@ -114,6 +127,36 @@ Name          Version Latest       Folder
 ------------- ------- ------------ -------------
 Lizmap server 2.13.1  2.13.2-alpha lizmap_server
 cadastre      2.1.1   2.1.2-alpha            
+```
+
+#### Options
+
+- `-o, --outdated`: List only outdated plugins.
+- `--outdated-target VERSION`: With the `--outdated` option, display the last version compatible with the specified QGIS version.
+  ```bash
+  $ qgis-plugin-manager list --outdated --outdated-target 3.28
+  ```
+
+- `--pre`: Include pre-release, development and experimental versions.
+- `--format FORMAT`: Select the output format. Available formats:
+  - `table` (default): Display as a formatted table
+  - `columns`: Display as columns
+  - `freeze`/`list`: Display in pip-like format (plugin==version)
+  - `json`: Display as JSON
+
+**Examples:**
+
+```bash
+# List in freeze/pip format
+$ qgis-plugin-manager list --format=list
+QuickOSM==1.16.0
+cadastre==2.1.1
+
+# List outdated in JSON format
+$ qgis-plugin-manager list --outdated --format=json
+
+# List all plugins in columns format
+$ qgis-plugin-manager list --format=columns
 ```
 
 
@@ -185,14 +228,79 @@ Version QGIS min Status Source
 Status: S = Server, X = Experimental, D = Deprecated, T = Trusted
 ```
 
+#### Options
+
+- `--pre`: Include pre-release, development and experimental versions.
+- `--deprecated`: Include deprecated versions.
+- `--format FORMAT`: Select the output format. Available formats:
+  - `table` (default): Display as a formatted table with status indicators
+  - `columns`: Display as columns
+  - `list`: Display in pip-like format (plugin==version)
+  - `json`: Display as JSON with full details
+
+**Examples:**
+
+```bash
+# List versions in pip format
+$ qgis-plugin-manager versions QuickOSM --format=list
+QuickOSM==1.16.0
+QuickOSM==1.15.0
+
+# List all versions including deprecated ones
+$ qgis-plugin-manager versions cadastre --deprecated
+
+# Get versions as JSON
+$ qgis-plugin-manager versions QuickOSM --format=json
+```
+
 ### Search
 
 Look for plugins according to tags and title :
 
 ```bash
 $ qgis-plugin-manager search dataviz
-Data Plotly
-QSoccer
+Data Plotly==4.0.0
+QSoccer==1.2.0
+```
+
+#### Options
+
+- `--server`: Filter to show only server plugins.
+  ```bash
+  $ qgis-plugin-manager search lizmap --server
+  ```
+
+- `--trusted`: Filter to show only trusted plugins.
+  ```bash
+  $ qgis-plugin-manager search --trusted
+  ```
+
+- `--pre`: Include pre-release, development and experimental versions.
+  ```bash
+  $ qgis-plugin-manager search dataviz --pre
+  ```
+
+- `--latest`: Show only the latest version of each plugin.
+  ```bash
+  $ qgis-plugin-manager search map --latest
+  ```
+
+- `--deprecated`: Include deprecated versions in search results.
+  ```bash
+  $ qgis-plugin-manager search old --deprecated
+  ```
+
+**Examples:**
+
+```bash
+# Search for server plugins only
+$ qgis-plugin-manager search atlas --server
+
+# Search for trusted plugins with experimental versions
+$ qgis-plugin-manager search qgis --trusted --pre
+
+# Search showing only latest stable versions
+$ qgis-plugin-manager search processing --latest
 ```
 
 ### Install
@@ -221,6 +329,57 @@ Installation QuickOSM 1.14.0
 ```
 
 You can use `--force` or `-f` to force the installation even if the plugin with the same version is already installed.
+
+#### Install multiple plugins
+
+You can install multiple plugins in a single command:
+
+```bash
+$ qgis-plugin-manager install QuickOSM cadastre 'Data Plotly'
+```
+
+#### Options
+
+- `-f, --force`: Force (re)installation even if the plugin is already installed.
+  ```bash
+  $ qgis-plugin-manager install QuickOSM --force
+  ```
+
+- `-U, --upgrade`: Upgrade plugin to the latest version.
+  ```bash
+  $ qgis-plugin-manager install QuickOSM --upgrade
+  ```
+
+- `--pre`: Include pre-release, development and experimental versions. By default, only stable versions are installed.
+  ```bash
+  $ qgis-plugin-manager install cadastre --pre
+  ```
+
+- `--deprecated`: Include deprecated versions.
+  ```bash
+  $ qgis-plugin-manager install OldPlugin --deprecated
+  ```
+
+- `--fix-permissions`: Set file permissions to 0644 after installation.
+  ```bash
+  $ qgis-plugin-manager install QuickOSM --fix-permissions
+  ```
+
+**Examples:**
+
+```bash
+# Install or upgrade to latest version
+$ qgis-plugin-manager install QuickOSM -U
+
+# Install prerelease version
+$ qgis-plugin-manager install cadastre==2.1.2-alpha --pre
+
+# Install multiple plugins with fixed permissions
+$ qgis-plugin-manager install QuickOSM cadastre --fix-permissions
+
+# Force reinstall with prerelease
+$ qgis-plugin-manager install 'Data Plotly' --force --pre
+```
 
 #### Enable a plugin
 
@@ -254,6 +413,41 @@ You can use `--force` or `-f` to force the upgrade for all plugins despite their
 
 *Note*, like APT, `update` is needed before to refresh the cache.
 
+#### Options
+
+- `-f, --force`: Force reinstall all plugins regardless of their version.
+  ```bash
+  $ qgis-plugin-manager upgrade --force
+  ```
+
+- `--pre`: Include pre-release, development and experimental versions. By default, only stable versions are considered.
+  ```bash
+  $ qgis-plugin-manager upgrade --pre
+  ```
+
+- `--deprecated`: Include deprecated versions when upgrading.
+  ```bash
+  $ qgis-plugin-manager upgrade --deprecated
+  ```
+
+- `--fix-permissions`: Set file permissions to 0644 for all upgraded plugins.
+  ```bash
+  $ qgis-plugin-manager upgrade --fix-permissions
+  ```
+
+**Examples:**
+
+```bash
+# Upgrade to latest stable versions
+$ qgis-plugin-manager upgrade
+
+# Upgrade including prerelease versions with fixed permissions
+$ qgis-plugin-manager upgrade --pre --fix-permissions
+
+# Force upgrade all plugins
+$ qgis-plugin-manager upgrade --force
+```
+
 #### Ignore plugins from the upgrade
 
 Some plugins might be installed by hand, without being installed with a remote. This command will try to upgrade
@@ -262,6 +456,46 @@ without a remote.
 
 It's possible to ignore such plugin by adding a file `ignorePlugins.list`, in your plugins' folder,
 with a list of **plugin name** on each line. The `upgrade` will not try to upgrade them.
+
+### Check
+
+Check the compatibility of installed plugins with a specific QGIS version.
+
+```bash
+$ qgis-plugin-manager check
+Name               Version QGIS 3.34
+------------------ ------- ----------
+QuickOSM           1.16.0  Yes
+cadastre           2.1.1   Yes
+wfsOutputExtension 1.8.3   No
+```
+
+If QGIS version is not specified, the command checks against the currently installed QGIS version.
+
+#### Options
+
+- `-v, --version VERSION`: Check compatibility against a specific QGIS version.
+  ```bash
+  $ qgis-plugin-manager check --version 3.28
+  ```
+
+- `--format FORMAT`: Select the output format. Available formats:
+  - `table` (default): Display as a formatted table
+  - `columns`: Display as columns
+  - `json`: Display as JSON with full compatibility details
+
+**Examples:**
+
+```bash
+# Check compatibility with QGIS 3.40
+$ qgis-plugin-manager check -v 3.40
+
+# Get compatibility information as JSON
+$ qgis-plugin-manager check --format=json
+
+# Check with specific version in columns format
+$ qgis-plugin-manager check --version 3.28 --format=columns
+```
 
 ### Remove
 
